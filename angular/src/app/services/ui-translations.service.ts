@@ -87,9 +87,31 @@ export class UiTranslationsService {
         done?.();
       },
       error: () => {
-        this.payload.set({});
-        done?.();
+        this.loadFallbackFromAssets(done);
       },
+    });
+  }
+
+  /** When API is unavailable (e.g. Render down), use bundled locale JSON files. */
+  private loadFallbackFromAssets(done?: () => void): void {
+    const locales: Array<UiExtraLocaleCode | 'ar'> = ['ar', 'fr', 'id', 'tr', 'zh-Hans'];
+    forkJoin(
+      locales.map((locale) =>
+        this.http.get<UiLocaleFilePayload>(`/assets/ui-translations/${locale}.json`).pipe(
+          catchError(() => of(null)),
+        ),
+      ),
+    ).subscribe((files) => {
+      let payload: UiManualTranslationsPayload = {};
+      locales.forEach((locale, index) => {
+        const file = files[index];
+        if (file) {
+          payload = mergeLocaleFileIntoPayload(payload, locale, file);
+        }
+      });
+      this.payload.set(payload);
+      window.dispatchEvent(new Event('hotelUiTranslationsUpdated'));
+      done?.();
     });
   }
 
