@@ -1,7 +1,7 @@
 import { Environment } from '@abp/ng.core';
 
 const apiUrl = 'https://hotel-api-fo0z.onrender.com';
-const baseUrl = 'https://example.pages.dev';
+const baseUrl = 'https://hotel-management.shahainalsharabi2.workers.dev';
 
 export const environment = {
   production: true,
