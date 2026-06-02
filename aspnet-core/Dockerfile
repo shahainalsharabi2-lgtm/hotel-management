@@ -9,6 +9,12 @@ RUN dotnet publish "src/Modiaf.Al.Arab.Hotel.HttpApi.Host/Modiaf.Al.Arab.Hotel.H
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
+
+# Npgsql on Debian needs Kerberos libs for SSL connections (Neon PostgreSQL).
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libgssapi-krb5-2 \
+    && rm -rf /var/lib/apt/lists/*
+
 ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
 
