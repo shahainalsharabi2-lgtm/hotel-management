@@ -32,7 +32,7 @@ public class Program
             Log.Information("Starting Modiaf.Al.Arab.Hotel.HttpApi.Host.");
             var builder = WebApplication.CreateBuilder(args);
             var dbProvider = builder.Configuration["Database:Provider"] ?? "(not set)";
-            var hasConnectionString = !string.IsNullOrWhiteSpace(builder.Configuration.GetConnectionString("Default"));
+            var hasConnectionString = !string.IsNullOrWhiteSpace(builder.Configuration["ConnectionStrings:Default"]);
             Log.Information("Database provider: {Provider}. Connection string configured: {HasConnectionString}", dbProvider, hasConnectionString);
             builder.Host.AddAppSettingsSecretsJson()
                 .UseAutofac()
