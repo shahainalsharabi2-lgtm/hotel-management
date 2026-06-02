@@ -14,6 +14,9 @@
     "ui-translations:sync": "node scripts/sync-ui-locale-structure.mjs && node scripts/merge-ui-locale-files-to-default.mjs"
   },
   "private": true,
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "dependencies": {
     "@abp/ng.account": "~10.3.0",
     "@abp/ng.account.core": "~10.3.0",
