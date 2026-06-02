@@ -1,0 +1,207 @@
+/* ── نظام الأيقونات: حجم موحّد ومظهر عصري ── */
+:root {
+  --icon-xs: 0.875rem;
+  --icon-sm: 1rem;
+  --icon-md: 1.125rem;
+  --icon-lg: 1.35rem;
+  --icon-xl: 1.65rem;
+  --icon-pill-size: 2.125rem;
+  --icon-pill-radius: 11px;
+  --icon-stroke: 1.65;
+}
+
+/* Font Awesome + Bootstrap Icons */
+i.fas,
+i.far,
+i.fab,
+i.bi,
+.app-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  line-height: 1;
+  flex-shrink: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+i.bi {
+  font-size: var(--icon-md);
+}
+
+i.fas,
+i.far,
+i.fab {
+  font-size: var(--icon-md);
+  width: 1.15em;
+  text-align: center;
+}
+
+/* أيقونات الشريط الجانبي — حبة زجاجية */
+.app-sidebar .sidebar-nav a > i.fas,
+.app-sidebar .sidebar-nav a > i.far,
+.app-sidebar .sidebar-nav-group__link > i.fas,
+.app-sidebar .sidebar-nav-subgroup__head > i.fas,
+.app-sidebar .sidebar-nav-group__head > i.fas.sidebar-nav-group__main-icon {
+  width: var(--icon-pill-size);
+  height: var(--icon-pill-size);
+  font-size: var(--icon-md);
+  border-radius: var(--icon-pill-radius);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.app-sidebar .sidebar-nav a:hover > i.fas,
+.app-sidebar .sidebar-nav a.active > i.fas,
+.app-sidebar .sidebar-nav-group__link:hover > i.fas,
+.app-sidebar .sidebar-nav-group__link.active > i.fas,
+.app-sidebar .sidebar-nav-group--section-active .sidebar-nav-group__head > i.fas.sidebar-nav-group__main-icon {
+  background: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+
+.app-sidebar .sidebar-nav-group__chevron {
+  width: auto !important;
+  height: auto !important;
+  font-size: 0.7rem !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  opacity: 0.75;
+}
+
+/* بلاطات PMS / الغرف */
+.rooms-dev-tile > i.fas,
+.rooms-dev-tile > i.bi {
+  font-size: var(--icon-xl);
+  margin-bottom: 4px;
+  filter: drop-shadow(0 2px 6px rgba(21, 101, 192, 0.2));
+}
+
+.pms-card-menu i.fas,
+.pms-info-cell > i.fas,
+.pms-date-strip i.fas,
+.pms-checkout-row > i.fas,
+.pms-guest-unit > i.fas,
+.pms-paid-pill i.fas {
+  font-size: var(--icon-sm);
+  color: var(--app-primary-mid);
+  opacity: 0.9;
+}
+
+.pms-actions-menu-item i.fas {
+  font-size: var(--icon-md);
+  color: #1565c0;
+}
+
+/* أزرار تفاصيل / إجراءات دائرية */
+.bk-detail-icon-btn i.fas,
+.pms-btn-icon-action i.fas,
+.pms-card-menu i.fas {
+  font-size: var(--icon-md);
+}
+
+.bk-detail-icon-btn {
+  box-shadow: 0 4px 14px rgba(21, 101, 192, 0.15);
+}
+
+.bk-detail-icon-btn:hover i.fas {
+  transform: scale(1.06);
+}
+
+/* رسائل النظام */
+.ui-toast > i.fas {
+  font-size: var(--icon-lg);
+}
+
+.ui-toast--success > i.fas {
+  color: #2e7d32;
+}
+
+.ui-toast--error > i.fas {
+  color: #c62828;
+}
+
+.ui-toast--warning > i.fas {
+  color: #ef6c00;
+}
+
+.ui-toast--info > i.fas {
+  color: #1565c0;
+}
+
+/* حقول وبطاقات */
+.bk-guest-field > i.fas,
+.bk-guest-chip > i.fas {
+  font-size: var(--icon-sm);
+  color: var(--app-primary-mid);
+}
+
+.transfer-room-banner i.fas,
+.check-in-banner i.fas,
+.reservation-banner i.fas {
+  font-size: var(--icon-lg);
+}
+
+/* أزرار رئيسية */
+.pms-btn-checkin-primary i.fas,
+.bookings-pms-checkin-link i.fas,
+.pms-btn-print i.fas {
+  font-size: var(--icon-md);
+}
+
+/* SVG جانبي موحّد */
+.nav-icon-svg {
+  display: inline-block;
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.92);
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.nav-icon-svg use {
+  stroke: currentColor;
+  fill: none;
+}
+
+.sidebar-nav a .nav-icon-svg,
+.sidebar-nav-group__link .nav-icon-svg {
+  width: var(--icon-pill-size);
+  height: var(--icon-pill-size);
+  padding: 6px;
+  border-radius: var(--icon-pill-radius);
+  background: rgba(255, 255, 255, 0.1);
+  box-sizing: border-box;
+}
+
+.sidebar-nav-group__head .nav-icon-svg,
+.sidebar-nav-subgroup__head .nav-icon-svg {
+  width: calc(var(--icon-pill-size) + 2px);
+  height: calc(var(--icon-pill-size) + 2px);
+}
+
+.sidebar-nav-subgroup__head .nav-icon-svg {
+  padding: 6px;
+  border-radius: var(--icon-pill-radius);
+  background: rgba(255, 255, 255, 0.1);
+  box-sizing: border-box;
+}
+
+.sidebar-nav-subgroup--active .sidebar-nav-subgroup__head .nav-icon-svg,
+.sidebar-nav-subgroup__head:hover .nav-icon-svg {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.sidebar-nav a:hover .nav-icon-svg,
+.sidebar-nav a.active .nav-icon-svg,
+.sidebar-nav-group__link:hover .nav-icon-svg,
+.sidebar-nav-group__link.active .nav-icon-svg,
+.sidebar-nav-group--section-active .sidebar-nav-group__head .nav-icon-svg {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.account-rail-group__main-icon.fas {
+  font-size: var(--icon-lg);
+}

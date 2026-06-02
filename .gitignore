@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+**/bin/
+**/obj/
+**/dist/
+**/.angular/cache
+
+# IDE / OS
+.vs/
+.idea/
+*.user
+*.suo
+Thumbs.db
+Desktop.ini
+
+# Logs and secrets
+*.log
+.env
+.env.*
+!*.env.example
+**/appsettings.secrets.json
+
+# Local tools cache
+tools/.translation-cache.json

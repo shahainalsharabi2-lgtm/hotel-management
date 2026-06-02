@@ -1,0 +1,511 @@
+/* You can add global styles to this file, and also import other style files */
+
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap');
+@import 'styles/icons.scss';
+
+@keyframes donut-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── سمة النظام: أبيض + أزرق ── */
+:root {
+  --lpx-logo: url('/assets/images/logo/logo-light.png');
+  --lpx-logo-icon: url('/assets/images/logo/logo-light-thumbnail.png');
+
+  --app-bg: #e8f1fb;
+  --app-bg-soft: #f4f8fd;
+  --app-surface: #ffffff;
+  --app-primary: #1565c0;
+  --app-primary-mid: #1976d2;
+  --app-primary-light: #42a5f5;
+  --app-accent: #1e88e5;
+  --app-accent-bright: #29b6f6;
+  --app-gradient: linear-gradient(135deg, #1565c0 0%, #42a5f5 100%);
+  --app-gradient-soft: linear-gradient(135deg, #e3f2fd 0%, #ffffff 100%);
+  --app-text: #1a2b42;
+  --app-text-muted: #5a6f88;
+  /** نص واجهة العرض العادي */
+  --app-text-normal: #1565c0;
+  --app-text-normal-muted: #1976d2;
+  --app-border: rgba(21, 101, 192, 0.14);
+  --app-border-strong: rgba(21, 101, 192, 0.26);
+  --app-shadow: 0 10px 40px rgba(21, 101, 192, 0.1);
+  --app-shadow-sm: 0 4px 16px rgba(21, 101, 192, 0.08);
+  --app-sidebar-bg: #1565c0;
+  --app-sidebar-border: rgba(255, 255, 255, 0.14);
+  --app-nav-hover: rgba(255, 255, 255, 0.12);
+  --app-nav-active: rgba(255, 255, 255, 0.2);
+  --glass-bg: rgba(255, 255, 255, 0.96);
+  --glass-border: rgba(21, 101, 192, 0.12);
+  --app-input-bg: var(--app-bg-soft);
+  --app-input-border: var(--app-border);
+  --app-on-primary: #ffffff;
+  --app-surface-muted: #f0f5fc;
+  --app-focus-ring: rgba(30, 136, 229, 0.35);
+  /* متغيرات العرض المطوّر (مخطط غرف، قاعدة بيانات، حجوزات) */
+  --dev-accent: var(--app-primary-mid);
+  --dev-accent-dim: var(--app-nav-active);
+  --dev-glass: var(--glass-bg);
+  --dev-glass-deep: var(--app-surface);
+  --dev-border: var(--app-border);
+  --dev-text: var(--app-text);
+  --dev-text-muted: var(--app-text-muted);
+
+  /* أوزان خط — خفيفة وواضحة (بدون بولد ثقيل) */
+  --fw-body: 400;
+  --fw-label: 500;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-btn: 600;
+
+  /* إطارات تفصيلية */
+  --app-border-ink: rgba(15, 23, 42, 0.1);
+  --app-border-ink-mid: rgba(15, 23, 42, 0.16);
+  --app-border-blue-line: rgba(21, 101, 192, 0.22);
+  --app-card-border: 1px solid var(--app-border-blue-line);
+  --app-card-inset-ring: inset 0 0 0 1px var(--app-border-ink);
+}
+
+/* ── أدوات مشتركة ── */
+.app-page {
+  min-height: 100vh;
+  color: var(--app-text);
+}
+
+.page-eyebrow {
+  color: var(--app-primary-mid);
+  font-weight: var(--fw-label);
+  letter-spacing: 0.04em;
+}
+
+.page-title-gradient {
+  background: linear-gradient(135deg, var(--app-primary) 0%, var(--app-primary-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.surface-card {
+  background: var(--app-surface);
+  border: var(--app-card-border);
+  border-radius: 18px;
+  box-shadow: var(--app-shadow-sm), var(--app-card-inset-ring);
+}
+
+.input-surface {
+  background: var(--app-input-bg);
+  border: 1px solid var(--app-input-border);
+  border-radius: 12px;
+  color: var(--app-text);
+}
+
+.input-surface:focus-within,
+.input-surface:focus {
+  border-color: var(--app-primary-light);
+  box-shadow: 0 0 0 3px var(--app-focus-ring);
+  outline: none;
+}
+
+.btn-app-primary {
+  background: var(--app-gradient);
+  color: var(--app-on-primary);
+  border: none;
+  border-radius: 12px;
+  font-weight: var(--fw-btn);
+  cursor: pointer;
+}
+
+.btn-app-secondary {
+  background: var(--app-surface);
+  border: var(--app-card-border);
+  box-shadow: var(--app-card-inset-ring);
+  color: var(--app-text);
+  border-radius: 12px;
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+}
+
+.btn-app-secondary:hover {
+  background: var(--app-nav-hover);
+  border-color: var(--app-border-strong);
+  color: var(--app-primary);
+}
+
+/* أزرار متدرجة — نص أبيض */
+.action-btn:not(.secondary),
+.add-btn,
+.login-btn,
+.btn.primary,
+.btn-save-settings.primary,
+.booking-page .submit-btn {
+  color: var(--app-on-primary) !important;
+}
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+  background: var(--app-bg) !important;
+  color: var(--app-text);
+  font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+  font-weight: var(--fw-body);
+  line-height: 1.55;
+  letter-spacing: 0.01em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* عناوين — وزن متوسط وليس عريض جداً */
+h1,
+h2,
+h3,
+.content-header h2,
+.page-header h1,
+.welcome-card h1,
+.header-content h1 {
+  font-weight: var(--fw-semibold) !important;
+  letter-spacing: -0.02em;
+}
+
+h4,
+h5,
+h6 {
+  font-weight: var(--fw-medium) !important;
+}
+
+label,
+.hint,
+.eyebrow,
+.field-group label,
+.sidebar-brand small,
+.rooms-dev-tile-label,
+.stat-info h3 {
+  font-weight: var(--fw-label) !important;
+}
+
+strong,
+b,
+.brand-title {
+  font-weight: var(--fw-semibold);
+}
+
+button,
+.btn,
+.action-btn,
+.login-btn,
+.sidebar-nav button {
+  font-weight: var(--fw-btn);
+}
+
+body.bg-light {
+  background: var(--app-bg) !important;
+  color: var(--app-text);
+}
+
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: var(--app-card-border);
+  border-radius: 20px;
+  box-shadow: var(--app-shadow-sm), var(--app-card-inset-ring);
+}
+
+/* بطاقات ولوحات — إطار أزرق + خط داخلي خفيف */
+.settings-frame,
+.summary-item,
+.rooms-dev-filter-banner,
+.rooms-dev-controls-sticky,
+.filters-card,
+.report-sheet,
+.state-card,
+.stat-card,
+.hotel-room-card:not([class*='--add']),
+.translation-area {
+  border: var(--app-card-border);
+  box-shadow: var(--app-shadow-sm), var(--app-card-inset-ring);
+}
+
+.dashboard-topbar,
+.rooms-dev-status-rail,
+.input-wrapper {
+  border: var(--app-card-border);
+  box-shadow: var(--app-shadow-sm), var(--app-card-inset-ring);
+}
+
+.field-group > input,
+.field-group > select,
+.select-field,
+.input-field {
+  border: 1px solid var(--app-border-ink-mid) !important;
+  box-shadow: inset 0 0 0 1px rgba(21, 101, 192, 0.06);
+}
+
+/* حقول إدخال — حدود أوضح */
+input:not([type='checkbox']):not([type='radio']):not([type='range']),
+select,
+textarea {
+  border: 1px solid var(--app-border-ink-mid);
+  font-weight: var(--fw-body);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--app-primary-light);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--app-focus-ring);
+}
+
+/* بطاقات حالات الغرف — إطار أسود خفيف فوق اللون */
+.rooms-dev-card[class*='rooms-dev-card--'],
+.room-card[class*='room-scene--'] {
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.2),
+    0 5px 16px rgba(15, 23, 42, 0.12);
+}
+
+.rooms-dev-card[class*='rooms-dev-card--'] .rooms-dev-card-circle {
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.15),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.06);
+}
+
+.rooms-dev-card[class*='rooms-dev-card--'] .rooms-dev-card-price {
+  border: 1px solid rgba(0, 0, 0, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* شريط جانبي التطبيق — أزرق ونص أبيض */
+.app-sidebar {
+  border-inline-end: 1px solid var(--app-sidebar-border) !important;
+  box-shadow: 4px 0 28px rgba(13, 71, 161, 0.35) !important;
+}
+
+.app-shell .sidebar-nav a {
+  font-weight: var(--fw-medium) !important;
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+
+.app-shell .sidebar-nav a:hover,
+.app-shell .sidebar-nav a.active {
+  color: #ffffff !important;
+  background: var(--app-nav-active) !important;
+  border-color: rgba(255, 255, 255, 0.28) !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+}
+
+.app-shell .sidebar-nav i {
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.app-shell .brand-title {
+  font-weight: var(--fw-semibold) !important;
+  color: #ffffff !important;
+}
+
+.app-shell .sidebar-brand small {
+  color: rgba(255, 255, 255, 0.78) !important;
+}
+
+/* ── إصلاح النص الأبيض على الخلفيات الفاتحة ── */
+.app-content,
+.settings-container,
+.settings-content,
+.settings-frame,
+.layout-room-panel,
+.list-page.bookings-pms-layout,
+.dashboard-container:not(.dashboard-container--normal),
+.reports-page,
+.booking-page,
+.booking-page .booking-card,
+.room-form-page,
+.room-details-page,
+.dashboard-page.database-page--advanced {
+  color: var(--app-text);
+}
+
+/* ── العرض العادي: خط أزرق ── */
+.rooms-page--normal,
+.list-page:not(.bookings-pms-layout),
+.dashboard-page:not(.database-page--advanced),
+.dashboard-container--normal {
+  color: var(--app-text-normal);
+}
+
+.rooms-page--normal .header-content p,
+.rooms-page--normal .summary-item .label,
+.rooms-page--normal .loading-state,
+.list-page:not(.bookings-pms-layout) .search-input,
+.list-page:not(.bookings-pms-layout) .date-input,
+.list-page:not(.bookings-pms-layout) .empty-state,
+.list-page:not(.bookings-pms-layout) .loader-container p,
+.dashboard-page:not(.database-page--advanced) p,
+.dashboard-page:not(.database-page--advanced) .stat-info span,
+.dashboard-container--normal .welcome-card p,
+.dashboard-container--normal .dashboard-topbar h2,
+.dashboard-container--normal .action-btn,
+.dashboard-container--normal .stat-info h3 {
+  color: var(--app-text-normal-muted);
+}
+
+.list-page:not(.bookings-pms-layout) th,
+.list-page:not(.bookings-pms-layout) td,
+.dashboard-page:not(.database-page--advanced) th,
+.dashboard-page:not(.database-page--advanced) td,
+.dashboard-page:not(.database-page--advanced) .section-title {
+  color: var(--app-text-normal) !important;
+}
+
+.rooms-page--normal .header-content h1,
+.dashboard-container--normal .welcome-card h1 {
+  background: linear-gradient(135deg, var(--app-primary) 0%, var(--app-primary-light) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* لوحات جانبية فاتحة */
+.layout-room-panel h2,
+.layout-room-panel h3,
+.layout-room-panel label,
+.layout-room-panel p,
+.layout-room-panel span:not([class*='pill']):not([class*='badge']) {
+  color: var(--app-text);
+}
+
+table,
+.table-container table {
+  color: var(--app-text);
+}
+
+th {
+  color: var(--app-text) !important;
+}
+
+td {
+  color: var(--app-text);
+}
+
+/* أزرار متدرجة — نص أبيض */
+.login-btn,
+.btn-save-settings.primary,
+.add-btn,
+.btn.primary,
+.action-btn.primary,
+.booking-page .submit-btn,
+.mode-switch button.active,
+.mode-switch button:hover {
+  color: var(--app-on-primary) !important;
+}
+
+/* بطاقات الغرف الملونة — نص فاتح للقراءة */
+.rooms-dev-card[class*='rooms-dev-card--'],
+.rooms-dev-card[class*='rooms-dev-card--'] .rooms-dev-card-type,
+.rooms-dev-card[class*='rooms-dev-card--'] .rooms-dev-card-floor,
+.rooms-dev-card[class*='rooms-dev-card--'] .rooms-dev-card-scene,
+.rooms-dev-card[class*='rooms-dev-card--'] .rooms-dev-card-top,
+.rooms-dev-card[class*='rooms-dev-card--'] .rooms-dev-card-price-label,
+.rooms-dev-card[class*='rooms-dev-card--'] .rooms-dev-card-price-value,
+.rooms-dev-card[class*='rooms-dev-card--'] .rooms-dev-card-price-unit,
+.rooms-dev-card[class*='rooms-dev-card--'] .rooms-dev-card-num {
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+
+.room-card[class*='room-scene--'] .room-type,
+.room-card[class*='room-scene--'] .room-number,
+.room-card[class*='room-scene--'] .room-meta-floor,
+.room-card[class*='room-scene--'] .room-price-kicker,
+.room-card[class*='room-scene--'] .room-price-amount,
+.room-card[class*='room-scene--'] .room-price-currency,
+.room-card[class*='room-scene--'] .status-badge {
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+
+/* تبويبات حالات العرض الملونة (خارج الشريط الجانبي) */
+.rooms-dev-filter-banner .rooms-dev-tile.tone-green .rooms-dev-tile-label,
+.rooms-dev-main .rooms-dev-tile.tone-green .rooms-dev-tile-label {
+  color: inherit !important;
+}
+
+/* ── شريط حالات العرض: نص وأيقونات (الوجه) أبيض ── */
+.rooms-dev-status-rail,
+.rooms-dev-status-rail .rooms-dev-status-rail-title,
+.rooms-dev-status-rail .rooms-dev-status-rail-close,
+.rooms-dev-status-rail .rooms-dev-tile--rail,
+.rooms-dev-status-rail .rooms-dev-tile--rail .rooms-dev-tile-label,
+.rooms-dev-status-rail .rooms-dev-tile--rail .rooms-dev-tile-count,
+.rooms-dev-status-rail .rooms-dev-tile--rail i,
+.rooms-dev-status-rail .rooms-dev-tile[class*='tone-'] .rooms-dev-tile-label,
+.rooms-dev-status-rail .rooms-dev-tile[class*='tone-'] .rooms-dev-tile-count,
+.rooms-dev-status-rail .rooms-dev-tile[class*='tone-'] i,
+.rooms-dev-rail-reopen,
+.rooms-dev-rail-reopen i,
+.rooms-dev-rail-reopen-label {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.rooms-dev-status-rail .rooms-dev-tile--rail i::before,
+.rooms-dev-status-rail .rooms-dev-tile[class*='tone-'] i::before {
+  color: #ffffff !important;
+}
+
+.rooms-dev-status-rail .rooms-dev-tile--rail i,
+.rooms-dev-status-rail .rooms-dev-tile[class*='tone-'] i {
+  filter: none !important;
+}
+
+.rooms-dev-status-rail .rooms-dev-status-rail-close {
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+
+.donut {
+  display: inline-block;
+  border: 4px solid rgba(21, 101, 192, 0.12);
+  border-left-color: var(--app-primary-mid);
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: donut-spin 1.2s linear infinite;
+
+  &.centered {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.abp-logo {
+  background-repeat: no-repeat;
+}
+
+.abp-support {
+  width: 178px;
+  height: 30px;
+  background-image: url('/assets/images/getting-started/abp-support.svg');
+}
+
+.abp-community {
+  width: 215px;
+  height: 30px;
+  background-image: url('/assets/images/getting-started/abp-community.svg');
+}
+
+.abp-blog {
+  width: 142px;
+  height: 30px;
+  background-image: url('/assets/images/getting-started/abp-blog.svg');
+}
+
+.logo-x {
+  width: 20px;
+  height: 20px;
+  background-image: url('/assets/images/getting-started/x.svg');
+}

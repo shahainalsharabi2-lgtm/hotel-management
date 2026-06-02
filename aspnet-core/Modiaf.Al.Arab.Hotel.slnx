@@ -1,0 +1,35 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Modiaf.Al.Arab.Hotel.Application.Contracts/Modiaf.Al.Arab.Hotel.Application.Contracts.csproj" />
+    <Project Path="src/Modiaf.Al.Arab.Hotel.Application/Modiaf.Al.Arab.Hotel.Application.csproj" />
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <Project Path="src/Modiaf.Al.Arab.Hotel.DbMigrator/Modiaf.Al.Arab.Hotel.DbMigrator.csproj" />
+    <Project Path="src/Modiaf.Al.Arab.Hotel.Domain.Shared/Modiaf.Al.Arab.Hotel.Domain.Shared.csproj" />
+    <Project Path="src/Modiaf.Al.Arab.Hotel.Domain/Modiaf.Al.Arab.Hotel.Domain.csproj" />
+    <Project Path="src/Modiaf.Al.Arab.Hotel.EntityFrameworkCore/Modiaf.Al.Arab.Hotel.EntityFrameworkCore.csproj" />
+    <Project Path="src/Modiaf.Al.Arab.Hotel.HttpApi.Client/Modiaf.Al.Arab.Hotel.HttpApi.Client.csproj" />
+    
+    <Project Path="src/Modiaf.Al.Arab.Hotel.HttpApi.Host/Modiaf.Al.Arab.Hotel.HttpApi.Host.csproj" />
+    <Project Path="src/Modiaf.Al.Arab.Hotel.HttpApi/Modiaf.Al.Arab.Hotel.HttpApi.csproj" />
+    
+    
+    
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/Modiaf.Al.Arab.Hotel.Application.Tests/Modiaf.Al.Arab.Hotel.Application.Tests.csproj" />
+    <Project Path="test/Modiaf.Al.Arab.Hotel.Domain.Tests/Modiaf.Al.Arab.Hotel.Domain.Tests.csproj" />
+    <Project Path="test/Modiaf.Al.Arab.Hotel.EntityFrameworkCore.Tests/Modiaf.Al.Arab.Hotel.EntityFrameworkCore.Tests.csproj" />
+    <Project Path="test/Modiaf.Al.Arab.Hotel.HttpApi.Client.ConsoleTestApp/Modiaf.Al.Arab.Hotel.HttpApi.Client.ConsoleTestApp.csproj" />
+    
+    <Project Path="test/Modiaf.Al.Arab.Hotel.TestBase/Modiaf.Al.Arab.Hotel.TestBase.csproj" />
+    
+  </Folder>
+</Solution>

@@ -1,0 +1,1010 @@
+<div class="settings-container">
+
+  <!-- â•گâ•گ LOGIN OVERLAY â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ -->
+  <div *ngIf="!isAuthorized" class="login-overlay">
+    <div class="login-background">
+      <div class="blob blob-1"></div>
+      <div class="blob blob-2"></div>
+    </div>
+
+    <div class="login-card">
+      <div class="login-header">
+        <div class="icon-box">
+          <i class="fas fa-shield-alt"></i>
+        </div>
+        <h2>{{ hotelBranding.displayName() || uiTranslations.screenText('settings', 'loginTitle') }}</h2>
+        <p>{{ uiTranslations.screenText('settings', 'loginPrompt') }}</p>
+      </div>
+
+      <div class="login-form">
+        <div class="input-container input-container--password">
+          <i class="fas fa-lock input-icon"></i>
+          <input
+            [type]="showLoginPassword ? 'text' : 'password'"
+            [(ngModel)]="inputPassword"
+            (keyup.enter)="verifyPassword()"
+            [placeholder]="uiTranslations.screenText('settings', 'passwordPh')"
+            autofocus
+            autocomplete="current-password" />
+          <button
+            type="button"
+            class="password-toggle"
+            (click)="toggleLoginPasswordVisible()"
+            [attr.aria-label]="
+              showLoginPassword
+                ? uiTranslations.screenText('settings', 'toggleHidePassword')
+                : uiTranslations.screenText('settings', 'toggleShowPassword')
+            "
+            [attr.title]="
+              showLoginPassword
+                ? uiTranslations.screenText('settings', 'toggleHidePassword')
+                : uiTranslations.screenText('settings', 'toggleShowPassword')
+            ">
+            <i class="fas" [class.fa-eye]="!showLoginPassword" [class.fa-eye-slash]="showLoginPassword" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        <div class="error-message" *ngIf="passwordError">
+          <i class="fas fa-exclamation-triangle"></i>
+          {{ passwordError }}
+        </div>
+
+        <button class="login-btn" (click)="verifyPassword()">
+          <i class="fas fa-sign-in-alt"></i>
+          <span>{{ uiTranslations.screenText('settings', 'loginBtn') }}</span>
+        </button>
+      </div>
+
+      <div class="login-footer">
+        <p>© 2026 {{ hotelBranding.displayName() }} — {{ uiTranslations.screenText('settings', 'loginFooter') }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- تأكيد كلمة المرور قبل حفظ / إضافة / تعديل / حذف -->
+  <div
+    *ngIf="isAuthorized && passwordGateOpen"
+    class="password-gate-overlay"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="uiTranslations.screenText('settings', 'loginTitle')">
+    <div class="password-gate-card">
+      <h3>{{ uiTranslations.screenText('settings', 'loginTitle') }}</h3>
+      <p>{{ uiTranslations.screenText('settings', 'loginPrompt') }}</p>
+      <div class="input-container input-container--password">
+        <i class="fas fa-lock input-icon"></i>
+        <input
+          [type]="showPasswordGateVisible ? 'text' : 'password'"
+          [(ngModel)]="passwordGateInput"
+          (keyup.enter)="confirmPasswordGate()"
+          [placeholder]="uiTranslations.screenText('settings', 'passwordPh')"
+          autofocus
+          autocomplete="current-password" />
+        <button
+          type="button"
+          class="password-toggle"
+          (click)="togglePasswordGateVisible()"
+          [attr.aria-label]="
+            showPasswordGateVisible
+              ? uiTranslations.screenText('settings', 'toggleHidePassword')
+              : uiTranslations.screenText('settings', 'toggleShowPassword')
+          ">
+          <i class="fas" [class.fa-eye]="!showPasswordGateVisible" [class.fa-eye-slash]="showPasswordGateVisible" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div class="error-message" *ngIf="passwordGateError">
+        <i class="fas fa-exclamation-triangle"></i>
+        {{ passwordGateError }}
+      </div>
+      <div class="password-gate-actions">
+        <button type="button" class="password-gate-btn password-gate-btn--muted" (click)="cancelPasswordGate()">
+          {{ uiTranslations.screenText('settings', 'cancelBtn') }}
+        </button>
+        <button type="button" class="password-gate-btn password-gate-btn--primary" (click)="confirmPasswordGate()">
+          <i class="fas fa-check" aria-hidden="true"></i>
+          {{ uiTranslations.screenText('settings', 'settingsConfirmBtn') }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- â•گâ•گ SETTINGS MAIN â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ -->
+  <div class="settings-main" *ngIf="isAuthorized">
+    <div class="settings-content">
+      <header class="settings-toolbar">
+        <button type="button" class="btn-save-settings primary" (click)="saveSettings()">
+          <i class="fas fa-save" aria-hidden="true"></i>
+          {{ uiTranslations.screenText('settings', 'saveChanges') }}
+        </button>
+      </header>
+
+      <!-- â•گâ•گâ•گ GENERAL TAB â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ -->
+      <div class="tab-content hotel-info-tab" *ngIf="activeTab === 'general'">
+        <div class="content-header">
+          <h2>
+            <i class="fas fa-hotel" style="color:var(--app-primary-mid);margin-left:10px"></i>
+            {{ uiTranslations.screenText('settings', 'generalTitle') }}
+          </h2>
+          <p>{{ uiTranslations.screenText('settings', 'generalSubtitle') }}</p>
+          <p class="locale-editing-hint">
+            {{ uiTranslations.screenText('settings', 'generalEditingLocaleHint') }}:
+            <strong>{{ displayLocaleLabel() }}</strong>
+          </p>
+        </div>
+
+        <div class="hotel-info-card settings-frame full-width">
+          <div class="hotel-info-grid">
+            <div class="field-group">
+              <label>{{ uiTranslations.screenText('settings', 'fieldHotelName') }}</label>
+              <div class="input-wrapper">
+                <i class="fas fa-building"></i>
+                <input type="text" [(ngModel)]="hotelBranding.activeProfile().hotelName"
+                  [placeholder]="uiTranslations.screenText('settings', 'phHotelName')" />
+              </div>
+            </div>
+            <div class="field-group full-span">
+              <label>{{ uiTranslations.screenText('settings', 'fieldAddress') }}</label>
+              <div class="input-wrapper">
+                <i class="fas fa-map-marker-alt"></i>
+                <input type="text" [(ngModel)]="hotelBranding.activeProfile().hotelAddress"
+                  [placeholder]="uiTranslations.screenText('settings', 'phAddress')" />
+              </div>
+            </div>
+
+            <div class="hotel-info-section-label full-span">
+              <i class="fas fa-address-book"></i>
+              {{ uiTranslations.screenText('settings', 'generalSectionContact') }}
+            </div>
+
+            <div class="field-group">
+              <label>{{ uiTranslations.screenText('settings', 'fieldLandline') }}</label>
+              <div class="input-wrapper">
+                <i class="fas fa-phone"></i>
+                <input type="tel" [(ngModel)]="hotelBranding.activeProfile().hotelLandline" dir="ltr"
+                  [placeholder]="uiTranslations.screenText('settings', 'phLandline')" />
+              </div>
+              <small class="hint">{{ uiTranslations.screenText('settings', 'hintLandline') }}</small>
+            </div>
+            <div class="field-group">
+              <label>{{ uiTranslations.screenText('settings', 'fieldMobile') }}</label>
+              <div class="input-wrapper">
+                <i class="fas fa-mobile-alt"></i>
+                <input type="tel" [(ngModel)]="hotelBranding.activeProfile().hotelMobile" dir="ltr"
+                  [placeholder]="uiTranslations.screenText('settings', 'phMobile')" />
+              </div>
+              <small class="hint">{{ uiTranslations.screenText('settings', 'hintMobile') }}</small>
+            </div>
+            <div class="field-group full-span">
+              <label>{{ uiTranslations.screenText('settings', 'fieldEmail') }}</label>
+              <div class="input-wrapper">
+                <i class="fas fa-envelope"></i>
+                <input type="email" [(ngModel)]="hotelBranding.activeProfile().hotelEmail" dir="ltr"
+                  [placeholder]="uiTranslations.screenText('settings', 'phEmail')" />
+              </div>
+              <small class="hint">{{ uiTranslations.screenText('settings', 'hintEmail') }}</small>
+            </div>
+
+            <div class="field-group full-span hotel-info-image-block">
+              <label>{{ uiTranslations.screenText('settings', 'fieldImage') }}</label>
+              <div class="hotel-image-upload">
+                <div class="hotel-image-preview-wrap" *ngIf="hotelImageDataUrl">
+                  <img [src]="hotelImageDataUrl" alt="" class="hotel-image-preview-oval" />
+                </div>
+                <div class="hotel-image-preview-placeholder" *ngIf="!hotelImageDataUrl">
+                  <i class="fas fa-image"></i>
+                </div>
+                <div class="hotel-image-actions">
+                  <label class="hotel-image-pick-btn">
+                    <i class="fas fa-upload"></i>
+                    {{ uiTranslations.screenText('settings', 'chooseImage') }}
+                    <input type="file" accept="image/*" (change)="onHotelImageSelected($event)" hidden />
+                  </label>
+                  <button type="button" class="ghost-btn-small" *ngIf="hotelImageDataUrl" (click)="removeHotelImage()">
+                    {{ uiTranslations.screenText('settings', 'removeImage') }}
+                  </button>
+                </div>
+              </div>
+              <small class="hint">{{ uiTranslations.screenText('settings', 'hintImage') }}</small>
+            </div>
+
+            <div class="hotel-info-section-label full-span">
+              <i class="fas fa-lock"></i>
+              {{ uiTranslations.screenText('settings', 'generalSectionSecurity') }}
+            </div>
+
+            <div class="field-group full-span">
+              <label>{{ uiTranslations.screenText('settings', 'fieldSettingsPassword') }}</label>
+              <div class="input-wrapper input-wrapper--password">
+                <i class="fas fa-key"></i>
+                <input
+                  [type]="showSettingsPassword ? 'text' : 'password'"
+                  [(ngModel)]="password"
+                  maxlength="128"
+                  [placeholder]="uiTranslations.screenText('settings', 'phPassword')"
+                  autocomplete="new-password" />
+                <button
+                  type="button"
+                  class="password-toggle"
+                  (click)="toggleSettingsPasswordVisible()"
+                  [attr.aria-label]="
+                    showSettingsPassword
+                      ? uiTranslations.screenText('settings', 'toggleHidePassword')
+                      : uiTranslations.screenText('settings', 'toggleShowPassword')
+                  ">
+                  <i class="fas" [class.fa-eye]="!showSettingsPassword" [class.fa-eye-slash]="showSettingsPassword" aria-hidden="true"></i>
+                </button>
+              </div>
+              <small class="hint">{{ uiTranslations.screenText('settings', 'hintPassword') }}</small>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="tab-content hotel-layout-tab" *ngIf="activeTab === 'layout'">
+        <div class="content-header">
+          <h2><i class="fas fa-door-open" style="color:var(--app-primary-mid);margin-left:10px"></i>{{ uiTranslations.screenText('settings', 'layoutTitle') }}</h2>
+          <p>{{ uiTranslations.screenText('settings', 'layoutSubtitle') }}</p>
+        </div>
+
+        <div class="layout-hero">
+          <div class="layout-hero-stat">
+            <span class="layout-hero-val">{{ rooms.length }}</span>
+            <span class="layout-hero-lbl">{{ uiTranslations.screenText('settings', 'totalRooms') }}</span>
+          </div>
+          <div class="layout-hero-stat" *ngFor="let st of layoutStatusOptions">
+            <span class="layout-hero-val" [ngClass]="'tone-' + st.tone">{{ layoutStatusCount(st.value) }}</span>
+            <span class="layout-hero-lbl">{{ uiTranslations.screenText('settings', st.labelKey) }}</span>
+          </div>
+        </div>
+
+        <div class="layout-toolbar layout-glass">
+          <div class="layout-toolbar-add">
+            <span class="layout-toolbar-kicker">{{ uiTranslations.screenText('settings', 'addFloor') }}</span>
+            <div class="form-grid compact layout-toolbar-row">
+              <div class="field-group compact-field">
+                <label>{{ uiTranslations.screenText('settings', 'floorLabel') }}</label>
+                <input type="number" [(ngModel)]="newFloorLevel" min="1" />
+              </div>
+              <div class="field-group compact-field">
+                <label>{{ uiTranslations.screenText('settings', 'capacityLabel') }}</label>
+                <input type="number" [(ngModel)]="newFloorRoomsCount" min="1" />
+              </div>
+              <button type="button" class="action-btn layout-add-floor-btn" (click)="addFloor()">
+                <i class="fas fa-layer-group"></i>
+                {{ uiTranslations.screenText('settings', 'addFloor') }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="layout-status-bar">
+          <span class="layout-status-bar-title">{{ uiTranslations.screenText('settings', 'statusLegend') }}</span>
+          <div class="layout-status-chips">
+            <button type="button" class="layout-status-chip" [class.layout-status-chip--active]="layoutStatusFilter === 'all'" (click)="setLayoutStatusFilter('all')">
+              {{ uiTranslations.screenText('settings', 'filterAll') }} <em>{{ rooms.length }}</em>
+            </button>
+            <button type="button" *ngFor="let st of layoutStatusOptions" class="layout-status-chip" [ngClass]="['tone-' + st.tone, layoutStatusFilter === st.value ? 'layout-status-chip--active' : '']" (click)="setLayoutStatusFilter(st.value)">
+              <i class="fas" [ngClass]="st.icon"></i> {{ uiTranslations.screenText('settings', st.labelKey) }} <em>{{ layoutStatusCount(st.value) }}</em>
+            </button>
+          </div>
+        </div>
+        <div *ngIf="floors.length === 0" class="empty-state layout-empty">
+          <i class="fas fa-building"></i>
+          <p>{{ uiTranslations.screenText('settings', 'emptyLayout') }}</p>
+        </div>
+
+        <div class="hotel-layout-stack" *ngIf="floors.length > 0">
+          <section class="hotel-floor-block" *ngFor="let floor of sortedFloors()">
+            <header class="hotel-floor-head">
+              <div class="hotel-floor-title">
+                <span class="hotel-floor-badge">{{ floor.level }}</span>
+                <div>
+                  <strong>{{ uiTranslations.screenText('settings', 'floorLabel') }} {{ floor.level }}</strong>
+                  <small>{{ getRoomCountForFloor(floor.level) }} / {{ floor.roomsCount }} {{ uiTranslations.screenText('settings', 'roomsOnFloor') }}</small>
+                </div>
+              </div>
+              <div class="hotel-floor-head-actions" *ngIf="editingFloorId !== floor.id">
+                <button type="button" class="ghost-btn-small" (click)="openLayoutNewRoomPanel(floor)">
+                  <i class="fas fa-plus"></i> {{ uiTranslations.screenText('settings', 'addRoom') }}
+                </button>
+                <button type="button" class="btn-icon-edit" (click)="editFloor(floor)" [title]="uiTranslations.screenText('settings', 'editBtn')">
+                  <i class="fas fa-pen"></i>
+                </button>
+                <button type="button" class="btn-icon-delete" (click)="floor.id && deleteFloor(floor.id)" [title]="uiTranslations.screenText('settings', 'deleteBtn')">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </div>
+              <div class="floor-edit-inline" *ngIf="editingFloorId === floor.id">
+                <input type="number" [(ngModel)]="editingFloorRoomsCount" [title]="uiTranslations.screenText('settings', 'floorRoomsCountTitle')" />
+                <button type="button" (click)="updateFloor()" class="btn-mini-save"><i class="fas fa-check"></i></button>
+                <button type="button" (click)="cancelFloorEdit()" class="btn-mini-cancel"><i class="fas fa-times"></i></button>
+              </div>
+            </header>
+
+            <div class="hotel-floor-meta">
+              <div class="hotel-floor-progress">
+                <div class="hotel-floor-progress-bar" [style.width.%]="floorOccupancyPercent(floor)"></div>
+              </div>
+              <span class="hotel-floor-progress-label">{{ floorOccupancyPercent(floor) }}%</span>
+            </div>
+
+            <div class="hotel-rooms-grid" *ngIf="filteredRoomsForFloor(floor.level).length > 0 || layoutStatusFilter === 'all'">
+              <article
+                class="hotel-room-card"
+                *ngFor="let room of filteredRoomsForFloor(floor.level)"
+                [ngClass]="room.status"
+                (click)="openLayoutRoomPanel(room)">
+                <header class="hotel-room-card-top">
+                  <span class="hotel-room-num">{{ room.roomNumber }}</span>
+                  <span class="hotel-room-status status-pill" [ngClass]="room.status">{{ roomStatusLabel(room.status) }}</span>
+                </header>
+                <p class="hotel-room-type">{{ uiTranslations.roomTypeLabel(room.type) }}</p>
+                <p class="hotel-room-price">{{ room.price | number }} {{ roomPriceSymbol(room) }}</p>
+                <div class="hotel-room-quick" (click)="$event.stopPropagation()">
+                  <span class="hotel-room-quick-label">{{ uiTranslations.screenText('settings', 'quickStatus') }}</span>
+                  <div class="hotel-room-quick-btns">
+                    <button
+                      type="button"
+                      *ngFor="let st of layoutStatusOptions"
+                      class="hotel-room-quick-btn"
+                      [ngClass]="['tone-' + st.tone, room.status === st.value ? 'is-active' : '']"
+                      [title]="uiTranslations.screenText('settings', st.labelKey)"
+                      (click)="quickUpdateRoomStatus(room, st.value, $event)">
+                      <i class="fas" [ngClass]="st.icon"></i>
+                    </button>
+                  </div>
+                </div>
+              </article>
+              <button
+                type="button"
+                class="hotel-room-card hotel-room-card--add"
+                *ngIf="layoutStatusFilter === 'all'"
+                (click)="openLayoutNewRoomPanel(floor)">
+                <i class="fas fa-plus"></i>
+                <span>{{ uiTranslations.screenText('settings', 'clickToAddRoom') }}</span>
+              </button>
+            </div>
+            <p class="layout-floor-filter-empty" *ngIf="filteredRoomsForFloor(floor.level).length === 0 && layoutStatusFilter !== 'all'">
+              {{ uiTranslations.screenText('settings', 'filterEmpty') }}
+            </p>
+          </section>
+        </div>
+
+        <div class="layout-panel-backdrop" *ngIf="layoutPanelOpen" (click)="closeLayoutPanel()"></div>
+        <aside class="layout-room-panel" *ngIf="layoutPanelOpen" (click)="$event.stopPropagation()">
+          <header class="layout-room-panel-head">
+            <h3>
+              {{ layoutPanelIsNew
+                ? uiTranslations.screenText('settings', 'newRoomPanelTitle')
+                : uiTranslations.screenText('settings', 'roomPanelTitle') }}
+            </h3>
+            <button type="button" class="btn-icon-cancel" (click)="closeLayoutPanel()" [attr.aria-label]="uiTranslations.screenText('settings', 'closePanel')">
+              <i class="fas fa-times"></i>
+            </button>
+          </header>
+          <div class="layout-room-panel-body">
+            <div class="field-group">
+              <label>{{ uiTranslations.screenText('settings', 'roomNumber') }}</label>
+              <input type="text" [(ngModel)]="layoutPanelRoomNumber" placeholder="101" />
+            </div>
+            <div class="field-group">
+              <label>{{ uiTranslations.screenText('settings', 'floorLabel') }}</label>
+              <select [(ngModel)]="layoutPanelFloorLevel">
+                <option *ngFor="let f of floors" [ngValue]="f.level">{{ f.level }}</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label>{{ uiTranslations.screenText('settings', 'roomType') }}</label>
+              <input type="text" [(ngModel)]="layoutPanelRoomType" list="layout-room-types" />
+              <datalist id="layout-room-types">
+                <option *ngFor="let t of roomTypeOptions" [value]="t"></option>
+              </datalist>
+            </div>
+            <div class="field-group">
+              <label>{{ uiTranslations.screenText('settings', 'roomPrice') }}</label>
+              <div class="input-wrapper input-wrapper--price">
+                <i class="fas fa-money-bill-wave" aria-hidden="true"></i>
+                <input type="number" [(ngModel)]="layoutPanelRoomPrice" min="0" step="1" />
+                <span class="input-currency-suffix" dir="ltr" [attr.title]="layoutPanelCurrencySymbol()">{{
+                  layoutPanelCurrencySymbol()
+                }}</span>
+              </div>
+            </div>
+            <div class="field-group layout-status-field">
+              <label>{{ uiTranslations.screenText('settings', 'roomStatus') }}</label>
+              <p class="layout-status-hint">{{ uiTranslations.screenText('settings', 'statusPickerHint') }}</p>
+              <div class="layout-status-picker">
+                <button
+                  type="button"
+                  *ngFor="let st of layoutStatusOptions"
+                  class="layout-status-pick"
+                  [ngClass]="['tone-' + st.tone, layoutPanelRoomStatus === st.value ? 'layout-status-pick--active' : '']"
+                  (click)="selectLayoutPanelStatus(st.value)">
+                  <i class="fas" [ngClass]="st.icon"></i>
+                  <span>{{ uiTranslations.screenText('settings', st.labelKey) }}</span>
+                </button>
+              </div>
+              <button
+                type="button"
+                class="layout-suspend-cta"
+                [class.layout-suspend-cta--active]="layoutPanelRoomStatus === 'suspended'"
+                (click)="selectLayoutPanelStatus('suspended')">
+                <i class="fas fa-hand-paper"></i>
+                {{ uiTranslations.screenText('settings', 'suspendRoom') }}
+              </button>
+            </div>
+          </div>
+          <footer class="layout-room-panel-foot">
+            <button type="button" class="action-btn" (click)="saveLayoutPanelRoom()">
+              <i class="fas fa-save"></i> {{ uiTranslations.screenText('settings', 'saveRoom') }}
+            </button>
+            <button type="button" class="btn-icon-delete layout-delete-btn" *ngIf="!layoutPanelIsNew" (click)="deleteLayoutPanelRoom()">
+              <i class="fas fa-trash-alt"></i> {{ uiTranslations.screenText('settings', 'deleteRoom') }}
+            </button>
+          </footer>
+        </aside>
+      </div>
+
+      <!-- ═══ PAYMENTS TAB â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ -->
+      <div class="tab-content" *ngIf="activeTab === 'payments'">
+        <div class="content-header">
+          <h2><i class="fas fa-credit-card" style="color:var(--app-primary-mid);margin-left:10px"></i>{{ uiTranslations.screenText('settings', 'paymentsTitle') }}</h2>
+          <p>{{ uiTranslations.screenText('settings', 'paymentsSubtitle') }}</p>
+        </div>
+
+        <div class="settings-grid">
+          <div class="settings-frame">
+            <h3><i class="fas fa-plus"></i> {{ uiTranslations.screenText('settings', 'paymentsAddTitle') }}</h3>
+            <div class="form-grid compact">
+              <div class="field-group">
+                <label>{{ uiTranslations.screenText('settings', 'paymentsMethodName') }}</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-wallet"></i>
+                  <input type="text" [(ngModel)]="newPaymentMethod" [placeholder]="uiTranslations.screenText('settings', 'paymentsMethodPh')"
+                    (keyup.enter)="addPaymentMethod()" />
+                </div>
+              </div>
+              <button class="action-btn" (click)="addPaymentMethod()">
+                <i class="fas fa-plus"></i> {{ uiTranslations.screenText('settings', 'paymentsAddBtn') }}
+              </button>
+            </div>
+          </div>
+
+          <div class="settings-frame full-width">
+            <h3><i class="fas fa-list-ul"></i> {{ uiTranslations.screenText('settings', 'paymentsListTitle') }} ({{ paymentMethods.length }})</h3>
+            <div class="payment-methods-list">
+              <div *ngIf="paymentMethods.length === 0" class="empty-state">
+                {{ uiTranslations.screenText('settings', 'paymentsEmpty') }}
+              </div>
+              <div class="payment-method-card" *ngFor="let method of paymentMethods; let i = index">
+                <ng-container *ngIf="editingPaymentIndex !== i">
+                  <div class="method-info">
+                    <i class="fas fa-money-check-alt"></i>
+                    <span>{{ method }}</span>
+                  </div>
+                  <div class="method-actions">
+                    <button class="btn-icon-edit" (click)="editPayment(i)" [title]="uiTranslations.screenText('settings', 'editBtn')">
+                      <i class="fas fa-pen"></i>
+                    </button>
+                    <button class="btn-icon-delete" (click)="deletePaymentMethod(i)" [title]="uiTranslations.screenText('settings', 'deleteBtn')">
+                      <i class="fas fa-trash-alt"></i>
+                    </button>
+                  </div>
+                </ng-container>
+                <ng-container *ngIf="editingPaymentIndex === i">
+                  <div class="edit-mode">
+                    <input type="text" [(ngModel)]="editingPaymentValue" (keyup.enter)="updatePayment()"
+                      (keyup.escape)="cancelEdit()" autofocus />
+                    <div class="edit-actions">
+                      <button class="btn-icon-save" (click)="updatePayment()"><i class="fas fa-check"></i></button>
+                      <button class="btn-icon-cancel" (click)="cancelEdit()"><i class="fas fa-times"></i></button>
+                    </div>
+                  </div>
+                </ng-container>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- â•گâ•گâ•گ IDENTITIES TAB â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ -->
+      <div class="tab-content" *ngIf="activeTab === 'identities'">
+        <div class="content-header">
+          <h2><i class="fas fa-id-card" style="color:var(--app-primary-mid);margin-left:10px"></i>{{ uiTranslations.screenText('settings', 'identitiesTitle') }}</h2>
+          <p>{{ uiTranslations.screenText('settings', 'identitiesSubtitle') }}</p>
+        </div>
+
+        <div class="settings-grid">
+          <div class="settings-frame">
+            <h3><i class="fas fa-plus"></i> {{ uiTranslations.screenText('settings', 'identitiesAddTitle') }}</h3>
+            <div class="form-grid compact">
+              <div class="field-group">
+                <label>{{ uiTranslations.screenText('settings', 'identitiesTypeName') }}</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-id-badge"></i>
+                  <input type="text" [(ngModel)]="newIdentityTypeName" [placeholder]="uiTranslations.screenText('settings', 'identitiesTypePh')"
+                    (keyup.enter)="addIdentityType()" />
+                </div>
+              </div>
+              <button class="action-btn" type="button" (click)="addIdentityType()" [disabled]="!newIdentityTypeName.trim()">
+                <i class="fas fa-plus"></i> {{ uiTranslations.screenText('settings', 'identitiesAddBtn') }}
+              </button>
+            </div>
+          </div>
+
+          <div class="settings-frame full-width">
+            <h3><i class="fas fa-id-card-alt"></i> {{ uiTranslations.screenText('settings', 'identitiesListTitle') }} ({{ identityTypes.length }})</h3>
+            <p class="identity-types-error" *ngIf="identityTypesError">{{ identityTypesError }}</p>
+            <p class="identity-types-loading" *ngIf="identityTypesLoading">
+              <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
+              {{ uiTranslations.screenText('settings', 'identitiesLoading') }}
+            </p>
+            <div class="payment-methods-list">
+              <div *ngIf="!identityTypesLoading && identityTypes.length === 0" class="empty-state">
+                {{ uiTranslations.screenText('settings', 'identitiesEmpty') }}
+              </div>
+              <div class="payment-method-card" *ngFor="let type of identityTypes; trackBy: trackIdentityType">
+                <div class="method-info">
+                  <i class="fas fa-id-card"></i>
+                  <span>{{ type.name }}</span>
+                </div>
+                <div class="method-actions">
+                  <button
+                    type="button"
+                    class="btn-icon-delete"
+                    (click)="deleteIdentityType(type.id)"
+                    [disabled]="type.id == null"
+                    [title]="uiTranslations.screenText('settings', 'deleteBtn')">
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- â•گâ•گâ•گ GUESTS TAB â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ -->
+      <div class="tab-content" *ngIf="activeTab === 'guests'">
+        <div class="content-header">
+          <h2><i class="fas fa-user-edit" style="color:var(--app-primary-mid);margin-left:10px"></i>{{ uiTranslations.screenText('settings', 'guestsTitle') }}</h2>
+          <p>{{ uiTranslations.screenText('settings', 'guestsSubtitle') }}</p>
+        </div>
+
+        <div class="settings-grid">
+          <!-- Date Filter -->
+          <div class="settings-frame full-width">
+            <h3><i class="fas fa-filter"></i> {{ uiTranslations.screenText('settings', 'guestsFilterTitle') }}</h3>
+            <div class="form-grid compact">
+              <div class="field-group">
+                <label>{{ uiTranslations.screenText('settings', 'guestsFilterDateLabel') }}</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-calendar-alt"></i>
+                  <input type="date" [(ngModel)]="selectedGuestDate" (change)="filterGuestsByDate()" />
+                </div>
+              </div>
+              <button class="action-btn secondary" (click)="selectedGuestDate = ''; filterGuestsByDate()">
+                <i class="fas fa-sync"></i> {{ uiTranslations.screenText('settings', 'guestsShowAllBtn') }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Guests List Table -->
+          <div class="settings-frame full-width" *ngIf="!editingBooking">
+            <h3><i class="fas fa-users"></i> {{ uiTranslations.screenText('settings', 'guestsListTitle') }} ({{ filteredBookings.length }})</h3>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>{{ uiTranslations.screenText('settings', 'guestColName') }}</th>
+                    <th>{{ uiTranslations.screenText('settings', 'guestColPhone') }}</th>
+                    <th>{{ uiTranslations.screenText('settings', 'guestColRoom') }}</th>
+                    <th>{{ uiTranslations.screenText('settings', 'guestColDate') }}</th>
+                    <th>{{ uiTranslations.screenText('settings', 'guestColTime') }}</th>
+                    <th>{{ uiTranslations.screenText('settings', 'guestColActions') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let b of filteredBookings">
+                    <td>{{ b.first_Name }} {{ b.last_Name }}</td>
+                    <td>{{ b.phone_Number }}</td>
+                    <td><span class="room-badge">{{ b.room_Number }}</span></td>
+                    <td>{{ b.booking_Date }}</td>
+                    <td>{{ formatTime12h(b.booking_Time) }}</td>
+                    <td class="table-actions">
+                      <button class="btn-icon-edit" (click)="editGuest(b)" [title]="uiTranslations.screenText('settings', 'editBtn')">
+                        <i class="fas fa-pen"></i>
+                      </button>
+                      <button class="btn-icon-delete" (click)="b.id && deleteGuest(b.id)" [title]="uiTranslations.screenText('settings', 'deleteBtn')">
+                        <i class="fas fa-trash-alt"></i>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr *ngIf="filteredBookings.length === 0">
+                    <td colspan="6" class="empty-state">{{ uiTranslations.screenText('settings', 'guestsNoData') }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Edit Guest Form -->
+          <div class="settings-frame full-width" *ngIf="editingBooking">
+            <div class="frame-header">
+              <h3><i class="fas fa-edit"></i> {{ uiTranslations.screenText('settings', 'guestsEditHeader') }}: {{ editingBooking?.first_Name }}</h3>
+              <button class="close-btn" (click)="editingBooking = null">âœ•</button>
+            </div>
+            
+            <div class="form-grid">
+              <div class="field-group">
+                <label>{{ uiTranslations.screenText('settings', 'guestFirstName') }}</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-user"></i>
+                  <input type="text" [(ngModel)]="editingBooking!.first_Name" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label>{{ uiTranslations.screenText('settings', 'guestLastName') }}</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-user"></i>
+                  <input type="text" [(ngModel)]="editingBooking!.last_Name" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label>{{ uiTranslations.screenText('settings', 'guestPhone') }}</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-phone"></i>
+                  <input type="text" [(ngModel)]="editingBooking!.phone_Number" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label>{{ uiTranslations.screenText('settings', 'guestIdNumber') }}</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-id-card"></i>
+                  <input type="text" [(ngModel)]="editingBooking!.id_Number" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label>{{ uiTranslations.screenText('settings', 'guestIdType') }}</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-id-badge"></i>
+                  <select [(ngModel)]="editingBooking!.id_Type" class="select-field">
+                    <option *ngFor="let t of identityTypes" [value]="t.name">{{t.name}}</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field-group">
+                <label>{{ uiTranslations.screenText('settings', 'guestRoomNum') }}</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-door-closed"></i>
+                  <input type="text" [(ngModel)]="editingBooking!.room_Number" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label>{{ uiTranslations.screenText('settings', 'guestBookingDate') }}</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-calendar"></i>
+                  <input type="date" [(ngModel)]="editingBooking!.booking_Date" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label>{{ uiTranslations.screenText('settings', 'guestBookingTime') }}</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-clock"></i>
+                  <input type="time" [(ngModel)]="editingBooking!.booking_Time" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label>{{ uiTranslations.screenText('settings', 'guestStayDays') }}</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-calendar-day"></i>
+                  <input type="number" [(ngModel)]="editingBooking!.stay_Days" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label>{{ uiTranslations.screenText('settings', 'guestPaidAmt') }}</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-money-bill-wave"></i>
+                  <input type="number" [(ngModel)]="editingBooking!.payment_Amount" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label>{{ uiTranslations.screenText('settings', 'guestRemainingAmt') }}</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-hand-holding-usd"></i>
+                  <input type="number" [(ngModel)]="editingBooking!.remaining_Amount" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label>{{ uiTranslations.screenText('settings', 'guestTotalAmt') }}</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-calculator"></i>
+                  <input type="number" [(ngModel)]="editingBooking!.total_Price" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label>{{ uiTranslations.screenText('settings', 'guestPayMethod') }}</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-wallet"></i>
+                  <select [(ngModel)]="editingBooking!.payment_Method" class="select-field">
+                    <option *ngFor="let m of paymentMethods" [value]="m">{{m}}</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field-group">
+                <label>{{ uiTranslations.screenText('settings', 'guestStatusLabel') }}</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-info-circle"></i>
+                  <select [(ngModel)]="editingBooking!.status" class="select-field">
+                    <option value="active">{{ uiTranslations.screenText('settings', 'statusActiveLabel') }}</option>
+                    <option value="checked_out">{{ uiTranslations.screenText('settings', 'statusCheckedOutLabel') }}</option>
+                    <option value="cancelled">{{ uiTranslations.screenText('settings', 'statusCancelledLabel') }}</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="frame-footer">
+              <button class="action-btn" (click)="updateGuest()">
+                <i class="fas fa-check"></i> {{ uiTranslations.screenText('settings', 'saveEditsBtn') }}
+              </button>
+              <button class="action-btn secondary" (click)="editingBooking = null">
+                {{ uiTranslations.screenText('settings', 'cancelBtn') }}
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="tab-content currency-tab" *ngIf="activeTab === 'currency'">
+        <div class="content-header">
+          <h2>
+            <i class="fas fa-coins" style="color:var(--app-primary-mid);margin-left:10px"></i>
+            {{ uiTranslations.screenText('settings', 'currencyTitle') }}
+          </h2>
+          <p>{{ uiTranslations.screenText('settings', 'currencySubtitle') }}</p>
+        </div>
+
+        <div class="currency-preview-card">
+          <div
+            class="currency-coin currency-coin--preview"
+            [ngClass]="'currency-coin--' + selectedCurrencyId.toLowerCase()"
+            aria-hidden="true">
+            <div class="currency-coin__ring">
+              <span class="currency-coin__ring-code" dir="ltr">{{ hotelCurrency.code() }}</span>
+              <span class="currency-coin__ring-engrave">{{ activeCurrencyEngrave() }}</span>
+            </div>
+            <div class="currency-coin__face">
+              <span class="currency-coin__flag">{{ activeCurrencyFlag() }}</span>
+              <span class="currency-coin__symbol" dir="ltr">{{ hotelCurrency.symbol() }}</span>
+            </div>
+          </div>
+          <div class="currency-preview-copy">
+            <div class="currency-preview-label">
+              <i class="fas fa-eye"></i>
+              {{ uiTranslations.screenText('settings', 'currencyPreviewLabel') }}
+            </div>
+            <div class="currency-preview-amount">{{ currencyPreviewAmount() }}</div>
+            <span class="currency-preview-badge">
+              <i class="fas fa-check-circle"></i>
+              {{ uiTranslations.screenText('settings', 'currencyActiveBadge') }}:
+              <strong>{{ hotelCurrency.symbol() }}</strong>
+              <em dir="ltr">({{ hotelCurrency.code() }})</em>
+            </span>
+          </div>
+        </div>
+
+        <p class="hint currency-pick-hint">{{ uiTranslations.screenText('settings', 'currencyPickHint') }}</p>
+
+        <div class="currency-grid">
+          <button
+            type="button"
+            class="currency-card"
+            *ngFor="let opt of currencyPresets"
+            [class.currency-card--active]="selectedCurrencyId === opt.id"
+            [attr.aria-pressed]="selectedCurrencyId === opt.id"
+            [attr.aria-label]="opt.nameAr"
+            (click)="selectCurrencyPreset(opt.id)">
+            <div
+              class="currency-coin"
+              [class]="'currency-coin currency-coin--' + opt.id.toLowerCase()"
+              aria-hidden="true">
+              <div class="currency-coin__ring">
+                <span class="currency-coin__ring-code" dir="ltr">{{ opt.code }}</span>
+                <span class="currency-coin__ring-engrave">{{ opt.engraveAr }}</span>
+              </div>
+              <div class="currency-coin__face">
+                <span class="currency-coin__flag">{{ opt.flag }}</span>
+                <span class="currency-coin__symbol" dir="ltr">{{ opt.symbol }}</span>
+              </div>
+            </div>
+            <span class="currency-card-name">{{ opt.nameAr }}</span>
+            <span class="currency-card-code" dir="ltr">{{ opt.code }}</span>
+            <i class="fas fa-check-circle currency-card-check" *ngIf="selectedCurrencyId === opt.id"></i>
+          </button>
+
+          <button
+            type="button"
+            class="currency-card currency-card--custom"
+            [class.currency-card--active]="selectedCurrencyId === currencyCustomId"
+            [attr.aria-pressed]="selectedCurrencyId === currencyCustomId"
+            (click)="selectCurrencyPreset(currencyCustomId)">
+            <div class="currency-coin currency-coin--custom" aria-hidden="true">
+              <div class="currency-coin__ring">
+                <span class="currency-coin__ring-code" dir="ltr">{{ currencyCustomCode || 'CUSTOM' }}</span>
+                <span class="currency-coin__ring-engrave">{{
+                  uiTranslations.screenText('settings', 'currencyCustomTitle')
+                }}</span>
+              </div>
+              <div class="currency-coin__face">
+                <span class="currency-coin__flag currency-coin__flag--icon"><i class="fas fa-sliders-h"></i></span>
+                <span class="currency-coin__symbol" dir="ltr">{{ currencyCustomSymbol || '?' }}</span>
+              </div>
+            </div>
+            <span class="currency-card-name">{{ uiTranslations.screenText('settings', 'currencyCustomTitle') }}</span>
+            <span class="currency-card-code" dir="ltr">{{ currencyCustomCode || 'CUSTOM' }}</span>
+            <i class="fas fa-check-circle currency-card-check" *ngIf="selectedCurrencyId === currencyCustomId"></i>
+          </button>
+        </div>
+
+        <div class="settings-frame currency-custom-panel" *ngIf="selectedCurrencyId === currencyCustomId">
+          <h3><i class="fas fa-pen-fancy"></i> {{ uiTranslations.screenText('settings', 'currencyCustomTitle') }}</h3>
+          <p class="hint">{{ uiTranslations.screenText('settings', 'currencyCustomHelp') }}</p>
+          <div class="form-grid compact">
+            <div class="field-group">
+              <label>{{ uiTranslations.screenText('settings', 'currencyCustomSymbol') }}</label>
+              <div class="input-wrapper">
+                <i class="fas fa-tag"></i>
+                <input
+                  type="text"
+                  [(ngModel)]="currencyCustomSymbol"
+                  (ngModelChange)="applyCustomCurrencyFields()"
+                  maxlength="16"
+                  dir="ltr"
+                  [placeholder]="uiTranslations.screenText('settings', 'currencyCodeHint')" />
+              </div>
+            </div>
+            <div class="field-group">
+              <label>{{ uiTranslations.screenText('settings', 'currencyCustomCode') }}</label>
+              <div class="input-wrapper">
+                <i class="fas fa-barcode"></i>
+                <input
+                  type="text"
+                  [(ngModel)]="currencyCustomCode"
+                  (ngModelChange)="applyCustomCurrencyFields()"
+                  maxlength="16"
+                  dir="ltr"
+                  placeholder="CUSTOM" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" *ngIf="activeTab === 'translations'">
+        <app-general-codes [embedded]="true" />
+      </div>
+
+      <div class="tab-content" *ngIf="activeTab === 'uiTranslations'">
+        <div class="content-header">
+          <h2>
+            <i class="fas fa-language" style="color:var(--app-primary-mid);margin-left:10px"></i>
+            {{ uiTranslations.screenText('settings', 'uiTranslationsTitle') }}
+          </h2>
+          <p>{{ uiTranslations.screenText('settings', 'uiTranslationsSubtitle') }}</p>
+        </div>
+
+        <div class="settings-frame full-width">
+          <div class="form-grid compact">
+            <div class="field-group">
+              <label>{{ uiTranslations.screenText('settings', 'uiTranslationsSearchLabel') }}</label>
+              <div class="input-wrapper">
+                <i class="fas fa-search"></i>
+                <input
+                  type="search"
+                  class="select-field"
+                  [(ngModel)]="uiTranslationsSearch"
+                  (ngModelChange)="uiTranslationsAutoOpenMatchingScreens()"
+                  [placeholder]="uiTranslations.screenText('settings', 'uiTranslationsSearchPh')" />
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label>{{ uiTranslations.screenText('settings', 'uiTranslationsActions') }}</label>
+              <div class="frame-footer" style="justify-content:flex-start;gap:10px;margin:0;">
+                <button type="button" class="action-btn secondary" (click)="reloadUiTranslationsFromBackend()">
+                  <i class="fas fa-rotate"></i>
+                  {{ uiTranslations.screenText('settings', 'uiTranslationsReload') }}
+                </button>
+                <button type="button" class="action-btn" (click)="saveUiTranslationsForm()" [disabled]="uiTranslationsSaving">
+                  <i class="fas fa-save"></i>
+                  {{ uiTranslationsSaving ? uiTranslations.screenText('settings', 'uiTranslationsSaving') : uiTranslations.screenText('settings', 'uiTranslationsSave') }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="error-message" *ngIf="uiTranslationsError">
+            <i class="fas fa-exclamation-triangle"></i>
+            {{ uiTranslationsError }}
+          </div>
+
+          <div *ngIf="uiTranslationsLoading" class="hint">
+            {{ uiTranslations.screenText('bookings', 'loading') }}
+          </div>
+
+          <ng-container *ngIf="!uiTranslationsLoading && uiTranslationsForm && uiTranslationsReferenceAr">
+            <div class="ui-tr-section">
+              <h3 class="ui-tr-section__title">{{ uiTranslations.screenText('settings', 'uiTranslationsBrandSubtitle') }}</h3>
+              <div class="ui-tr-row" *ngIf="uiTranslationsMatchesText('brandSubtitle', uiTranslationsReferenceAr.brandSubtitle, uiTranslationsForm.brandSubtitle)">
+                <div class="ui-tr-cell ui-tr-cell--ar">{{ uiTranslationsReferenceAr.brandSubtitle }}</div>
+                <div class="ui-tr-cell ui-tr-cell--input">
+                  <input class="ui-tr-input" type="text" [(ngModel)]="uiTranslationsForm.brandSubtitle" />
+                </div>
+              </div>
+            </div>
+
+            <div class="ui-tr-section">
+              <h3 class="ui-tr-section__title">{{ uiTranslations.screenText('settings', 'uiTranslationsSidebarNav') }}</h3>
+              <div class="ui-tr-table">
+                <div
+                  class="ui-tr-row"
+                  *ngFor="let k of uiTranslationsSidebarKeys()"
+                  [class.ui-tr-row--hidden]="!uiTranslationsMatchesText(k, uiTranslationsReferenceAr.sidebarNav?.[k], uiTranslationsForm.sidebarNav?.[k])">
+                  <div class="ui-tr-cell ui-tr-cell--ar">{{ uiTranslationsReferenceAr.sidebarNav?.[k] }}</div>
+                  <div class="ui-tr-cell ui-tr-cell--input">
+                    <input class="ui-tr-input" type="text" [(ngModel)]="uiTranslationsForm.sidebarNav![k]" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="ui-tr-section">
+              <h3 class="ui-tr-section__title">{{ uiTranslations.screenText('settings', 'uiTranslationsChrome') }}</h3>
+              <div class="ui-tr-table">
+                <div
+                  class="ui-tr-row"
+                  *ngFor="let k of uiTranslationsChromeKeys()"
+                  [class.ui-tr-row--hidden]="!uiTranslationsMatchesText(k, uiTranslationsReferenceAr.chrome?.[k], uiTranslationsForm.chrome?.[k])">
+                  <div class="ui-tr-cell ui-tr-cell--ar">{{ uiTranslationsReferenceAr.chrome?.[k] }}</div>
+                  <div class="ui-tr-cell ui-tr-cell--input">
+                    <input class="ui-tr-input" type="text" [(ngModel)]="uiTranslationsForm.chrome![k]" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="ui-tr-section">
+              <h3 class="ui-tr-section__title">{{ uiTranslations.screenText('settings', 'uiTranslationsScreens') }}</h3>
+              <div class="ui-tr-screens">
+                <div
+                  class="ui-tr-screen"
+                  *ngFor="let screenId of uiTranslationsScreenIds()"
+                  [class.ui-tr-row--hidden]="!uiTranslationsScreenHasMatch(screenId)">
+                  <button type="button" class="ui-tr-screen__head" (click)="toggleUiTranslationsScreen(screenId)">
+                    <span class="ui-tr-screen__title">
+                      {{ uiTranslationsScreenLabel(screenId) }}
+                      <small class="ui-tr-screen__key" dir="ltr">{{ screenId }}</small>
+                    </span>
+                    <i class="fas" [class.fa-chevron-up]="uiTranslationsScreenOpen(screenId)" [class.fa-chevron-down]="!uiTranslationsScreenOpen(screenId)"></i>
+                  </button>
+                  <div class="ui-tr-table" *ngIf="uiTranslationsScreenOpen(screenId)">
+                    <div
+                      class="ui-tr-row"
+                      *ngFor="let mk of uiTranslationsScreenMsgKeys(screenId)"
+                      [class.ui-tr-row--hidden]="!uiTranslationsMatchesText(mk, uiTranslationsReferenceAr.screenCopy?.[screenId]?.[mk], uiTranslationsForm.screenCopy?.[screenId]?.[mk])">
+                      <div class="ui-tr-cell ui-tr-cell--ar">{{ uiTranslationsReferenceAr.screenCopy?.[screenId]?.[mk] }}</div>
+                      <div class="ui-tr-cell ui-tr-cell--input">
+                        <input class="ui-tr-input" type="text" [(ngModel)]="uiTranslationsForm.screenCopy![screenId][mk]" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

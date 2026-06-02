@@ -1,0 +1,231 @@
+<article
+  class="pms-card"
+  [class.pms-card--reserved]="cardTopAccent === 'reserved'"
+  [class.pms-card--balance-due]="cardTopAccent === 'balance'"
+  [class.pms-card--uniform]="uniformCardSize"
+  [class.pms-card--arriving]="isArrivingMenu">
+  <header class="pms-card-head" [class.pms-card-head--menu-left]="usesActionsMenu">
+    <div class="pms-card-menu-wrap" *ngIf="usesActionsMenu && !isDepartingAction">
+      <button
+        type="button"
+        class="pms-card-menu"
+        [class.pms-card-menu--open]="actionsMenuOpen"
+        (click)="toggleActionsMenu($event)"
+        [attr.aria-expanded]="actionsMenuOpen"
+        aria-haspopup="menu"
+        [attr.aria-label]="ui.screenText('bookings', 'pmsActionsMenuAria')">
+        <i class="fas fa-ellipsis-v" aria-hidden="true"></i>
+      </button>
+      <div
+        *ngIf="actionsMenuOpen"
+        class="pms-actions-menu"
+        role="menu"
+        (click)="$event.stopPropagation()">
+        <ng-container *ngIf="isArrivingMenu">
+          <button type="button" class="pms-actions-menu-item" role="menuitem" (click)="onMenuAction('checkIn')">
+            <span>{{ ui.screenText('bookings', 'checkInBtn') }}</span>
+            <i class="fas fa-door-open" aria-hidden="true"></i>
+          </button>
+          <button type="button" class="pms-actions-menu-item" role="menuitem" (click)="onMenuAction('noShow')">
+            <span>{{ ui.screenText('bookings', 'pmsMenuNoShow') }}</span>
+            <i class="fas fa-user-slash" aria-hidden="true"></i>
+          </button>
+          <button type="button" class="pms-actions-menu-item" role="menuitem" (click)="onMenuAction('cancelReservation')">
+            <span>{{ ui.screenText('bookings', 'pmsMenuCancelReservation') }}</span>
+            <i class="fas fa-times-circle" aria-hidden="true"></i>
+          </button>
+          <button type="button" class="pms-actions-menu-item" role="menuitem" (click)="onMenuAction('print')">
+            <span>{{ ui.screenText('bookings', 'pmsMenuPrintMemo') }}</span>
+            <i class="fas fa-print" aria-hidden="true"></i>
+          </button>
+        </ng-container>
+        <ng-container *ngIf="isStayingMenu">
+          <button type="button" class="pms-actions-menu-item" role="menuitem" (click)="onMenuAction('transfer')">
+            <span>{{ ui.screenText('bookings', 'pmsMenuTransferRoom') }}</span>
+            <i class="fas fa-exchange-alt" aria-hidden="true"></i>
+          </button>
+          <button type="button" class="pms-actions-menu-item" role="menuitem" (click)="onMenuAction('extend')">
+            <span>{{ ui.screenText('bookings', 'pmsMenuExtendStay') }}</span>
+            <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+          </button>
+          <button
+            type="button"
+            class="pms-actions-menu-item"
+            [class.pms-actions-menu-item--disabled]="!canPayFromAccount"
+            role="menuitem"
+            [disabled]="!canPayFromAccount"
+            (click)="onMenuAction('payFromAccount')">
+            <span>{{ ui.screenText('bookings', 'pmsMenuPayFromAccount') }}</span>
+            <i class="fas fa-wallet" aria-hidden="true"></i>
+          </button>
+          <button type="button" class="pms-actions-menu-item" role="menuitem" (click)="onMenuAction('depart')">
+            <span>{{ ui.screenText('bookings', 'pmsMenuDeparture') }}</span>
+            <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+          </button>
+          <button type="button" class="pms-actions-menu-item" role="menuitem" (click)="onMenuAction('cancelCheckIn')">
+            <span>{{ ui.screenText('bookings', 'pmsMenuCancelCheckIn') }}</span>
+            <i class="fas fa-undo" aria-hidden="true"></i>
+          </button>
+          <button type="button" class="pms-actions-menu-item" role="menuitem" (click)="onMenuAction('print')">
+            <span>{{ ui.screenText('bookings', 'pmsMenuPrintMemo') }}</span>
+            <i class="fas fa-print" aria-hidden="true"></i>
+          </button>
+        </ng-container>
+      </div>
+    </div>
+    <div
+      class="pms-card-menu-wrap"
+      *ngIf="!usesActionsMenu && !hideFooterActions && !isDepartingAction && !isCheckInAction">
+      <button
+        type="button"
+        class="pms-card-menu"
+        (click)="onViewDetails()"
+        [attr.aria-label]="ui.screenText('bookings', 'pmsViewDetails')">
+        <i class="fas fa-ellipsis-v" aria-hidden="true"></i>
+      </button>
+    </div>
+    <div class="pms-card-head-center">
+      <div class="pms-avatar">{{ guestInitial(booking) }}</div>
+      <div class="pms-name-block">
+        <div class="pms-name">{{ booking.first_Name }} {{ booking.last_Name }}</div>
+        <div class="pms-meta">
+          <span class="pms-chip pms-chip--reserved" *ngIf="booking.status === 'reserved'">
+            {{ ui.screenText('bookings', 'statusReserved') }}
+          </span>
+          <span class="pms-chip pms-chip--invoice" *ngIf="booking.invoice_Number">
+            <i class="fas fa-file-invoice" aria-hidden="true"></i>
+            {{ booking.invoice_Number }}
+          </span>
+        </div>
+      </div>
+    </div>
+    <span class="pms-order-badge">{{ orderIndex + 1 }}</span>
+  </header>
+
+  <div class="pms-date-strip">
+    <span class="pms-date-start">{{ formatSlashDate(checkInYmd(booking)) }}</span>
+    <div class="pms-nights">
+      <i class="fas fa-moon"></i>
+      <span>{{ booking.stay_Days || 0 }} {{ ui.screenText('bookings', 'pmsNights') }}</span>
+    </div>
+    <span class="pms-date-end">{{ formatSlashDate(checkOutYmd(booking)) }}</span>
+  </div>
+
+  <div class="pms-info-row">
+    <div class="pms-info-cell pms-info-end">
+      <i class="fas fa-calendar-alt"></i>
+      <span>{{ formatSlashDate(infoRowDateYmd(booking)) }}</span>
+    </div>
+    <div class="pms-info-cell pms-info-center">
+      <i class="fas fa-bed"></i>
+      <strong>{{ booking.room_Number || '—' }}</strong>
+    </div>
+    <div class="pms-info-cell">
+      <div class="pms-guest-icons">
+        <div class="pms-guest-unit">
+          <i class="fas fa-user"></i>
+          <span>{{ booking.adults_Count != null ? booking.adults_Count : '—' }}</span>
+        </div>
+        <div class="pms-guest-unit">
+          <i class="fas fa-child"></i>
+          <span>{{ booking.children_Count != null ? booking.children_Count : '—' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pms-money-strip">
+    <div class="pms-money-col">
+      <span class="pms-money-label">{{ ui.screenText('bookings', 'pmsTotal') }}</span>
+      <span class="pms-money-val">{{ formatPmsMoney(booking.total_Price) }} <small>{{ bookingCurrencySymbol(booking) }}</small></span>
+    </div>
+    <div class="pms-money-col">
+      <span class="pms-money-label">{{ ui.screenText('bookings', 'pmsPaid') }}</span>
+      <span class="pms-money-val">{{ formatPmsMoney(booking.payment_Amount) }} <small>{{ bookingCurrencySymbol(booking) }}</small></span>
+    </div>
+    <div class="pms-money-col" [class.pms-money-col--debt]="(booking.remaining_Amount || 0) > 0">
+      <span
+        class="pms-money-label"
+        [class.pms-money-label--debt]="(booking.remaining_Amount || 0) > 0">{{ ui.screenText('bookings', 'pmsBalance') }}</span>
+      <span
+        class="pms-money-val"
+        [class.pms-money-debt]="(booking.remaining_Amount || 0) > 0">
+        {{ formatPmsMoney(booking.remaining_Amount) }} <small>{{ bookingCurrencySymbol(booking) }}</small>
+      </span>
+    </div>
+  </div>
+
+  <div class="pms-card-spacer" *ngIf="!isArrivingMenu" aria-hidden="true"></div>
+
+  <div
+    *ngIf="showBookingTypeRow; else pmsCountdownRow"
+    class="pms-checkout-row pms-checkout-row--booking-type"
+    [class.pms-checkout-row--type-confirmed]="isBookingConfirmed"
+    [class.pms-checkout-row--type-unconfirmed]="!isBookingConfirmed">
+    <i class="fas pms-booking-type-icon" [ngClass]="bookingTypeIcon" aria-hidden="true"></i>
+    <span class="pms-checkout-row-label pms-checkout-row-label--booking-type">{{ bookingTypeLabel() }}</span>
+  </div>
+  <ng-template #pmsCountdownRow>
+    <div
+      class="pms-checkout-row"
+      [class.pms-checkout-row--checkin]="isReservedCard && cardCountdownLabelKey === 'pmsRemainingCheckIn'">
+      <i class="fas fa-clock" aria-hidden="true"></i>
+      <span class="pms-checkout-row-label">{{ ui.screenText('bookings', cardCountdownLabelKey) }}</span>
+      <span class="pms-checkout-row-val">{{ cardCountdownText }}</span>
+    </div>
+  </ng-template>
+
+  <footer
+    class="pms-card-actions"
+    [class.pms-card-actions--departing]="isDepartingAction"
+    [class.pms-card-actions--arriving]="isArrivingMenu"
+    *ngIf="isDepartingAction || isArrivingMenu || ((!hideFooterActions || showRenew) && !usesActionsMenu)">
+    <button
+      type="button"
+      class="pms-btn-checkin-primary"
+      *ngIf="isArrivingMenu"
+      (click)="onCheckIn()"
+      [attr.aria-label]="ui.screenText('bookings', 'checkInBtn')">
+      <i class="fas fa-door-open" aria-hidden="true"></i>
+      <span>{{ ui.screenText('bookings', 'checkInBtn') }}</span>
+    </button>
+    <button
+      type="button"
+      class="pms-btn-print"
+      *ngIf="!isArrivingMenu && (isDepartingAction || !hideFooterActions)"
+      (click)="printBookingCard()">
+      <i class="fas fa-print"></i> {{ ui.screenText('bookings', 'pmsPrint') }}
+    </button>
+    <button
+      *ngIf="showRenew && !isDepartingAction"
+      type="button"
+      class="pms-btn-icon-action pms-btn-renew"
+      (click)="onRenew()"
+      [attr.aria-label]="ui.screenText('bookings', 'pmsRenew')">
+      <i class="fas fa-redo" aria-hidden="true"></i>
+      <span class="pms-btn-icon-action-tooltip">{{ ui.screenText('bookings', 'pmsRenew') }}</span>
+    </button>
+    <button
+      type="button"
+      class="pms-btn-view-details pms-btn-view-details--footer pms-btn-depart--footer"
+      *ngIf="isDepartingAction"
+      (click)="departGuest.emit(booking)"
+      [attr.aria-label]="ui.screenText('bookings', 'departBtn')">
+      <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+      <span class="pms-btn-view-details-label">{{ ui.screenText('bookings', 'departBtn') }}</span>
+    </button>
+    <button
+      type="button"
+      class="pms-btn-view-details pms-btn-view-details--footer"
+      [class.pms-btn-checkin--footer]="isCheckInAction"
+      *ngIf="!hideFooterActions && !isDepartingAction && !isArrivingMenu"
+      (click)="onPrimaryAction()"
+      [attr.aria-label]="isCheckInAction ? ui.screenText('bookings', 'checkInBtn') : ui.screenText('bookings', 'pmsViewBookingDetails')"
+      [title]="isCheckInAction ? ui.screenText('bookings', 'checkInBtn') : ui.screenText('bookings', 'pmsViewDetails')">
+      <i class="fas" [ngClass]="isCheckInAction ? 'fa-door-open' : 'fa-id-card-alt'" aria-hidden="true"></i>
+      <span class="pms-btn-view-details-label">{{
+        isCheckInAction ? ui.screenText('bookings', 'checkInBtn') : ui.screenText('bookings', 'pmsViewDetails')
+      }}</span>
+    </button>
+  </footer>
+</article>

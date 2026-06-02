@@ -1,0 +1,86 @@
+<header class="app-top-bar" (click)="closeLangPicker()">
+  <div class="app-top-bar__cluster app-top-bar__cluster--start">
+    <div class="app-top-bar__tools" role="toolbar">
+      <button
+        type="button"
+        class="app-top-bar__icon-btn app-top-bar__icon-btn--notify"
+        (click)="openNotifications($event)"
+        [attr.title]="ui.chromeLabel('notificationsMenuTitle')"
+        [attr.aria-label]="ui.chromeLabel('notificationsMenuTitle')">
+        <i class="fas fa-bell" aria-hidden="true"></i>
+        <span class="app-top-bar__badge" *ngIf="unreadNotifications > 0">{{ unreadNotifications }}</span>
+      </button>
+
+      <div
+        class="lang-picker"
+        [class.lang-picker--open]="langPickerOpen"
+        (click)="$event.stopPropagation()"
+        role="group"
+        [attr.aria-label]="ui.chromeLabel('langPickerAria')">
+        <button
+          type="button"
+          class="lang-picker__trigger"
+          (click)="toggleLangPicker($event)"
+          [attr.aria-expanded]="langPickerOpen"
+          [attr.aria-haspopup]="'listbox'"
+          [attr.title]="localeLabel(activeLocaleOption().labelKey)">
+          <img
+            class="lang-picker__flag-img"
+            [src]="activeLocaleOption().flagSrc"
+            alt=""
+            width="22"
+            height="22" />
+          <span class="lang-picker__trigger-code">{{ activeLocaleOption().shortCode }}</span>
+          <span class="lang-picker__trigger-name">{{ localeLabel(activeLocaleOption().labelKey) }}</span>
+          <i
+            class="fas fa-chevron-down lang-picker__chevron"
+            [class.lang-picker__chevron--open]="langPickerOpen"
+            aria-hidden="true"></i>
+        </button>
+
+        <ul
+          class="lang-picker__menu"
+          *ngIf="langPickerOpen"
+          role="listbox"
+          [attr.aria-label]="ui.chromeLabel('langPickerAria')">
+          <li *ngFor="let opt of otherLocaleOptions()" role="none">
+            <button
+              type="button"
+              class="lang-picker__item"
+              role="option"
+              (click)="selectLocale(opt.code, $event)">
+              <img class="lang-picker__flag-img" [src]="opt.flagSrc" alt="" width="24" height="24" />
+              <span class="lang-picker__item-code">{{ opt.shortCode }}</span>
+              <span class="lang-picker__item-name">{{ localeLabel(opt.labelKey) }}</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <button
+        type="button"
+        class="app-top-bar__search"
+        (click)="openSearch($event)"
+        [attr.title]="ui.chromeLabel('searchOpenTitle')"
+        [attr.aria-label]="ui.chromeLabel('searchOpenAria')">
+        <i class="fas fa-search" aria-hidden="true"></i>
+        <span class="app-top-bar__search-label">{{ ui.chromeLabel('searchOverlayPlaceholder') }}</span>
+        <kbd class="app-top-bar__search-kbd">F3</kbd>
+      </button>
+    </div>
+  </div>
+
+  <div class="app-top-bar__cluster app-top-bar__cluster--end">
+    <nav class="app-top-bar__crumb" aria-label="breadcrumb">
+      <span>{{ breadcrumb }}</span>
+    </nav>
+    <div class="app-top-bar__clock" aria-live="polite">
+      <span class="app-top-bar__clock-date">{{ clockDate }}</span>
+      <span class="app-top-bar__clock-time">{{ clockTime }}</span>
+    </div>
+    <div class="app-top-bar__brand app-top-bar__brand--leading" [title]="hotelDisplayName">
+      <img *ngIf="hotelImageSrc" [src]="hotelImageSrc" alt="" class="app-top-bar__brand-img" />
+      <span *ngIf="!hotelImageSrc" class="app-top-bar__brand-fallback">{{ hotelNameInitial }}</span>
+    </div>
+  </div>
+</header>

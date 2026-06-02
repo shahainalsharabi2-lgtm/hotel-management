@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\common.props" />
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Modiaf.Al.Arab.Hotel</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Modiaf.Al.Arab.Hotel.Domain\Modiaf.Al.Arab.Hotel.Domain.csproj" />
+    <ProjectReference Include="..\Modiaf.Al.Arab.Hotel.TestBase\Modiaf.Al.Arab.Hotel.TestBase.csproj" />
+  </ItemGroup>
+
+</Project>

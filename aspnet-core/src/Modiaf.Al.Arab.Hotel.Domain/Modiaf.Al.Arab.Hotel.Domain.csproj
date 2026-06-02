@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\common.props" />
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Modiaf.Al.Arab.Hotel</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Modiaf.Al.Arab.Hotel.Domain.Shared\Modiaf.Al.Arab.Hotel.Domain.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="UiTranslations\ui-translations-default.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Volo.Abp.Emailing" Version="10.3.0" />
+    <PackageReference Include="Volo.Abp.Identity.Domain" Version="10.3.0" />
+    <PackageReference Include="Volo.Abp.PermissionManagement.Domain.Identity" Version="10.3.0" />
+    <PackageReference Include="Volo.Abp.BackgroundJobs.Domain" Version="10.3.0" />
+    <PackageReference Include="Volo.Abp.AuditLogging.Domain" Version="10.3.0" />
+    <PackageReference Include="Volo.Abp.TenantManagement.Domain" Version="10.3.0" />
+    <PackageReference Include="Volo.Abp.FeatureManagement.Domain" Version="10.3.0" />
+    <PackageReference Include="Volo.Abp.SettingManagement.Domain" Version="10.3.0" />
+    <PackageReference Include="Volo.Abp.OpenIddict.Domain" Version="10.3.0" />
+    <PackageReference Include="Volo.Abp.PermissionManagement.Domain.OpenIddict" Version="10.3.0" />
+  </ItemGroup>
+
+</Project>

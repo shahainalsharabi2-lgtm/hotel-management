@@ -1,0 +1,520 @@
+<div class="rooms-page" [class.rooms-page--advanced]="roomsAdvancedLayout" [class.rooms-page--normal]="!roomsAdvancedLayout">
+  <ng-container *ngIf="!roomsAdvancedLayout">
+    <header class="page-header">
+      <div class="header-content">
+        <h1>{{ ui.screenText('rooms', 'pageTitle') }}</h1>
+        <p>{{ ui.screenText('rooms', 'pageSubtitle') }}</p>
+      </div>
+
+      <div class="status-summary">
+        <div class="summary-item available" (click)="toggleStatusFilter('available')"
+          [class.active]="selectedStatus === 'available'" role="button" tabindex="0">
+          <i class="fas fa-broom"></i>
+          <span class="count">{{ getRoomsByStatus('available') }}</span>
+          <span class="label">{{ ui.screenText('rooms', 'labelAvailable') }}</span>
+        </div>
+        <div class="summary-item dirty" (click)="toggleStatusFilter('dirty')" [class.active]="selectedStatus === 'dirty'"
+          role="button" tabindex="0">
+          <i class="fas fa-spray-can"></i>
+          <span class="count">{{ getRoomsByStatus('dirty') }}</span>
+          <span class="label">{{ ui.screenText('rooms', 'labelDirty') }}</span>
+        </div>
+        <div class="summary-item occupied" (click)="toggleStatusFilter('occupied')"
+          [class.active]="selectedStatus === 'occupied'" role="button" tabindex="0">
+          <i class="fas fa-user-tag"></i>
+          <span class="count">{{ getRoomsByStatus('occupied') }}</span>
+          <span class="label">{{ ui.screenText('rooms', 'labelOccupied') }}</span>
+        </div>
+        <div class="summary-item maintenance" (click)="toggleStatusFilter('maintenance')"
+          [class.active]="selectedStatus === 'maintenance'" role="button" tabindex="0">
+          <i class="fas fa-tools"></i>
+          <span class="count">{{ getRoomsByStatus('maintenance') }}</span>
+          <span class="label">{{ ui.screenText('rooms', 'labelMaintenance') }}</span>
+        </div>
+      </div>
+    </header>
+  </ng-container>
+
+  <ng-container *ngIf="roomsAdvancedLayout && !isLoading && !error">
+    <div
+      class="rooms-pick-banner"
+      *ngIf="pickRoomMode"
+      role="status">
+      <i class="fas fa-hand-pointer" aria-hidden="true"></i>
+      <span>{{ ui.screenText('rooms', 'pickRoomBanner') }}</span>
+      <button type="button" class="rooms-pick-banner__cancel" (click)="cancelPickRoom()">
+        {{ ui.screenText('rooms', 'pickRoomCancel') }}
+      </button>
+    </div>
+    <div class="rooms-dev-advanced-shell" [class.rooms-dev-advanced-shell--rail-collapsed]="!statusRailOpen">
+      <aside class="rooms-dev-status-rail" *ngIf="statusRailOpen" [attr.aria-label]="ui.screenText('rooms', 'devStatusRailTitle')">
+        <div class="rooms-dev-status-rail-head">
+          <span class="rooms-dev-status-rail-title">{{ ui.screenText('rooms', 'devStatusRailTitle') }}</span>
+          <button type="button" class="rooms-dev-status-rail-close" (click)="closeStatusRail()" [title]="ui.screenText('rooms', 'devCollapseRail')" [attr.aria-label]="ui.screenText('rooms', 'devCollapseRail')">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <button type="button" class="rooms-dev-tile rooms-dev-tile--rail" *ngFor="let tile of devSummaryTiles"
+          [ngClass]="['tone-' + tile.tone, isDevTileActive(tile) ? 'rooms-dev-tile--active' : '']"
+          (click)="onDevSummaryClick(tile)">
+          <i class="fas {{ tile.icon }}"></i>
+          <span class="rooms-dev-tile-count">{{ tile.count }}</span>
+          <span class="rooms-dev-tile-label">{{ ui.screenText('rooms', tile.labelKey) }}</span>
+        </button>
+      </aside>
+      <button type="button" *ngIf="!statusRailOpen" class="rooms-dev-rail-reopen" (click)="openStatusRail()" [title]="ui.screenText('rooms', 'devShowRail')" [attr.aria-label]="ui.screenText('rooms', 'devShowRail')">
+        <i class="fas fa-filter"></i>
+        <span class="rooms-dev-rail-reopen-label">{{ ui.screenText('rooms', 'railStatesLabel') }}</span>
+      </button>
+      <div class="rooms-dev-advanced-core">
+        <header class="rooms-dev-page-head">
+          <div>
+            <h1 class="rooms-dev-title">{{ ui.screenText('rooms', 'pageTitle') }}</h1>
+            <p class="rooms-dev-sub">{{ ui.screenText('rooms', 'devTotalRooms') }} — {{ totalRooms }}</p>
+          </div>
+        </header>
+
+        <div
+          class="rooms-dev-controls-sticky"
+          [class.rooms-dev-controls-sticky--collapsed]="!filterToolbarOpen">
+          <button
+            type="button"
+            class="rooms-dev-controls-toggle"
+            (click)="toggleFilterToolbar()"
+            [attr.aria-expanded]="filterToolbarOpen"
+            aria-controls="rooms-dev-filter-panel"
+            id="rooms-dev-filter-toggle">
+            <span class="rooms-dev-controls-toggle-label">
+              <i class="fas fa-sliders-h" aria-hidden="true"></i>
+              {{ ui.screenText('rooms', 'devFilterLabel') }}
+            </span>
+            <span class="rooms-dev-controls-toggle-hint" *ngIf="!filterToolbarOpen">
+              {{ ui.screenText('rooms', 'devFilterToggleHint') }}
+            </span>
+            <i
+              class="fas rooms-dev-controls-toggle-chevron"
+              [class.fa-chevron-up]="filterToolbarOpen"
+              [class.fa-chevron-down]="!filterToolbarOpen"
+              aria-hidden="true"></i>
+          </button>
+
+          <div
+            class="rooms-dev-controls-panel"
+            *ngIf="filterToolbarOpen"
+            id="rooms-dev-filter-panel"
+            role="region"
+            aria-labelledby="rooms-dev-filter-toggle">
+            <div class="rooms-dev-filter-banner" *ngIf="devFilterBannerVisible" role="status" aria-live="polite">
+              <div class="rooms-dev-filter-banner__accent" aria-hidden="true"></div>
+              <div class="rooms-dev-filter-banner__icon" aria-hidden="true"><i class="fas fa-sliders-h"></i></div>
+              <div class="rooms-dev-filter-banner__body">
+                <span class="rooms-dev-filter-banner__title">{{ ui.screenText('rooms', 'devCurrentViewTitle') }}</span>
+                <ul class="rooms-dev-filter-banner__list">
+                  <li *ngFor="let line of devFilterSummaryLines">{{ line }}</li>
+                </ul>
+              </div>
+              <button type="button" class="rooms-dev-filter-banner__clear" (click)="clearAdvancedFilters()">
+                {{ ui.screenText('rooms', 'clearFilters') }}
+              </button>
+            </div>
+
+            <div class="rooms-dev-toolbar">
+              <div class="rooms-dev-toolbar-start">
+                <label class="rooms-dev-field">
+                  <span class="sr-only">{{ ui.screenText('rooms', 'srDataScope') }}</span>
+                  <select class="rooms-dev-select" [(ngModel)]="devDataScope" (ngModelChange)="collapseFilterToolbar()">
+                    <option value="all">{{ ui.screenText('rooms', 'dataScopeAll') }}</option>
+                    <option value="floor">{{ ui.screenText('rooms', 'dataScopeFloor') }}</option>
+                  </select>
+                </label>
+                <label class="rooms-dev-field">
+                  <span class="sr-only">{{ ui.screenText('rooms', 'srRoomType') }}</span>
+                  <select class="rooms-dev-select" [(ngModel)]="devRoomType" (ngModelChange)="collapseFilterToolbar()">
+                    <option value="">{{ ui.screenText('rooms', 'allRoomTypes') }}</option>
+                    <option *ngFor="let rt of uniqueRoomTypes()" [value]="rt">{{ rt }}</option>
+                  </select>
+                </label>
+              </div>
+              <div class="rooms-dev-toolbar-mid">
+                <label class="rooms-dev-check">
+                  <input type="checkbox" [(ngModel)]="devArrivingOnly" (ngModelChange)="collapseFilterToolbar()" />
+                  <span>{{ ui.screenText('rooms', 'devArrivingShort') }}</span>
+                </label>
+                <label class="rooms-dev-check">
+                  <input type="checkbox" [(ngModel)]="devPaymentDueOnly" (ngModelChange)="collapseFilterToolbar()" />
+                  <span>{{ ui.screenText('rooms', 'devPaymentDueShort') }}</span>
+                </label>
+              </div>
+              <div class="rooms-dev-toolbar-end">
+                <div class="rooms-dev-search-wrap">
+                  <i class="fas fa-search" aria-hidden="true"></i>
+                  <input
+                    type="search"
+                    class="rooms-dev-search"
+                    [(ngModel)]="devSearch"
+                    (blur)="collapseFilterToolbar()"
+                    (keydown.enter)="collapseFilterToolbar()"
+                    [placeholder]="ui.screenText('rooms', 'searchPlaceholder')" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rooms-dev-main">
+          <ng-container *ngIf="showTransferredRoomsPanel">
+            <section class="rooms-xfer-screen" [attr.aria-label]="ui.screenText('rooms', 'transferredScreenTitle')">
+              <header class="rooms-xfer-screen-head">
+                <h2 class="rooms-xfer-screen-title">
+                  <i class="fas fa-exchange-alt" aria-hidden="true"></i>
+                  {{ ui.screenText('rooms', 'transferredScreenTitle') }}
+                </h2>
+                <p class="rooms-xfer-screen-sub">{{ ui.screenText('rooms', 'transferredScreenSubtitle') }}</p>
+              </header>
+
+              <div class="rooms-xfer-list" *ngIf="transferDisplayRows.length; else xferEmpty">
+                <button
+                  type="button"
+                  class="rooms-xfer-row"
+                  *ngFor="let row of transferDisplayRows"
+                  (click)="openTransferDestination(row)">
+                  <div class="rooms-xfer-row-pills">
+                    <div class="rooms-xfer-pill rooms-xfer-pill--from">
+                      <span class="rooms-xfer-pill-label">{{ ui.screenText('rooms', 'transferredFromLabel') }}</span>
+                      <strong>{{ row.transfer.fromRoom }}</strong>
+                      <span class="rooms-xfer-pill-status" *ngIf="row.fromRoom">{{ getStatusText(row.fromRoom.status) }}</span>
+                    </div>
+                    <i class="fas fa-long-arrow-alt-left rooms-xfer-row-arrow" aria-hidden="true"></i>
+                    <div class="rooms-xfer-pill rooms-xfer-pill--to">
+                      <span class="rooms-xfer-pill-label">{{ ui.screenText('rooms', 'transferredToLabel') }}</span>
+                      <strong>{{ row.transfer.toRoom }}</strong>
+                      <span class="rooms-xfer-pill-status" *ngIf="row.toRoom">{{ getStatusText(row.toRoom.status) }}</span>
+                    </div>
+                  </div>
+                  <div class="rooms-xfer-row-meta">
+                    <span *ngIf="row.transfer.guestName" class="rooms-xfer-guest">
+                      <i class="fas fa-user" aria-hidden="true"></i> {{ row.transfer.guestName }}
+                    </span>
+                    <span class="rooms-xfer-time">
+                      <i class="fas fa-clock" aria-hidden="true"></i> {{ formatTransferTime(row.transfer.at) }}
+                    </span>
+                  </div>
+                </button>
+              </div>
+              <ng-template #xferEmpty>
+                <p class="rooms-xfer-empty">{{ ui.screenText('rooms', 'transferredScreenEmpty') }}</p>
+              </ng-template>
+
+              <section class="rooms-xfer-rooms-block" *ngIf="roomsInvolvedInTransfers.length">
+                <h3 class="rooms-xfer-rooms-title">{{ ui.screenText('rooms', 'transferredRoomsCardsTitle') }}</h3>
+                <div class="rooms-dev-strip-wrap">
+                  <div class="rooms-dev-strip rooms-dev-strip--xfer" [style.--dev-scale]="devLayoutScale / 100">
+                    <div
+                      class="rooms-dev-card"
+                      *ngFor="let room of roomsInvolvedInTransfers; trackBy: trackDevRoomCard"
+                      role="button"
+                      tabindex="0"
+                      [ngClass]="devSemanticCardTone(room)"
+                      [class.rooms-dev-card--menu-open]="isCardMenuOpen(room)"
+                      (click)="onDevCardClick(room)"
+                      (keydown.enter)="onDevCardKeyActivate($event, room)"
+                      (keydown.space)="onDevCardKeyActivate($event, room)">
+                      <div class="rooms-dev-card-top">
+                        <div class="rooms-dev-card-menu-wrap" (click)="$event.stopPropagation()">
+                          <button
+                            type="button"
+                            class="rooms-dev-card-menu"
+                            (click)="toggleCardMenu($event, room)"
+                            [attr.aria-expanded]="isCardMenuOpen(room)"
+                            [attr.aria-label]="ui.screenText('rooms', 'cardMenuAria')">
+                            <i class="fas fa-ellipsis-v" aria-hidden="true"></i>
+                          </button>
+                          <div
+                            class="rooms-dev-card-dropdown"
+                            *ngIf="isCardMenuOpen(room)"
+                            role="menu"
+                            (click)="$event.stopPropagation()">
+                            <button
+                              type="button"
+                              class="rooms-dev-card-dropdown__item"
+                              *ngIf="pickRoomMode"
+                              role="menuitem"
+                              [disabled]="!canPickRoomForBooking(room)"
+                              (click)="pickRoomForBooking(room); $event.stopPropagation()">
+                              <i class="fas fa-check-circle" aria-hidden="true"></i>
+                              {{ ui.screenText('rooms', 'pickRoomAction') }}
+                            </button>
+                            <button
+                              type="button"
+                              class="rooms-dev-card-dropdown__item"
+                              *ngIf="canStartRoomCleaning(room)"
+                              role="menuitem"
+                              (click)="startRoomCleaning(room, $event)">
+                              <i class="fas fa-broom" aria-hidden="true"></i>
+                              {{ ui.screenText('rooms', 'cardMenuStartCleaning') }}
+                            </button>
+                            <button
+                              type="button"
+                              class="rooms-dev-card-dropdown__item"
+                              role="menuitem"
+                              (click)="openRoomPreview(room); $event.stopPropagation()">
+                              <i class="fas fa-info-circle" aria-hidden="true"></i>
+                              {{ ui.screenText('rooms', 'cardMenuDetails') }}
+                            </button>
+                          </div>
+                        </div>
+                        <span class="rooms-dev-card-flag" [attr.title]="semanticSceneTooltip(room)" [attr.aria-label]="semanticSceneTooltip(room)">
+                          <i class="fas" [ngClass]="semanticSceneFlagIcon(room)" aria-hidden="true"></i>
+                        </span>
+                      </div>
+                      <div
+                        class="rooms-dev-card-circle"
+                        [class.rooms-dev-card-circle--cleaning]="isRoomCleaning(room)"
+                        [class.rooms-dev-card-circle--reserved-clean]="isReservedCleanRoom(room)"
+                        [attr.aria-hidden]="true">
+                        <i class="fas fa-broom rooms-dev-card-broom-anim" *ngIf="isRoomCleaning(room)" aria-hidden="true"></i>
+                        <i
+                          class="fas rooms-dev-card-scene-ico"
+                          *ngIf="!isRoomCleaning(room)"
+                          [ngClass]="semanticSceneCircleIcon(room)"
+                          aria-hidden="true"></i>
+                        <span class="rooms-dev-card-num">{{ room.roomNumber }}</span>
+                      </div>
+                      <div class="rooms-dev-card-mid">
+                        <span class="rooms-dev-card-cleaning-time" *ngIf="isRoomCleaning(room)">{{
+                          roomCleaningClock(room)
+                        }}</span>
+                        <div class="rooms-dev-card-mid-default" *ngIf="!isRoomCleaning(room)">
+                          <div class="rooms-dev-card-type">{{ ui.roomTypeLabel(room.type) }}</div>
+                          <div class="rooms-dev-card-scene" *ngIf="getSemanticStatusSubtitle(room)">
+                            {{ getSemanticStatusSubtitle(room) }}
+                          </div>
+                        </div>
+                      </div>
+                      <p class="rooms-dev-card-guest" [class.rooms-dev-card-guest--empty]="!showGuestOnCard(room)">
+                        <ng-container *ngIf="showGuestOnCard(room)">
+                          <i class="fas fa-user" aria-hidden="true"></i> {{ guestNameForRoom(room) }}
+                        </ng-container>
+                      </p>
+                      <div class="rooms-dev-card-money rooms-dev-card-money--spacer" aria-hidden="true"></div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </section>
+          </ng-container>
+
+          <ng-container *ngIf="!showTransferredRoomsPanel && devAdvancedHasRooms">
+            <section class="rooms-dev-floor-block" *ngFor="let section of advancedSections()">
+              <h2 class="rooms-dev-floor-title">{{ section.label }}</h2>
+              <div class="rooms-dev-strip-wrap">
+                <div class="rooms-dev-strip" [style.--dev-scale]="devLayoutScale / 100">
+                  <div
+                    class="rooms-dev-card"
+                    *ngFor="let room of section.rooms; trackBy: trackDevRoomCard"
+                    role="button"
+                    tabindex="0"
+                    [ngClass]="devSemanticCardTone(room)"
+                    [class.rooms-dev-card--menu-open]="isCardMenuOpen(room)"
+                    (click)="onDevCardClick(room)"
+                    (keydown.enter)="onDevCardKeyActivate($event, room)"
+                    (keydown.space)="onDevCardKeyActivate($event, room)">
+                    <div class="rooms-dev-card-top">
+                      <div class="rooms-dev-card-menu-wrap" (click)="$event.stopPropagation()">
+                        <button
+                          type="button"
+                          class="rooms-dev-card-menu"
+                          (click)="toggleCardMenu($event, room)"
+                          [attr.aria-expanded]="isCardMenuOpen(room)"
+                          [attr.aria-label]="ui.screenText('rooms', 'cardMenuAria')">
+                          <i class="fas fa-ellipsis-v" aria-hidden="true"></i>
+                        </button>
+                        <div
+                          class="rooms-dev-card-dropdown"
+                          *ngIf="isCardMenuOpen(room)"
+                          role="menu"
+                          (click)="$event.stopPropagation()">
+                          <button
+                            type="button"
+                            class="rooms-dev-card-dropdown__item"
+                            *ngIf="pickRoomMode"
+                            role="menuitem"
+                            [disabled]="!canPickRoomForBooking(room)"
+                            (click)="pickRoomForBooking(room); $event.stopPropagation()">
+                            <i class="fas fa-check-circle" aria-hidden="true"></i>
+                            {{ ui.screenText('rooms', 'pickRoomAction') }}
+                          </button>
+                          <button
+                            type="button"
+                            class="rooms-dev-card-dropdown__item"
+                            *ngIf="canStartRoomCleaning(room)"
+                            role="menuitem"
+                            (click)="startRoomCleaning(room, $event)">
+                            <i class="fas fa-broom" aria-hidden="true"></i>
+                            {{ ui.screenText('rooms', 'cardMenuStartCleaning') }}
+                          </button>
+                          <button
+                            type="button"
+                            class="rooms-dev-card-dropdown__item"
+                            role="menuitem"
+                            (click)="openRoomPreview(room); $event.stopPropagation()">
+                            <i class="fas fa-info-circle" aria-hidden="true"></i>
+                            {{ ui.screenText('rooms', 'cardMenuDetails') }}
+                          </button>
+                        </div>
+                      </div>
+                      <span class="rooms-dev-card-flag" [attr.title]="semanticSceneTooltip(room)" [attr.aria-label]="semanticSceneTooltip(room)">
+                        <i class="fas" [ngClass]="semanticSceneFlagIcon(room)" aria-hidden="true"></i>
+                      </span>
+                    </div>
+                    <div
+                      class="rooms-dev-card-circle"
+                      [class.rooms-dev-card-circle--cleaning]="isRoomCleaning(room)"
+                      [class.rooms-dev-card-circle--reserved-clean]="isReservedCleanRoom(room)"
+                      [attr.aria-hidden]="true">
+                      <i class="fas fa-broom rooms-dev-card-broom-anim" *ngIf="isRoomCleaning(room)" aria-hidden="true"></i>
+                      <i
+                        class="fas rooms-dev-card-scene-ico"
+                        *ngIf="!isRoomCleaning(room)"
+                        [ngClass]="semanticSceneCircleIcon(room)"
+                        aria-hidden="true"></i>
+                      <span class="rooms-dev-card-num">{{ room.roomNumber }}</span>
+                    </div>
+                    <div class="rooms-dev-card-mid">
+                      <span class="rooms-dev-card-cleaning-time" *ngIf="isRoomCleaning(room)">{{
+                        roomCleaningClock(room)
+                      }}</span>
+                      <div class="rooms-dev-card-mid-default" *ngIf="!isRoomCleaning(room)">
+                        <div class="rooms-dev-card-type">{{ ui.roomTypeLabel(room.type) }}</div>
+                        <div class="rooms-dev-card-scene" *ngIf="getSemanticStatusSubtitle(room)">
+                          {{ getSemanticStatusSubtitle(room) }}
+                        </div>
+                      </div>
+                    </div>
+                    <p class="rooms-dev-card-guest" [class.rooms-dev-card-guest--empty]="!showGuestOnCard(room)">
+                      <ng-container *ngIf="showGuestOnCard(room)">
+                        <i class="fas fa-user" aria-hidden="true"></i> {{ guestNameForRoom(room) }}
+                      </ng-container>
+                    </p>
+                    <div class="rooms-dev-card-money">
+                      <div class="rooms-dev-card-price">
+                        <span class="rooms-dev-card-price-label">{{ ui.screenText('rooms', 'perNightLabel') }}</span>
+                        <div class="rooms-dev-card-price-row">
+                          <span class="rooms-dev-card-price-value">{{ room.price | number:'1.0-0' }}</span>
+                          <abbr class="rooms-dev-card-price-unit" [attr.title]="room.currencyCode || 'YER'">{{
+                            roomPriceSymbol(room)
+                          }}</abbr>
+                        </div>
+                      </div>
+                      <div class="rooms-dev-card-meta">
+                        <span class="rooms-dev-card-floor">{{ ui.screenText('rooms', 'floorBadge').replace('{f}', '' + room.floor) }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </ng-container>
+          <p *ngIf="!devAdvancedHasRooms" class="rooms-dev-empty">
+            {{ showTransferredRoomsPanel ? ui.screenText('rooms', 'transferredScreenEmpty') : ui.screenText('rooms', 'devNoRoomsMatch') }}
+          </p>
+        </div>
+
+        <footer class="rooms-dev-footer">
+          <div class="rooms-dev-footer-scale">
+            <label for="rooms-dev-scale">{{ ui.screenText('rooms', 'devDisplayScale') }}</label>
+            <input id="rooms-dev-scale" type="range" min="70" max="130" [(ngModel)]="devLayoutScale" />
+            <span>{{ devLayoutScale }}%</span>
+          </div>
+          <div class="rooms-dev-footer-stats">
+            <div class="rooms-dev-stat rooms-dev-stat--credit">
+              <span class="rooms-dev-stat-label">{{ ui.screenText('rooms', 'devOccupiedRatesTotal') }}</span>
+              <span class="rooms-dev-stat-value">{{ devOccupiedRates | number:'1.0-0' }} YR</span>
+            </div>
+            <div class="rooms-dev-stat rooms-dev-stat--debit">
+              <span class="rooms-dev-stat-label">{{ ui.screenText('rooms', 'devTotalRatesAll') }}</span>
+              <span class="rooms-dev-stat-value">{{ devTotalRates | number:'1.0-0' }} YR</span>
+            </div>
+            <div class="rooms-dev-stat rooms-dev-stat--net">
+              <span class="rooms-dev-stat-label">{{ ui.screenText('rooms', 'devNetDisplay') }}</span>
+              <span class="rooms-dev-stat-value">{{ (devTotalRates - devOccupiedRates) | number:'1.0-0' }} YR</span>
+            </div>
+          </div>
+          <div class="rooms-dev-footer-occ">
+            <span class="rooms-dev-occ-label">{{ ui.screenText('rooms', 'devOccupancyLabel') }}</span>
+            <div class="rooms-dev-occ-bar">
+              <div class="rooms-dev-occ-fill" [style.width.%]="devOccupancyPercent"></div>
+            </div>
+            <span class="rooms-dev-occ-pct">{{ devOccupancyPercent }}%</span>
+          </div>
+        </footer>
+      </div>
+    </div>
+  </ng-container>
+
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>{{ ui.screenText('rooms', 'loadingRooms') }}</p>
+  </div>
+
+  <div *ngIf="error" class="error-msg">{{ error }}</div>
+
+  <div class="rooms-grid" *ngIf="!roomsAdvancedLayout && !isLoading && !error">
+    <div class="room-card glass-card" *ngFor="let room of filteredRooms()" [ngClass]="gridRoomSceneClass(room)"
+      (click)="openRoomPreview(room)">
+      <div class="room-header">
+        <span class="room-num-wrap">
+          <i class="fas room-scene-ico" [ngClass]="semanticSceneIcon(room)" aria-hidden="true"></i>
+          <span class="room-number">{{ room.roomNumber }}</span>
+        </span>
+        <span class="status-badge" [ngClass]="gridRoomSceneClass(room)" [attr.title]="semanticSceneTooltip(room)">
+          <i class="fas" [ngClass]="semanticSceneIcon(room)" aria-hidden="true"></i>
+          {{ getStatusText(room.status) }}
+        </span>
+      </div>
+
+      <p class="room-scene-hint" *ngIf="getSemanticStatusSubtitle(room)">{{ getSemanticStatusSubtitle(room) }}</p>
+
+      <p class="room-guest-line" *ngIf="guestNameForRoom(room) as guestName">
+        <i class="fas fa-user" aria-hidden="true"></i>
+        <span>{{ guestName }}</span>
+      </p>
+
+      <div class="room-body">
+        <h3 class="room-type">{{ ui.roomTypeLabel(room.type) }}</h3>
+        <div class="room-details">
+          <span class="room-meta-floor">{{ ui.screenText('rooms', 'floorBadge').replace('{f}', '' + room.floor) }}</span>
+          <div class="room-price-block">
+            <span class="room-price-kicker">{{ ui.screenText('rooms', 'pricePerNightKicker') }}</span>
+            <div class="room-price-line">
+              <span class="room-price-amount">{{ room.price | number:'1.0-0' }}</span>
+              <abbr class="room-price-currency" [attr.title]="room.currencyCode || 'YER'">{{ roomPriceSymbol(room) }}</abbr>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="room-footer" (click)="$event.stopPropagation()">
+        <button class="action-btn secondary" (click)="goToEdit(room.id)">
+          <i class="fas fa-edit"></i>
+          {{ ui.screenText('rooms', 'editStatusBtn') }}
+        </button>
+
+        <button class="action-btn" *ngIf="room.status === 'available'" routerLink="/booking">
+          <i class="fas fa-calendar-plus"></i>
+          {{ ui.screenText('rooms', 'bookNowBtn') }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <app-room-preview-sheet
+    [room]="roomPreview"
+    [booking]="roomPreview ? getStayingBookingForRoom(roomPreview) : null"
+    [transferHint]="roomPreview ? getRoomTransferHint(roomPreview) : null"
+    [pickRoomMode]="pickRoomMode"
+    [canPickRoom]="roomPreview ? canPickRoomForBooking(roomPreview) : false"
+    (dismiss)="closeRoomPreview()"
+    (pickRoom)="pickRoomForBooking($event)">
+  </app-room-preview-sheet>
+</div>

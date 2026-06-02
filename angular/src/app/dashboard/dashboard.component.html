@@ -1,0 +1,227 @@
+<div
+  class="dashboard-container"
+  [class.dashboard-container--normal]="viewMode === 'normal'"
+  [class.dashboard-container--advanced]="viewMode === 'advanced'">
+  <div class="dashboard-topbar glass-card">
+    <div>
+      <h2>
+        {{
+          viewMode === 'advanced'
+            ? ui.screenText('dashboard', 'viewTitleAdvanced')
+            : ui.screenText('dashboard', 'viewTitleNormal')
+        }}
+      </h2>
+    </div>
+    <div class="mode-switch" role="group" [attr.aria-label]="ui.screenText('dashboard', 'modeSwitchAria')">
+      <button type="button" [class.active]="viewMode === 'normal'" (click)="setViewMode('normal')">
+        <span>{{ ui.screenText('dashboard', 'btnNormalLabel') }}</span>
+        <small>{{ ui.screenText('dashboard', 'btnNormalHint') }}</small>
+      </button>
+      <button type="button" [class.active]="viewMode === 'advanced'" (click)="setViewMode('advanced')">
+        <span>{{ ui.screenText('dashboard', 'btnAdvancedLabel') }}</span>
+        <small>{{ ui.screenText('dashboard', 'btnAdvancedHint') }}</small>
+      </button>
+    </div>
+  </div>
+
+  <div class="welcome-card glass-card" *ngIf="viewMode === 'normal'">
+    <h1>{{ ui.screenText('dashboard', 'welcomePrefix') }}{{ hotelName }}</h1>
+
+    <div class="quick-actions">
+      <a routerLink="/booking" class="action-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="8.5" cy="7" r="4"></circle>
+          <line x1="20" y1="8" x2="20" y2="14"></line>
+          <line x1="23" y1="11" x2="17" y2="11"></line>
+        </svg>
+        <span>{{ ui.screenText('dashboard', 'quickBooking') }}</span>
+      </a>
+
+      <a routerLink="/bookings" class="action-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="9" y1="3" x2="9" y2="21"></line>
+          <line x1="3" y1="9" x2="21" y2="9"></line>
+        </svg>
+        <span>{{ ui.screenText('dashboard', 'quickBookings') }}</span>
+      </a>
+
+      <a routerLink="/settings" [queryParams]="{ tab: 'general' }" class="action-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+        </svg>
+        <span>{{ ui.screenText('dashboard', 'quickSettings') }}</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="stats-grid" *ngIf="viewMode === 'normal'">
+    <div class="stat-card glass-card clickable" routerLink="/rooms">
+      <div class="stat-icon" style="background: rgba(21, 101, 192, 0.12); color: var(--app-primary-mid);">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+      </div>
+      <div class="stat-info">
+        <h3>{{ ui.screenText('dashboard', 'statRoomsPlan') }}</h3>
+        <span class="value">{{ availableRoomsCount }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card glass-card clickable" routerLink="/bookings">
+      <div class="stat-icon" style="background: rgba(76, 175, 80, 0.2); color: #4caf50;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="9" y1="3" x2="9" y2="21"></line>
+          <line x1="3" y1="9" x2="21" y2="9"></line>
+        </svg>
+      </div>
+      <div class="stat-info">
+        <h3>{{ ui.screenText('dashboard', 'statBookingsRegs') }}</h3>
+        <span class="value">{{ bookingsCount }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="advanced-dashboard" *ngIf="viewMode === 'advanced'">
+    <p class="dashboard-loading" *ngIf="loading">{{ ui.screenText('bookings', 'loading') }}</p>
+
+    <div class="dash-metrics-board" *ngIf="!loading">
+      <div class="dash-metrics-row dash-metrics-row--primary">
+        <a class="dash-metric-card glass-card" routerLink="/rooms">
+          <span class="dash-metric-card__label">{{ ui.screenText('dashboard', 'metricTotalRooms') }}</span>
+          <span class="dash-metric-card__pct" [style.--pct.%]="pctTotalRooms">{{ pctTotalRooms }}%</span>
+          <strong class="dash-metric-card__value">{{ totalRoomsCount | localeNumber }}</strong>
+          <svg class="dash-metric-card__spark" viewBox="0 0 120 36" preserveAspectRatio="none" aria-hidden="true">
+            <polyline [attr.points]="sparkPolyline(sparklines.total)" />
+          </svg>
+        </a>
+
+        <a class="dash-metric-card glass-card dash-metric-card--success" routerLink="/rooms">
+          <span class="dash-metric-card__label">{{ ui.screenText('dashboard', 'metricAvailable') }}</span>
+          <span class="dash-metric-card__pct" [style.--pct.%]="pctAvailableRooms">{{ pctAvailableRooms }}%</span>
+          <strong class="dash-metric-card__value">{{ availableRoomsCount | localeNumber }}</strong>
+          <svg class="dash-metric-card__spark" viewBox="0 0 120 36" preserveAspectRatio="none" aria-hidden="true">
+            <polyline [attr.points]="sparkPolyline(sparklines.available)" />
+          </svg>
+        </a>
+
+        <a
+          class="dash-metric-card glass-card dash-metric-card--warning"
+          routerLink="/bookings"
+          [queryParams]="{ view: 'records' }">
+          <span class="dash-metric-card__label">{{ ui.screenText('dashboard', 'metricOccupied') }}</span>
+          <span class="dash-metric-card__pct" [style.--pct.%]="pctBookedRooms">{{ pctBookedRooms }}%</span>
+          <strong class="dash-metric-card__value">{{ bookedRoomsCount | localeNumber }}</strong>
+          <svg class="dash-metric-card__spark" viewBox="0 0 120 36" preserveAspectRatio="none" aria-hidden="true">
+            <polyline [attr.points]="sparkPolyline(sparklines.booked)" />
+          </svg>
+        </a>
+
+        <a class="dash-metric-card glass-card dash-metric-card--danger" routerLink="/rooms">
+          <span class="dash-metric-card__label">{{ ui.screenText('dashboard', 'metricMaintenanceDirty') }}</span>
+          <span class="dash-metric-card__pct" [style.--pct.%]="pctMaintenanceDirtyRooms">{{ pctMaintenanceDirtyRooms }}%</span>
+          <strong class="dash-metric-card__value">{{ maintenanceRoomsCount + dirtyRoomsCount | localeNumber }}</strong>
+          <small class="dash-metric-card__hint">
+            {{ ui.screenText('dashboard', 'metricMaintenanceShort') }}: {{ maintenanceRoomsCount | localeNumber }}
+            ·
+            {{ ui.screenText('dashboard', 'metricDirtyShort') }}: {{ dirtyRoomsCount | localeNumber }}
+          </small>
+          <svg class="dash-metric-card__spark" viewBox="0 0 120 36" preserveAspectRatio="none" aria-hidden="true">
+            <polyline [attr.points]="sparkPolyline(sparklines.maintenanceDirty)" />
+          </svg>
+        </a>
+
+        <a
+          class="dash-metric-card glass-card dash-metric-card--staying"
+          routerLink="/front-desk"
+          [queryParams]="{ pmsTab: 'staying' }">
+          <span class="dash-metric-card__label">{{ ui.screenText('dashboard', 'metricFrontDeskStaying') }}</span>
+          <span class="dash-metric-card__pct" [style.--pct.%]="pctStayingRooms">{{ pctStayingRooms }}%</span>
+          <strong class="dash-metric-card__value">{{ stayingRoomsCount | localeNumber }}</strong>
+          <svg class="dash-metric-card__spark" viewBox="0 0 120 36" preserveAspectRatio="none" aria-hidden="true">
+            <polyline [attr.points]="sparkPolyline(sparklines.staying)" />
+          </svg>
+        </a>
+      </div>
+
+      <div class="dash-metrics-row dash-metrics-row--secondary">
+        <a
+          class="dash-metric-card glass-card"
+          routerLink="/front-desk"
+          [queryParams]="{ pmsTab: 'staying' }">
+          <span class="dash-metric-card__label">{{ ui.screenText('dashboard', 'metricGuests') }}</span>
+          <span class="dash-metric-card__pct" [style.--pct.%]="pctGuests">{{ pctGuests }}%</span>
+          <strong class="dash-metric-card__value">{{ guestsCount | localeNumber }}</strong>
+          <small class="dash-metric-card__hint">
+            {{ ui.screenText('dashboard', 'metricAdultsShort') }}: {{ stayingAdultsCount | localeNumber }}
+            ·
+            {{ ui.screenText('dashboard', 'metricChildrenShort') }}: {{ stayingChildrenCount | localeNumber }}
+          </small>
+          <svg class="dash-metric-card__spark" viewBox="0 0 120 36" preserveAspectRatio="none" aria-hidden="true">
+            <polyline [attr.points]="sparkPolyline(sparklines.guests)" />
+          </svg>
+        </a>
+
+        <a class="dash-metric-card glass-card dash-metric-card--money" routerLink="/bookings">
+          <span class="dash-metric-card__label">{{ ui.screenText('dashboard', 'metricPaid') }}</span>
+          <span class="dash-metric-card__pct" [style.--pct.%]="pctPaid">{{ pctPaid }}%</span>
+          <strong class="dash-metric-card__value">{{ totalRevenue | localeNumber }}</strong>
+          <small class="dash-metric-card__currency">{{ hotelCurrency.symbol() }}</small>
+          <svg class="dash-metric-card__spark" viewBox="0 0 120 36" preserveAspectRatio="none" aria-hidden="true">
+            <polyline [attr.points]="sparkPolyline(sparklines.paid)" />
+          </svg>
+        </a>
+
+        <a class="dash-metric-card glass-card dash-metric-card--money" routerLink="/bookings">
+          <span class="dash-metric-card__label">{{ ui.screenText('dashboard', 'metricRemaining') }}</span>
+          <span class="dash-metric-card__pct" [style.--pct.%]="pctRemaining">{{ pctRemaining }}%</span>
+          <strong class="dash-metric-card__value">{{ remainingAmount | localeNumber }}</strong>
+          <small class="dash-metric-card__currency">{{ hotelCurrency.symbol() }}</small>
+          <svg class="dash-metric-card__spark" viewBox="0 0 120 36" preserveAspectRatio="none" aria-hidden="true">
+            <polyline [attr.points]="sparkPolyline(sparklines.remaining)" />
+          </svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="status-breakdown glass-card" *ngIf="!loading">
+      <div class="status-breakdown-head">
+        <div>
+          <span class="eyebrow">{{ ui.screenText('dashboard', 'occupancyEyebrow') }}</span>
+          <h3>{{ ui.screenText('dashboard', 'breakdownTitle') }}</h3>
+        </div>
+        <div class="progress-ring" [style.--rate.%]="occupancyRate">
+          <span>{{ occupancyRate }}%</span>
+        </div>
+      </div>
+      <div class="status-row">
+        <span>{{ ui.screenText('dashboard', 'statusVacant') }}</span>
+        <div class="bar"><i [style.width.%]="totalRoomsCount ? (availableRoomsCount / totalRoomsCount) * 100 : 0"></i></div>
+        <strong>{{ availableRoomsCount }}</strong>
+      </div>
+      <div class="status-row">
+        <span>{{ ui.screenText('dashboard', 'statusOccupiedLbl') }}</span>
+        <div class="bar occupied"><i [style.width.%]="totalRoomsCount ? (bookedRoomsCount / totalRoomsCount) * 100 : 0"></i></div>
+        <strong>{{ bookedRoomsCount }}</strong>
+      </div>
+      <div class="status-row">
+        <span>{{ ui.screenText('dashboard', 'statusMaintenanceLbl') }}</span>
+        <div class="bar maintenance"><i [style.width.%]="totalRoomsCount ? (maintenanceRoomsCount / totalRoomsCount) * 100 : 0"></i></div>
+        <strong>{{ maintenanceRoomsCount }}</strong>
+      </div>
+      <div class="status-row">
+        <span>{{ ui.screenText('dashboard', 'statusDirtyLbl') }}</span>
+        <div class="bar dirty"><i [style.width.%]="totalRoomsCount ? (dirtyRoomsCount / totalRoomsCount) * 100 : 0"></i></div>
+        <strong>{{ dirtyRoomsCount }}</strong>
+      </div>
+      <div class="status-row">
+        <span>{{ ui.screenText('dashboard', 'statusSuspendedShort') }}</span>
+        <div class="bar suspended"><i [style.width.%]="totalRoomsCount ? (suspendedRoomsCount / totalRoomsCount) * 100 : 0"></i></div>
+        <strong>{{ suspendedRoomsCount }}</strong>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="error" class="error-message">{{ error }}</div>
+</div>

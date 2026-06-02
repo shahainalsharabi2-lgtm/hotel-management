@@ -1,0 +1,5 @@
+# اقتراحات المحلّل على ملفات الهجرات المُولَّدة (مثل CA1861 / IDE0300) — لا تُعدَّل يدوياً
+[**/Migrations/*.cs]
+dotnet_analyzer_diagnostic.CA1861.severity = none
+dotnet_analyzer_diagnostic.IDE0300.severity = none
+dotnet_analyzer_diagnostic.IDE0301.severity = none

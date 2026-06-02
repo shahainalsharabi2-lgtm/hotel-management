@@ -1,0 +1,57 @@
+<div class="gc-page" [class.gc-page--embedded]="embedded" dir="rtl">
+  @if (embedded) {
+    <div class="gc-page-intro">
+      <h2>
+        <i class="fas fa-language" aria-hidden="true"></i>
+        {{ ui.screenText('settings', 'tabGeneralCodings') }}
+      </h2>
+      <p>{{ ui.screenText('settings', 'translationsPageIntro') }}</p>
+    </div>
+  } @else {
+    <header class="gc-page-header">
+      <div class="gc-page-header__main">
+        <div class="gc-page-header-icon" aria-hidden="true">
+          <i class="bi bi-grid-3x3-gap"></i>
+        </div>
+        <div>
+          <h1 class="gc-page-title">{{ ui.screenText('generalCodes', 'pageTitle') }}</h1>
+        </div>
+      </div>
+    </header>
+  }
+
+  <div class="gc-layout">
+    <aside class="gc-nav-col">
+      <div class="gc-nav-card">
+        <div class="gc-nav-inner">
+          <ul class="gc-nav-list">
+            @for (tab of tabs; track tab.id) {
+              <li>
+                <button
+                  type="button"
+                  class="gc-nav-link"
+                  [class.gc-nav-link--active]="activeTab === tab.id"
+                  (click)="selectTab(tab.id)">
+                  {{ tabLabel(tab.labelKey) }}
+                </button>
+              </li>
+            }
+          </ul>
+        </div>
+      </div>
+    </aside>
+
+    <div class="gc-content-col">
+      <div class="gc-content-card">
+        @if (activeTabConfig(); as tab) {
+          <div class="gc-content-inner">
+            <app-general-code-panel
+              [category]="tab.id"
+              [titleKey]="tab.labelKey"
+              [descriptionKey]="tab.descriptionKey" />
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

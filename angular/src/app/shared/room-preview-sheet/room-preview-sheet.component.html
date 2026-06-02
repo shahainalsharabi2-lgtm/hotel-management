@@ -1,0 +1,194 @@
+<div class="rps-wrap" *ngIf="room as r">
+  <button type="button" class="rps-scrim" (click)="close()" [attr.aria-label]="ui.screenText('bookings', 'closeModalAria')"></button>
+  <div
+    class="rps-panel"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-labelledby]="'rps-title-' + r.id"
+    (click)="$event.stopPropagation()">
+    <header class="rps-head" [ngClass]="'rps-head--' + r.status">
+      <div class="rps-num-ring">
+        <span class="rps-num">{{ r.roomNumber }}</span>
+      </div>
+      <div class="rps-head-text">
+        <h2 class="rps-title" [id]="'rps-title-' + r.id">{{ roomTitle(r.roomNumber) }}</h2>
+        <span class="rps-status-pill" [ngClass]="'rps-status-pill--' + r.status">{{ statusLabel(r.status) }}</span>
+        <p class="rps-transfer-line" *ngIf="transferHint as th">
+          <i class="fas fa-exchange-alt" aria-hidden="true"></i>
+          {{ transferLine(th) }}
+        </p>
+      </div>
+    </header>
+
+    <section class="rps-guest" *ngIf="booking as b">
+      <h3 class="rps-guest-title"><i class="fas fa-user-check"></i> {{ ui.screenText('roomPreview', 'guestSectionTitle') }}</h3>
+      <div class="rps-guest-hero">
+        <span class="rps-guest-avatar" aria-hidden="true">{{ guestInitial(b) }}</span>
+        <div class="rps-guest-hero-text">
+          <strong class="rps-guest-name">{{ guestFullName(b) }}</strong>
+          <span class="rps-guest-number">
+            <i class="fas fa-hashtag" aria-hidden="true"></i>
+            {{ ui.screenText('roomPreview', 'guestNumberLabel') }}: {{ guestNumber(b) }}
+          </span>
+        </div>
+      </div>
+
+      <div class="rps-guest-stats">
+        <div class="rps-guest-stat">
+          <span class="rps-guest-stat-label">{{ ui.screenText('bookings', 'pmsTotal') }}</span>
+          <span class="rps-guest-stat-val">{{ (b.total_Price || 0) | localeNumber:'money' }} {{ bookingSymbol(b) }}</span>
+        </div>
+        <div class="rps-guest-stat">
+          <span class="rps-guest-stat-label">{{ ui.screenText('bookings', 'pmsPaid') }}</span>
+          <span class="rps-guest-stat-val">{{ (b.payment_Amount || 0) | localeNumber:'money' }} {{ bookingSymbol(b) }}</span>
+        </div>
+        <div class="rps-guest-stat">
+          <span class="rps-guest-stat-label">{{ ui.screenText('bookings', 'pmsBalance') }}</span>
+          <span class="rps-guest-stat-val" [class.rps-guest-stat-val--due]="(b.remaining_Amount || 0) > 0">
+            {{ (b.remaining_Amount || 0) | localeNumber:'money' }} {{ bookingSymbol(b) }}
+          </span>
+        </div>
+      </div>
+
+      <ul class="rps-guest-list">
+        <li><i class="fas fa-phone"></i><span>{{ b.phone_Number || '—' }}</span></li>
+        <li><i class="fas fa-id-card"></i><span>{{ b.id_Type }} — {{ b.id_Number }}</span></li>
+        <li>
+          <i class="fas fa-calendar-day"></i>
+          <span>
+            {{ formatSlashDate(checkInYmd(b)) }} → {{ formatSlashDate(checkOutYmd(b)) }}
+            ({{ b.stay_Days || 0 }} {{ ui.screenText('booking', 'nightSingular') }})
+          </span>
+        </li>
+        <li><i class="fas fa-clock"></i><span>{{ formatTime12h(b.booking_Time) }}</span></li>
+        <li>
+          <i class="fas fa-user-friends"></i>
+          <span>{{ b.adults_Count }} {{ ui.screenText('bookings', 'guestAdultUnit') }} · {{ b.children_Count || 0 }} {{ ui.screenText('bookings', 'guestChildUnit') }}</span>
+        </li>
+        <li *ngIf="b.payment_Method"><i class="fas fa-wallet"></i><span>{{ b.payment_Method }}</span></li>
+      </ul>
+
+      <div class="rps-guest-countdown">
+        <i class="fas fa-hourglass-half" aria-hidden="true"></i>
+        <span>{{ ui.screenText('bookings', 'pmsRemainingCheckout') }}:</span>
+        <strong>{{ checkoutCountdown(b) }}</strong>
+      </div>
+
+      <a routerLink="/bookings" class="rps-guest-link" (click)="close()">
+        <i class="fas fa-list"></i> {{ ui.screenText('roomPreview', 'viewInBookings') }}
+      </a>
+    </section>
+
+    <div class="rps-specs">
+      <div class="rps-spec">
+        <span class="rps-spec-label">{{ ui.screenText('roomPreview', 'specType') }}</span>
+        <span class="rps-spec-value">{{ ui.roomTypeLabel(r.type) }}</span>
+      </div>
+      <div class="rps-spec">
+        <span class="rps-spec-label">{{ ui.screenText('roomPreview', 'specFloor') }}</span>
+        <span class="rps-spec-value">{{ r.floor }}</span>
+      </div>
+      <div class="rps-spec rps-spec--wide" *ngIf="r.status === 'maintenance' && (r.maintenanceReason || '').trim()">
+        <span class="rps-spec-label">{{ ui.screenText('roomPreview', 'maintenanceReasonLabel') }}</span>
+        <span class="rps-spec-value rps-spec-value--reason">{{ r.maintenanceReason }}</span>
+      </div>
+      <div class="rps-spec rps-spec--wide" *ngIf="maintenanceReasonDescription() as d">
+        <span class="rps-spec-label">{{ ui.screenText('roomPreview', 'maintenanceReasonDescLabel') }}</span>
+        <span class="rps-spec-value rps-spec-value--reason-desc">{{ d }}</span>
+      </div>
+      <div class="rps-spec rps-spec--wide">
+        <span class="rps-spec-label">{{ ui.screenText('roomPreview', 'specPriceNight') }}</span>
+        <div class="rps-price-chip">
+          <span class="rps-price-amt">{{ r.price | localeNumber:'money' }}</span>
+          <abbr class="rps-price-unit" [attr.title]="r.currencyCode || 'YER'">{{ priceSymbol(r) }}</abbr>
+        </div>
+      </div>
+    </div>
+
+    <section class="rps-status-edit" *ngIf="editableStatus">
+      <h3 class="rps-status-edit-title">
+        <i class="fas fa-broom"></i> {{ ui.screenText('roomPreview', 'editRoomStatus') }}
+      </h3>
+      <p class="rps-status-edit-desc">{{ ui.screenText('roomPreview', 'editRoomStatusDesc') }}</p>
+      <div class="rps-status-btns">
+        <button
+          type="button"
+          class="rps-status-btn rps-status-btn--available"
+          [class.rps-status-btn--active]="r.status === 'available'"
+          [disabled]="statusSaving || r.status === 'available'"
+          (click)="changeStatus('available')">
+          <i class="fas fa-broom"></i> {{ ui.screenText('roomDetails', 'btnClean') }}
+        </button>
+        <button
+          type="button"
+          class="rps-status-btn rps-status-btn--dirty"
+          [class.rps-status-btn--active]="r.status === 'dirty'"
+          [disabled]="statusSaving || r.status === 'dirty'"
+          (click)="changeStatus('dirty')">
+          <i class="fas fa-spray-can"></i> {{ ui.screenText('roomDetails', 'btnDirty') }}
+        </button>
+        <button
+          type="button"
+          class="rps-status-btn rps-status-btn--maintenance"
+          [class.rps-status-btn--active]="r.status === 'maintenance'"
+          [disabled]="statusSaving || r.status === 'maintenance'"
+          (click)="changeStatus('maintenance')">
+          <i class="fas fa-screwdriver-wrench"></i> {{ ui.screenText('roomDetails', 'btnMaintenance') }}
+        </button>
+        <button
+          type="button"
+          class="rps-status-btn rps-status-btn--suspended"
+          [class.rps-status-btn--active]="r.status === 'suspended'"
+          [disabled]="statusSaving || r.status === 'suspended'"
+          (click)="changeStatus('suspended')">
+          <i class="fas fa-hand-paper"></i> {{ ui.screenText('roomDetails', 'btnSuspended') }}
+        </button>
+      </div>
+      <p class="rps-status-saving" *ngIf="statusSaving">
+        <i class="fas fa-spinner fa-spin"></i> {{ ui.screenText('roomDetails', 'saving') }}
+      </p>
+
+      <div class="rps-maint-reason" *ngIf="maintenanceReasonOpen">
+        <label class="rps-maint-reason__label">
+          {{ ui.screenText('roomPreview', 'maintenanceReasonLabel') }}
+        </label>
+        <select
+          class="rps-maint-reason__select"
+          [(ngModel)]="selectedMaintenanceReason"
+          [disabled]="maintenanceReasonsLoading || statusSaving">
+          <option value="">{{ ui.screenText('roomPreview', 'maintenanceReasonPick') }}</option>
+          <option *ngFor="let it of maintenanceReasons" [value]="it.name">{{ it.name }}</option>
+        </select>
+      </div>
+    </section>
+
+    <button
+      type="button"
+      *ngIf="pickRoomMode && canPickRoom"
+      class="rps-pick-room-btn"
+      (click)="pickRoom.emit(r); close()">
+      <i class="fas fa-check-circle" aria-hidden="true"></i>
+      <span>{{ ui.screenText('rooms', 'pickRoomAction') }}</span>
+    </button>
+
+    <a
+      *ngIf="r.status === 'available' && !booking && !pickRoomMode && !maintenanceReasonOpen"
+      routerLink="/booking"
+      [queryParams]="{ roomNumber: r.roomNumber }"
+      class="rps-book-hover rps-book-hover--visible"
+      (click)="close()">
+      <i class="fas fa-calendar-plus" aria-hidden="true"></i>
+      <span>{{ ui.screenText('roomPreview', 'newBooking') }}</span>
+    </a>
+
+    <button
+      type="button"
+      *ngIf="maintenanceReasonOpen"
+      class="rps-book-hover rps-book-hover--visible"
+      [disabled]="statusSaving"
+      (click)="saveMaintenanceStatus()">
+      <i class="fas fa-save" aria-hidden="true"></i>
+      <span>{{ ui.screenText('roomPreview', 'maintenanceReasonSave') }}</span>
+    </button>
+  </div>
+</div>

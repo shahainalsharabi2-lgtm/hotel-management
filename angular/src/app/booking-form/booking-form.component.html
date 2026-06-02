@@ -1,0 +1,686 @@
+<div class="booking-page">
+  <div class="stars-container">
+    <div class="star" *ngFor="let s of stars" [style.top.%]="s.top" [style.left.%]="s.left"
+      [style.animation-delay.s]="s.delay"></div>
+  </div>
+
+  <div class="glass-card">
+    <header class="card-header">
+      <a [routerLink]="['/dashboard']" class="icon-circle-link">
+        <div class="icon-circle">
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+            stroke="#1976d2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+        </div>
+      </a>
+      <div class="header-text">
+        <h1>{{ bookingPageTitle }}</h1>
+        <p>{{ bookingPageSubtitle }}</p>
+      </div>
+      <a routerLink="/bookings" class="view-list-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
+        </svg>
+        {{ ui.screenText('booking', 'viewBookingsLink') }}
+      </a>
+    </header>
+
+    <form [formGroup]="bookingForm" (ngSubmit)="onSubmit()" class="modern-form">
+
+      <div
+        *ngIf="transferRoomMode"
+        class="transfer-room-flow"
+        [ngClass]="'transfer-room-flow--' + transferDisplayState"
+        role="status"
+        [attr.aria-label]="transferStateLabel()">
+        <div class="transfer-room-flow-head">
+          <i class="fas fa-exchange-alt" aria-hidden="true"></i>
+          <span class="transfer-room-flow-state">{{ transferStateLabel() }}</span>
+        </div>
+        <div class="transfer-room-from-to">
+          <div class="transfer-room-pill transfer-room-pill--from">
+            <span class="transfer-room-pill-label">{{ ui.screenText('booking', 'transferRoomFromLabel') }}</span>
+            <strong class="transfer-room-pill-num">{{ transferCurrentRoomNumber || '—' }}</strong>
+          </div>
+          <i class="fas fa-long-arrow-alt-left transfer-room-arrow" aria-hidden="true"></i>
+          <div class="transfer-room-pill transfer-room-pill--to">
+            <span class="transfer-room-pill-label">{{ ui.screenText('booking', 'transferRoomToLabel') }}</span>
+            <strong class="transfer-room-pill-num">
+              {{ transferTargetRoomNumber || ui.screenText('booking', 'transferRoomToPending') }}
+            </strong>
+          </div>
+        </div>
+        <p class="transfer-room-flow-hint" *ngIf="transferDisplayState === 'same'">
+          {{ ui.screenText('booking', 'transferRoomSameWarning') }}
+        </p>
+      </div>
+
+      <div *ngIf="reservationMode" class="transfer-room-banner reservation-banner" role="note">
+        <i class="fas fa-calendar-check" aria-hidden="true"></i>
+        <span>{{ ui.screenText('booking', 'reservationBanner') }}</span>
+      </div>
+
+      <div *ngIf="extendStayMode && checkInBookingInvoice" class="transfer-room-banner extend-stay-banner" role="note">
+        <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+        <span>{{ ui.screenText('booking', 'extendStayBanner') }}: {{ checkInBookingInvoice }}</span>
+      </div>
+
+      <div *ngIf="walkInCheckInMode" class="transfer-room-banner check-in-banner" role="note">
+        <i class="fas fa-door-open" aria-hidden="true"></i>
+        <span>{{ ui.screenText('booking', 'walkInCheckInBanner') }}</span>
+      </div>
+
+      <div *ngIf="checkInMode && !extendStayMode && !walkInCheckInMode && checkInBookingInvoice" class="transfer-room-banner check-in-banner" role="note">
+        <i class="fas fa-door-open" aria-hidden="true"></i>
+        <span>{{ ui.screenText('booking', 'checkInBanner') }}: {{ checkInBookingInvoice }}</span>
+      </div>
+
+      <div *ngIf="editBookingMode && editBookingInvoice" class="transfer-room-banner edit-booking-banner" role="note">
+        <i class="fas fa-pen" aria-hidden="true"></i>
+        <span>{{ ui.screenText('booking', 'editBookingBanner') }}: {{ editBookingInvoice }}</span>
+      </div>
+
+      <div class="booking-toolbar" [class.booking-toolbar--with-kind]="showBookingKindPicker">
+        <div class="top-meta-bar">
+          <div class="meta-item">
+            <label>{{ ui.screenText('booking', 'invoiceLabel') }}</label>
+            <div class="meta-value highlight">{{ bookingForm.get('invoice_Number')?.value }}</div>
+          </div>
+          <div class="meta-item">
+            <label>{{ ui.screenText('booking', 'bookingDateLabel') }}</label>
+            <div class="meta-value">{{ bookingForm.get('booking_Date')?.value }}</div>
+          </div>
+          <div class="meta-item">
+            <label>{{ ui.screenText('booking', 'bookingTimeLabel') }}</label>
+            <div class="meta-value">{{ bookingForm.get('booking_Time')?.value }}</div>
+          </div>
+        </div>
+        <div class="booking-kind-slot" *ngIf="showBookingKindPicker" (click)="$event.stopPropagation()">
+          <label class="booking-kind-slot__label" for="booking-kind-display">
+            <i class="fas fa-tag" aria-hidden="true"></i>
+            {{ ui.screenText('booking', 'bookingTypeLabel') }}
+          </label>
+          <div class="booking-kind-picker-wrap">
+            <div
+              class="booking-kind-field-shell"
+              [class.booking-kind-field-shell--open]="bookingKindPickerOpen"
+              [class.booking-kind-field-shell--locked]="bookingKindLocked">
+              <input
+                id="booking-kind-display"
+                type="text"
+                class="premium-input booking-kind-display"
+                readonly
+                [value]="selectedBookingKindLabel || ui.screenText('booking', 'bookingKindPlaceholder')"
+                [placeholder]="ui.screenText('booking', 'bookingKindPlaceholder')"
+                (click)="toggleBookingKindPicker($event)" />
+              <div class="booking-kind-field-actions">
+                <button
+                  type="button"
+                  class="booking-kind-clear-btn"
+                  *ngIf="!bookingKindLocked && selectedBookingKindLabel"
+                  (click)="clearBookingKind($event)"
+                  [attr.aria-label]="ui.screenText('booking', 'bookingKindClearAria')">
+                  <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+                <button
+                  type="button"
+                  class="booking-kind-toggle-btn"
+                  [disabled]="bookingKindLocked"
+                  (click)="toggleBookingKindPicker($event)"
+                  [attr.aria-expanded]="bookingKindPickerOpen"
+                  [attr.aria-label]="ui.screenText('booking', 'bookingKindToggleAria')">
+                  <i class="fas" [ngClass]="bookingKindPickerOpen ? 'fa-chevron-up' : 'fa-chevron-down'" aria-hidden="true"></i>
+                </button>
+              </div>
+            </div>
+            <div
+              class="booking-kind-panel"
+              *ngIf="bookingKindPickerOpen && !bookingKindLocked"
+              role="listbox"
+              [attr.aria-label]="ui.screenText('booking', 'bookingTypeLabel')">
+              <button
+                type="button"
+                class="booking-kind-option"
+                *ngFor="let opt of bookingKindOptions"
+                role="option"
+                [attr.aria-selected]="selectedBookingKind === opt.id"
+                [class.booking-kind-option--active]="selectedBookingKind === opt.id"
+                (click)="selectBookingKind(opt.id)">
+                <i class="fas" [ngClass]="opt.icon" aria-hidden="true"></i>
+                <span>{{ ui.screenText('booking', opt.labelKey) }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-panes-container">
+        <!-- Screen 1: Guest Data Pane -->
+        <div class="form-pane guest-pane">
+          <h2 class="pane-title">
+            <i class="fas fa-user-tag"></i>
+            {{ ui.screenText('booking', 'guestPaneTitle') }}
+          </h2>
+
+          <div class="pane-grid">
+            <div
+              class="form-group full-width guest-name-picker-wrap"
+              *ngIf="walkInCheckInMode"
+              (click)="$event.stopPropagation()">
+              <label>{{ ui.screenText('booking', 'guestFullNameLabel') }}</label>
+              <div
+                class="guest-name-field-shell"
+                [class.guest-name-field-shell--open]="guestPickerOpen"
+                [class.guest-name-field-shell--error]="submitted && bookingForm.get('guest_Full_Name')?.invalid"
+                (click)="$event.stopPropagation()">
+                <input
+                  type="search"
+                  formControlName="guest_Full_Name"
+                  class="premium-input guest-name-input"
+                  [placeholder]="ui.screenText('booking', 'guestPickSearchPlaceholder')"
+                  (focus)="onGuestNameFieldFocus()"
+                  (input)="onGuestNameFieldInput()"
+                  autocomplete="name" />
+                <button
+                  type="button"
+                  class="guest-pick-btn"
+                  (click)="toggleGuestPicker($event)"
+                  [attr.aria-expanded]="guestPickerOpen"
+                  [attr.aria-label]="ui.screenText('booking', 'guestPickAria')"
+                  [title]="ui.screenText('booking', 'guestPickAria')">
+                  <i class="fas fa-address-book" aria-hidden="true"></i>
+                </button>
+              </div>
+              <div
+                class="guest-picker-panel"
+                *ngIf="guestPickerOpen"
+                role="listbox"
+                [attr.aria-label]="ui.screenText('booking', 'guestPickTitle')"
+                (click)="$event.stopPropagation()">
+                <p class="guest-picker-hint" *ngIf="guestPickerLoading">
+                  {{ ui.screenText('booking', 'guestPickLoading') }}
+                </p>
+                <p class="guest-picker-hint" *ngIf="!guestPickerLoading && !filteredKnownGuests.length">
+                  {{ ui.screenText('booking', 'guestPickEmpty') }}
+                </p>
+                <ul class="guest-picker-list" *ngIf="!guestPickerLoading && filteredKnownGuests.length">
+                  <li *ngFor="let g of filteredKnownGuests">
+                    <button type="button" class="guest-picker-item" (click)="selectKnownGuest(g)">
+                      <span class="guest-picker-item-name">{{ g.fullName }}</span>
+                      <span class="guest-picker-item-meta" *ngIf="g.phone_Number || g.id_Number || g.nationality">
+                        <span *ngIf="g.phone_Number">{{ g.phone_Number }}</span>
+                        <span *ngIf="g.phone_Number && (g.id_Number || g.nationality)"> · </span>
+                        <span *ngIf="g.id_Number">{{ g.id_Type ? g.id_Type + ' ' : '' }}{{ g.id_Number }}</span>
+                        <span *ngIf="g.id_Number && g.nationality"> · </span>
+                        <span *ngIf="g.nationality">{{ g.nationality }}</span>
+                      </span>
+                    </button>
+                  </li>
+                </ul>
+              </div>
+              <div class="field-error" *ngIf="submitted && bookingForm.get('guest_Full_Name')?.invalid">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>{{ ui.screenText('booking', 'guestFullNameRequired') }}</span>
+              </div>
+            </div>
+            <div
+              class="form-group full-width guest-name-picker-wrap"
+              *ngIf="reservationMode"
+              (click)="$event.stopPropagation()">
+              <label>{{ ui.screenText('booking', 'guestFullNameLabel') }}</label>
+              <div
+                class="guest-name-field-shell guest-name-field-shell--reservation"
+                [class.guest-name-field-shell--open]="guestPickerOpen || guestProfileModalOpen"
+                [class.guest-name-field-shell--error]="submitted && bookingForm.get('guest_Full_Name')?.invalid"
+                (click)="$event.stopPropagation()">
+                <button
+                  type="button"
+                  class="guest-pick-btn guest-pick-btn--reservation"
+                  (click)="toggleGuestPicker($event)"
+                  [attr.aria-expanded]="guestPickerOpen"
+                  [attr.aria-label]="ui.screenText('booking', 'guestPickAria')"
+                  [title]="ui.screenText('booking', 'guestPickAria')">
+                  <i class="fas fa-address-book" aria-hidden="true"></i>
+                </button>
+                <input
+                  type="search"
+                  formControlName="guest_Full_Name"
+                  class="premium-input guest-name-input guest-name-input--reservation-pick"
+                  [placeholder]="ui.screenText('booking', 'guestPickSearchPlaceholder')"
+                  (focus)="onGuestNameFieldFocus()"
+                  (input)="onGuestNameFieldInput()"
+                  autocomplete="name" />
+                <button
+                  type="button"
+                  class="guest-profile-inline-btn"
+                  (click)="openGuestProfileModal($event)"
+                  [attr.aria-expanded]="guestProfileModalOpen"
+                  [attr.aria-label]="ui.screenText('booking', 'guestSaveInSystem')"
+                  [title]="ui.screenText('booking', 'guestSaveInSystem')">
+                  <i class="fas fa-user-plus" aria-hidden="true"></i>
+                </button>
+              </div>
+              <div
+                class="guest-picker-panel"
+                *ngIf="guestPickerOpen"
+                role="listbox"
+                [attr.aria-label]="ui.screenText('booking', 'guestPickTitle')"
+                (click)="$event.stopPropagation()">
+                <p class="guest-picker-hint" *ngIf="guestPickerLoading">
+                  {{ ui.screenText('booking', 'guestPickLoading') }}
+                </p>
+                <p class="guest-picker-hint" *ngIf="!guestPickerLoading && !filteredKnownGuests.length">
+                  {{ ui.screenText('booking', 'guestPickEmpty') }}
+                </p>
+                <ul class="guest-picker-list" *ngIf="!guestPickerLoading && filteredKnownGuests.length">
+                  <li *ngFor="let g of filteredKnownGuests">
+                    <button type="button" class="guest-picker-item" (click)="selectKnownGuest(g)">
+                      <span class="guest-picker-item-name">{{ g.fullName }}</span>
+                      <span class="guest-picker-item-meta" *ngIf="g.phone_Number || g.id_Number || g.nationality">
+                        <span *ngIf="g.phone_Number">{{ g.phone_Number }}</span>
+                        <span *ngIf="g.phone_Number && (g.id_Number || g.nationality)"> · </span>
+                        <span *ngIf="g.id_Number">{{ g.id_Type ? g.id_Type + ' ' : '' }}{{ g.id_Number }}</span>
+                        <span *ngIf="g.id_Number && g.nationality"> · </span>
+                        <span *ngIf="g.nationality">{{ g.nationality }}</span>
+                      </span>
+                      <span class="guest-picker-item-badge" *ngIf="g.fromRegistry">
+                        {{ ui.screenText('booking', 'guestPickRegistryBadge') }}
+                      </span>
+                    </button>
+                  </li>
+                </ul>
+              </div>
+              <div class="field-error" *ngIf="submitted && bookingForm.get('guest_Full_Name')?.invalid">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>{{ ui.screenText('booking', 'guestFullNameRequired') }}</span>
+              </div>
+            </div>
+            <ng-container *ngIf="!walkInCheckInMode && !reservationMode">
+              <div class="form-group">
+                <label>{{ ui.screenText('booking', 'firstNameLabel') }}</label>
+                <input type="text" formControlName="first_Name" placeholder="" class="premium-input" />
+              </div>
+              <div class="form-group">
+                <label>{{ ui.screenText('booking', 'lastNameLabel') }}</label>
+                <input type="text" formControlName="last_Name" placeholder="" class="premium-input" />
+              </div>
+            </ng-container>
+            <ng-container *ngIf="!reservationMode">
+            <div class="form-group">
+              <label>{{ ui.screenText('booking', 'idTypeLabel') }}</label>
+              <select formControlName="id_Type" class="premium-input field-box__control">
+                <option value="" disabled *ngIf="checkInMode">{{ ui.screenText('booking', 'idTypeLabel') }}</option>
+                <option *ngFor="let type of identityTypes" [value]="type.name">{{ type.name }}</option>
+              </select>
+            </div>
+            <div class="form-group" [class.has-error]="submitted && bookingForm.get('id_Number')?.invalid">
+              <label>{{ ui.screenText('booking', 'idNumberPlaceholder') }}</label>
+              <input
+                type="text"
+                formControlName="id_Number"
+                [maxlength]="idNumberMaxLength"
+                class="premium-input"
+                inputmode="numeric"
+                autocomplete="off"
+                [class.input-error]="submitted && bookingForm.get('id_Number')?.invalid" />
+              <div class="field-error" *ngIf="submitted && bookingForm.get('id_Number')?.errors as errs">
+                <i class="fas fa-exclamation-circle"></i>
+                <span *ngIf="errs['required']">هذا الحقل مطلوب</span>
+                <span *ngIf="errs['minlength'] || errs['maxlength']">
+                  يجب إدخال {{ idNumberMaxLength }} رقماً بالضبط
+                </span>
+                <span *ngIf="errs['pattern'] && !errs['minlength'] && !errs['maxlength']">يُسمح بالأرقام فقط</span>
+              </div>
+            </div>
+
+            <div class="form-group full-width" *ngIf="!reservationMode">
+              <label>{{ ui.screenText('booking', 'phoneLabel') }}</label>
+              <div class="phone-input-container">
+                <div class="phone-prefix" [attr.aria-label]="phoneDisplay.dialCode">
+                  <img
+                    class="flag-icon-img"
+                    [src]="phoneDisplay.flagSrc"
+                    alt=""
+                    width="22"
+                    height="16" />
+                  <span class="country-code">{{ phoneDisplay.dialCode }}</span>
+                </div>
+                <input
+                  type="tel"
+                  formControlName="phone_Number"
+                  placeholder=""
+                  [attr.maxlength]="phoneDisplay.maxLength"
+                  class="premium-input phone-input"
+                  [class.input-error]="submitted && bookingForm.get('phone_Number')?.invalid" />
+              </div>
+              <div class="field-error" *ngIf="submitted && bookingForm.get('phone_Number')?.invalid">
+                <i class="fas fa-exclamation-circle"></i>
+                <span *ngIf="bookingForm.get('phone_Number')?.errors?.['required']">{{ ui.screenText('booking', 'phoneRequired') }}</span>
+                <span *ngIf="bookingForm.get('phone_Number')?.errors?.['pattern']">{{ ui.screenText('booking', 'phonePattern') }}</span>
+                <span *ngIf="bookingForm.get('phone_Number')?.errors?.['minlength']">{{ ui.screenText('booking', 'phoneMinLength') }}</span>
+              </div>
+            </div>
+
+            </ng-container>
+
+            <div class="form-group full-width" *ngIf="reservationMode">
+              <label>{{ ui.screenText('booking', 'phoneLabel') }}</label>
+              <div class="phone-input-container">
+                <div class="phone-prefix" [attr.aria-label]="phoneDisplay.dialCode">
+                  <img class="flag-icon-img" [src]="phoneDisplay.flagSrc" alt="" width="22" height="16" />
+                  <span class="country-code">{{ phoneDisplay.dialCode }}</span>
+                </div>
+                <input type="tel" formControlName="phone_Number" class="premium-input phone-input" [attr.maxlength]="phoneDisplay.maxLength" />
+              </div>
+            </div>
+
+            <div class="numbers-modern-grid full-width reservation-guest-count" *ngIf="reservationMode">
+              <div class="stat-input-card">
+                <label><i class="fas fa-users"></i> {{ ui.screenText('booking', 'peopleCountLabel') }}</label>
+                <input type="number" formControlName="people_Count" min="1" />
+              </div>
+              <div class="stat-input-card highlight">
+                <label><i class="fas fa-calendar-day"></i> {{ ui.screenText('booking', 'daysLabel') }}</label>
+                <input type="number" formControlName="stay_Days" min="1" />
+              </div>
+            </div>
+
+            <div class="divider full-width" *ngIf="!reservationMode"></div>
+
+            <div class="numbers-modern-grid numbers-modern-grid--triple full-width" *ngIf="!reservationMode">
+              <div class="stat-input-card">
+                <label><i class="fas fa-user"></i> {{ ui.screenText('booking', 'adultsLabel') }}</label>
+                <input type="number" formControlName="adults_Count" min="1" />
+              </div>
+              <div class="stat-input-card">
+                <label><i class="fas fa-child"></i> {{ ui.screenText('booking', 'childrenLabel') }}</label>
+                <input type="number" formControlName="children_Count" min="0" />
+              </div>
+              <div class="stat-input-card highlight">
+                <label><i class="fas fa-calendar-day"></i> {{ ui.screenText('booking', 'daysLabel') }}</label>
+                <input type="number" formControlName="stay_Days" min="1" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Screen 2: Order Data Pane -->
+        <div class="form-pane order-pane" [class.order-pane--transfer]="transferRoomMode">
+          <h2 class="pane-title">
+            <i class="fas fa-shopping-cart"></i>
+            {{ ui.screenText('booking', 'orderPaneTitle') }}
+          </h2>
+
+          <div class="pane-grid">
+            <div class="form-group full-width field-box-group" [class.form-group--transfer-target]="transferRoomMode">
+              <label>{{
+                transferRoomMode
+                  ? ui.screenText('booking', 'transferRoomNewRoomLabel')
+                  : ui.screenText('booking', 'roomNumberLabel')
+              }}</label>
+              <div class="field-box-shell field-box-shell--select">
+                <select
+                  formControlName="room_Number"
+                  (change)="onRoomSelect($event)"
+                  class="premium-input field-box__control">
+                  <option value="" disabled>{{ ui.screenText('booking', 'chooseRoom') }}</option>
+                  <option *ngFor="let room of availableRooms" [value]="room.roomNumber">
+                    {{ ui.screenText('booking', 'roomOptionPrefix') }} {{ room.roomNumber }} ({{ room.type }})
+                  </option>
+                </select>
+                <button
+                  type="button"
+                  class="field-box__action"
+                  (click)="goPickRoomFromChart()"
+                  [attr.aria-label]="ui.screenText('booking', 'pickRoomFromChartAria')"
+                  [title]="ui.screenText('booking', 'pickRoomFromChartAria')">
+                  <i class="fas fa-th-large" aria-hidden="true"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>نوع الغرفة</label>
+              <input type="text" formControlName="room_Type" readonly class="readonly-input" />
+            </div>
+            <div class="form-group">
+              <label>الطابق</label>
+              <input type="text" formControlName="floor" readonly class="readonly-input" />
+            </div>
+
+            <div class="finance-section full-width">
+              <div class="finance-card total">
+                <label>سعر الغرفة الإجمالي</label>
+                <div class="price-display">
+                  <span>{{ bookingForm.get('total_Price')?.value | localeNumber:'money' }}</span>
+                  <small class="currency-tag">{{ priceCurrencySymbol() }}</small>
+                </div>
+              </div>
+
+              <div class="form-group payment-input" *ngIf="showPaidAmountField">
+                <label>
+                  {{ ui.screenText('booking', 'paidLabel') }}
+                  <span class="optional-tag" *ngIf="reservationMode && advanceDepositMode">*</span>
+                </label>
+                <div class="input-with-icon">
+                  <input
+                    type="number"
+                    formControlName="payment_Amount"
+                    [attr.min]="advanceDepositMode ? 0.01 : 0"
+                    [placeholder]="advanceDepositMode ? '' : '0'" />
+                  <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <div class="field-error" *ngIf="submitted && advanceDepositMode && bookingForm.get('payment_Amount')?.invalid">
+                  <i class="fas fa-exclamation-circle"></i>
+                  <span>{{ ui.screenText('booking', 'advanceDepositAmountRequired') }}</span>
+                </div>
+              </div>
+
+              <div class="finance-card balance" [class.debt]="(bookingForm.get('remaining_amount')?.value || 0) > 0">
+                <label>المبلغ المتبقي</label>
+                <div class="price-display">
+                  <span>{{ bookingForm.get('remaining_Amount')?.value | localeNumber:'money' }}</span>
+                  <small class="currency-tag">{{ priceCurrencySymbol() }}</small>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group full-width" *ngIf="showPaymentMethodField">
+              <label>طريقة الدفع</label>
+              <select formControlName="payment_Method" class="premium-input field-box__control">
+                <option *ngFor="let method of paymentMethods" [value]="method">{{ method }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-footer">
+        <div class="submit-section">
+          <button type="submit" class="btn-confirm-booking" [disabled]="loading || checkInPrefillBusy">
+            <span *ngIf="!loading && !checkInPrefillBusy">
+              <i class="fas" [ngClass]="transferRoomMode ? 'fa-exchange-alt' : 'fa-check-double'"></i>
+              {{ bookingSubmitLabel }}
+            </span>
+            <span *ngIf="loading || checkInPrefillBusy" class="loader-inline"></span>
+          </button>
+        </div>
+
+        <div *ngIf="success" class="toast success">
+          <i class="fas fa-check-circle"></i>
+          {{ ui.screenText('booking', 'successMsg') }}
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div
+    *ngIf="guestProfileModalOpen"
+    class="gp-modal-wrap guest-profile-modal-wrap"
+    (click)="closeGuestProfileModal()">
+    <div
+      class="gp-modal-panel"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-labelledby]="'gp-modal-title'"
+      (click)="$event.stopPropagation()">
+      <header class="gp-modal-head">
+        <h2 class="gp-modal-title" id="gp-modal-title">
+          <i class="fas fa-user-plus" aria-hidden="true"></i>
+          {{ ui.screenText('booking', 'guestProfileModalTitle') }}
+        </h2>
+        <button
+          type="button"
+          class="gp-modal-close"
+          (click)="closeGuestProfileModal()"
+          [attr.aria-label]="ui.screenText('booking', 'guestProfileModalClose')">
+          <i class="fas fa-times" aria-hidden="true"></i>
+        </button>
+      </header>
+
+      <form class="gp-modal-body" [formGroup]="guestProfileForm" (ngSubmit)="confirmGuestProfileModal()">
+        <div class="gp-modal-alert gp-modal-alert--warn" *ngIf="guestProfileValidationMessage">
+          <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+          <span>{{ guestProfileValidationMessage }}</span>
+        </div>
+        <section class="gp-modal-section">
+          <h3 class="gp-modal-section-title">
+            <i class="fas fa-id-card-alt" aria-hidden="true"></i>
+            {{ ui.screenText('booking', 'guestProfilePersonalSection') }}
+          </h3>
+          <div class="gp-modal-grid">
+            <div class="form-group">
+              <label>{{ ui.screenText('booking', 'guestProfileFirstName') }}</label>
+              <input type="text" formControlName="first_Name" class="premium-input" autocomplete="given-name" />
+              <div class="field-error" *ngIf="guestProfileSubmitted && guestProfileForm.get('first_Name')?.invalid">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>{{ ui.screenText('booking', 'fieldRequired') }}</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>{{ ui.screenText('booking', 'guestProfileMiddleName') }}</label>
+              <input type="text" formControlName="middle_Name" class="premium-input" autocomplete="additional-name" />
+            </div>
+            <div class="form-group">
+              <label>{{ ui.screenText('booking', 'guestProfileLastName') }}</label>
+              <input type="text" formControlName="last_Name" class="premium-input" autocomplete="family-name" />
+              <div class="field-error" *ngIf="guestProfileSubmitted && guestProfileForm.get('last_Name')?.invalid">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>{{ ui.screenText('booking', 'fieldRequired') }}</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>{{ ui.screenText('booking', 'phoneLabel') }}</label>
+              <input type="tel" formControlName="phone_Number" class="premium-input" autocomplete="tel" inputmode="numeric" />
+              <div class="field-error" *ngIf="guestProfileSubmitted && guestProfileForm.get('phone_Number')?.invalid">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>{{ ui.screenText('booking', 'phoneRequired') }}</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>{{ ui.screenText('booking', 'guestProfileGender') }}</label>
+              <select formControlName="gender" class="premium-input field-box__control">
+                <option value="" disabled>{{ ui.screenText('booking', 'guestProfileSelectPlaceholder') }}</option>
+                <option *ngFor="let g of guestGenderOptions" [value]="g.id">
+                  {{ ui.screenText('booking', g.labelKey) }}
+                </option>
+              </select>
+              <div class="field-error" *ngIf="guestProfileSubmitted && guestProfileForm.get('gender')?.invalid">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>{{ ui.screenText('booking', 'fieldRequired') }}</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>{{ ui.screenText('booking', 'guestProfileNationality') }}</label>
+              <input type="text" formControlName="nationality" class="premium-input" />
+              <div class="field-error" *ngIf="guestProfileSubmitted && guestProfileForm.get('nationality')?.invalid">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>{{ ui.screenText('booking', 'fieldRequired') }}</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>{{ ui.screenText('booking', 'guestProfileCountry') }}</label>
+              <input type="text" formControlName="country" class="premium-input" />
+              <div class="field-error" *ngIf="guestProfileSubmitted && guestProfileForm.get('country')?.invalid">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>{{ ui.screenText('booking', 'fieldRequired') }}</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>{{ ui.screenText('booking', 'guestProfileBirthDate') }}</label>
+              <input type="date" formControlName="birth_Date" class="premium-input" />
+              <div class="field-error" *ngIf="guestProfileSubmitted && guestProfileForm.get('birth_Date')?.invalid">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>{{ ui.screenText('booking', 'fieldRequired') }}</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="gp-modal-section">
+          <h3 class="gp-modal-section-title">
+            <i class="fas fa-passport" aria-hidden="true"></i>
+            {{ ui.screenText('booking', 'guestProfileIdentitySection') }}
+          </h3>
+          <div class="gp-modal-grid">
+            <div class="form-group">
+              <label>{{ ui.screenText('booking', 'idTypeLabel') }}</label>
+              <select formControlName="id_Type" class="premium-input field-box__control">
+                <option value="" disabled>{{ ui.screenText('booking', 'guestProfileSelectPlaceholder') }}</option>
+                <option *ngFor="let type of identityTypes" [value]="type.name">{{ type.name }}</option>
+              </select>
+              <div class="field-error" *ngIf="guestProfileSubmitted && guestProfileForm.get('id_Type')?.invalid">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>{{ ui.screenText('booking', 'fieldRequired') }}</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>{{ ui.screenText('booking', 'guestProfileIdIssuingCountry') }}</label>
+              <input type="text" formControlName="id_Issuing_Country" class="premium-input" />
+              <div
+                class="field-error"
+                *ngIf="guestProfileSubmitted && guestProfileForm.get('id_Issuing_Country')?.invalid">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>{{ ui.screenText('booking', 'fieldRequired') }}</span>
+              </div>
+            </div>
+            <div class="form-group gp-modal-grid-span-2">
+              <label>{{ ui.screenText('booking', 'idNumberPlaceholder') }}</label>
+              <input
+                type="text"
+                formControlName="id_Number"
+                class="premium-input"
+                inputmode="numeric"
+                [attr.maxlength]="idNumberMaxLength"
+                [placeholder]="idNumberHint || ui.screenText('booking', 'idNumberPlaceholder')" />
+              <p class="gp-modal-field-hint" *ngIf="idNumberHint">{{ idNumberHint }}</p>
+              <div class="field-error" *ngIf="guestProfileSubmitted && guestProfileForm.get('id_Number')?.hasError('required')">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>{{ ui.screenText('booking', 'fieldRequired') }}</span>
+              </div>
+              <div
+                class="field-error"
+                *ngIf="guestProfileSubmitted && guestProfileForm.get('id_Number')?.invalid && !guestProfileForm.get('id_Number')?.hasError('required')">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>{{ ui.screenText('booking', 'idNumberExactLength').replace('{n}', '' + idNumberMaxLength) }}</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <footer class="gp-modal-footer">
+          <button type="button" class="gp-modal-btn gp-modal-btn--ghost" (click)="closeGuestProfileModal()">
+            {{ ui.screenText('booking', 'guestProfileModalCancel') }}
+          </button>
+          <button type="submit" class="gp-modal-btn gp-modal-btn--primary" [disabled]="guestProfileSaving">
+            <i class="fas" [ngClass]="guestProfileSaving ? 'fa-spinner fa-spin' : 'fa-check'" aria-hidden="true"></i>
+            {{ guestProfileSaving ? ui.screenText('booking', 'guestProfileSaving') : ui.screenText('booking', 'guestProfileModalSave') }}
+          </button>
+        </footer>
+      </form>
+    </div>
+  </div>
+</div>

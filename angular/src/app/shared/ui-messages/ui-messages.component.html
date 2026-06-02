@@ -1,0 +1,46 @@
+<div class="ui-toast-host" aria-live="polite" aria-relevant="additions">
+  <div
+    *ngFor="let toast of uiMsg.toasts()"
+    class="ui-toast"
+    [class.ui-toast--success]="toast.tone === 'success'"
+    [class.ui-toast--error]="toast.tone === 'error'"
+    [class.ui-toast--warning]="toast.tone === 'warning'"
+    [class.ui-toast--info]="toast.tone === 'info'"
+    role="status">
+    <i class="fas" [ngClass]="toastIcon(toast.tone)" aria-hidden="true"></i>
+    <p class="ui-toast-text">{{ toast.message }}</p>
+    <button
+      type="button"
+      class="ui-toast-close"
+      (click)="uiMsg.dismissToast(toast.id)"
+      [attr.aria-label]="ui.chromeLabel('messageClose')">
+      <i class="fas fa-times" aria-hidden="true"></i>
+    </button>
+  </div>
+</div>
+
+<div
+  *ngIf="uiMsg.confirmRequest() as req"
+  class="ui-confirm-backdrop"
+  role="presentation"
+  (click)="onConfirm(false)">
+  <div
+    class="ui-confirm-panel"
+    role="alertdialog"
+    aria-modal="true"
+    aria-labelledby="ui-confirm-title"
+    (click)="$event.stopPropagation()">
+    <h2 id="ui-confirm-title" class="ui-confirm-title">
+      {{ ui.chromeLabel('messageConfirmTitle') }}
+    </h2>
+    <p class="ui-confirm-message">{{ req.message }}</p>
+    <div class="ui-confirm-actions">
+      <button type="button" class="ui-confirm-btn ui-confirm-btn--ghost" (click)="onConfirm(false)">
+        {{ ui.chromeLabel('messageCancel') }}
+      </button>
+      <button type="button" class="ui-confirm-btn ui-confirm-btn--primary" (click)="onConfirm(true)">
+        {{ ui.chromeLabel('messageConfirm') }}
+      </button>
+    </div>
+  </div>
+</div>

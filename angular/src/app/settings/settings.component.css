@@ -1,0 +1,485 @@
+/* UI translations editor */
+.ui-tr-section {
+  margin-top: 18px;
+}
+
+.ui-tr-section__title {
+  margin: 0 0 10px;
+  font-size: 1.05rem;
+  color: var(--app-text);
+}
+
+.ui-tr-table {
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.ui-tr-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 12px 12px;
+  border-top: 1px solid rgba(148, 163, 184, 0.18);
+  align-items: center;
+}
+
+.ui-tr-row:first-child {
+  border-top: 0;
+}
+
+.ui-tr-row--hidden {
+  display: none;
+}
+
+.ui-tr-cell--ar {
+  color: rgba(15, 23, 42, 0.82);
+  font-size: 0.92rem;
+}
+
+.ui-tr-input {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(255, 255, 255, 0.92);
+  padding: 10px 10px;
+  outline: none;
+}
+
+.ui-tr-input:focus {
+  border-color: rgba(37, 99, 235, 0.55);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.16);
+}
+
+.ui-tr-screens {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ui-tr-screen {
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.ui-tr-screen__head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 0;
+  cursor: pointer;
+  background: rgba(15, 23, 42, 0.04);
+  color: var(--app-text);
+  font-weight: 800;
+}
+
+.ui-tr-screen__title {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.95rem;
+  font-weight: 900;
+  opacity: 0.92;
+}
+
+.ui-tr-screen__key {
+  font-weight: 600;
+  font-size: 11px;
+  opacity: 0.65;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+}
+
+@media (max-width: 900px) {
+  .ui-tr-row {
+    grid-template-columns: 1fr;
+  }
+  .ui-tr-cell--input {
+    grid-column: 1 / -1;
+  }
+}
+
+
+/* ══ CURRENCY TAB — عملات دائرية بنقش ═══════════════════════════ */
+.currency-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.currency-preview-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.25rem 2rem;
+  padding: 1.5rem 1.75rem;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(21, 101, 192, 0.1) 0%, rgba(66, 165, 245, 0.06) 55%, rgba(255, 255, 255, 0.9) 100%);
+  border: var(--app-card-border);
+  box-shadow: var(--app-shadow-sm), var(--app-card-inset-ring);
+}
+
+.currency-preview-copy {
+  flex: 1 1 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.currency-preview-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: var(--app-text-normal-muted, var(--app-text-muted));
+}
+
+.currency-preview-amount {
+  font-size: clamp(1.75rem, 4vw, 2.35rem);
+  font-weight: 600;
+  color: var(--app-primary);
+  letter-spacing: -0.02em;
+}
+
+.currency-preview-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(21, 101, 192, 0.08);
+  border: 1px solid rgba(21, 101, 192, 0.22);
+  color: var(--app-primary);
+  font-size: 0.88rem;
+}
+
+.currency-preview-badge strong {
+  color: var(--app-primary);
+  font-weight: 600;
+}
+
+.currency-preview-badge em {
+  font-style: normal;
+  opacity: 0.85;
+  font-size: 0.82rem;
+}
+
+.currency-pick-hint {
+  margin: 0;
+}
+
+.currency-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(156px, 1fr));
+  gap: 16px;
+}
+
+.currency-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 1.15rem 0.75rem 1rem;
+  border-radius: 18px;
+  border: var(--app-card-border);
+  background: var(--app-surface);
+  color: inherit;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: center;
+  transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
+}
+
+.currency-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--app-border-strong);
+  background: var(--app-bg-soft);
+  box-shadow: var(--app-shadow);
+}
+
+.currency-card:hover .currency-coin {
+  transform: scale(1.04) rotate(-2deg);
+}
+
+.currency-card--active {
+  border-color: var(--app-primary-mid);
+  background: linear-gradient(165deg, rgba(227, 242, 253, 0.95), var(--app-surface));
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.18), var(--app-shadow-sm);
+}
+
+.currency-card--active .currency-coin {
+  transform: scale(1.06);
+  box-shadow:
+    0 10px 28px rgba(21, 101, 192, 0.28),
+    inset 0 2px 4px rgba(255, 255, 255, 0.45),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.18);
+}
+
+.currency-card-name {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--app-text);
+  line-height: 1.35;
+}
+
+.currency-card-code {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--app-text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.currency-card-check {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  color: #2e7d32;
+  font-size: 1.05rem;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.currency-card--active .currency-card-check {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ── العملة الدائرية (نقش + وجه) ── */
+.currency-coin {
+  --coin-size: 92px;
+  --coin-metal-1: #e8c547;
+  --coin-metal-2: #c9a227;
+  --coin-metal-3: #8b6914;
+  --coin-rim: #6d4c12;
+  position: relative;
+  width: var(--coin-size);
+  height: var(--coin-size);
+  flex-shrink: 0;
+  border-radius: 50%;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  filter: drop-shadow(0 6px 14px rgba(21, 101, 192, 0.2));
+}
+
+.currency-coin--preview {
+  --coin-size: 108px;
+}
+
+.currency-coin__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  padding: 5px;
+  background: conic-gradient(
+    from 210deg,
+    var(--coin-metal-1),
+    var(--coin-metal-2),
+    var(--coin-metal-3),
+    var(--coin-metal-2),
+    var(--coin-metal-1)
+  );
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.35),
+    inset 0 -4px 10px rgba(0, 0, 0, 0.22),
+    0 2px 0 rgba(255, 255, 255, 0.25);
+}
+
+.currency-coin__ring::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  border: 1px dashed rgba(255, 255, 255, 0.28);
+  pointer-events: none;
+}
+
+.currency-coin__ring-code,
+.currency-coin__ring-engrave {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.52rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--coin-rim);
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.55),
+    0 -1px 1px rgba(0, 0, 0, 0.35);
+  white-space: nowrap;
+  max-width: 78%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.currency-coin__ring-code {
+  top: 9px;
+}
+
+.currency-coin__ring-engrave {
+  bottom: 9px;
+  font-size: 0.5rem;
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+
+.currency-coin__face {
+  position: absolute;
+  inset: 14px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  background: radial-gradient(circle at 32% 28%, #fffef8 0%, var(--coin-metal-1) 38%, var(--coin-metal-2) 72%, var(--coin-metal-3) 100%);
+  box-shadow:
+    inset 0 3px 8px rgba(255, 255, 255, 0.5),
+    inset 0 -5px 12px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.currency-coin__face::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.22) 0%, transparent 42%, rgba(0, 0, 0, 0.08) 100%);
+  pointer-events: none;
+}
+
+.currency-coin__flag {
+  font-size: 1.1rem;
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
+  z-index: 1;
+}
+
+.currency-coin__flag--icon {
+  font-size: 0.95rem;
+  color: var(--app-primary-mid);
+}
+
+.currency-coin__symbol {
+  font-size: 1.45rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #3e2723;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.7),
+    0 -1px 2px rgba(0, 0, 0, 0.25);
+  z-index: 1;
+}
+
+.currency-coin--preview .currency-coin__symbol {
+  font-size: 1.65rem;
+}
+
+/* ألوان معدنية لكل عملة / دولة */
+.currency-coin--yer {
+  --coin-metal-1: #f4d03f;
+  --coin-metal-2: #d4a017;
+  --coin-metal-3: #9a7b0a;
+  --coin-rim: #5d4e37;
+}
+
+.currency-coin--sar {
+  --coin-metal-1: #e8f5e9;
+  --coin-metal-2: #c8e6c9;
+  --coin-metal-3: #2e7d32;
+  --coin-rim: #1b5e20;
+}
+
+.currency-coin--usd {
+  --coin-metal-1: #eceff1;
+  --coin-metal-2: #b0bec5;
+  --coin-metal-3: #546e7a;
+  --coin-rim: #37474f;
+}
+
+.currency-coin--eur {
+  --coin-metal-1: #fff8e1;
+  --coin-metal-2: #ffca28;
+  --coin-metal-3: #1565c0;
+  --coin-rim: #0d47a1;
+}
+
+.currency-coin--aed {
+  --coin-metal-1: #fffde7;
+  --coin-metal-2: #ffd54f;
+  --coin-metal-3: #c62828;
+  --coin-rim: #b71c1c;
+}
+
+.currency-coin--try {
+  --coin-metal-1: #ffebee;
+  --coin-metal-2: #ef9a9a;
+  --coin-metal-3: #b71c1c;
+  --coin-rim: #7f0000;
+}
+
+.currency-coin--cny {
+  --coin-metal-1: #ffcdd2;
+  --coin-metal-2: #ef5350;
+  --coin-metal-3: #b71c1c;
+  --coin-rim: #880e4f;
+}
+
+.currency-coin--custom {
+  --coin-metal-1: #e3f2fd;
+  --coin-metal-2: #90caf9;
+  --coin-metal-3: #1565c0;
+  --coin-rim: #0d47a1;
+}
+
+.currency-custom-panel {
+  margin-top: 4px;
+  animation: currencyPanelIn 0.28s ease-out;
+}
+
+@keyframes currencyPanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 520px) {
+  .currency-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .currency-preview-card {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .currency-preview-copy {
+    align-items: center;
+  }
+}
+
+.identity-types-loading,
+.identity-types-error {
+  margin: 0 0 0.75rem;
+  font-size: 0.88rem;
+}
+
+.identity-types-loading {
+  color: var(--app-text-muted);
+}
+
+.identity-types-error {
+  color: #ef9a9a;
+}

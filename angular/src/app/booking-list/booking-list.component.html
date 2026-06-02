@@ -1,0 +1,984 @@
+<div
+  class="list-page"
+  [class.bookings-pms-layout]="bookingsCardLayout"
+  [class.bookings-front-desk-layout]="bookingsCardLayout && isFrontDeskRoute()"
+  [class.rooms-page--advanced]="bookingsCardLayout"
+  [class.list-page--guest-modal-open]="guestDetailModalBooking || transferAmountModalBooking || departCheckoutModalBooking">
+  <div *ngIf="loading" class="loader-container">
+    <div class="loader"></div>
+    <p>{{ ui.screenText('bookings', 'loading') }}</p>
+  </div>
+
+  <div *ngIf="error" class="error-msg">
+    {{ error }}
+  </div>
+
+  <ng-container *ngIf="!loading && !error">
+    <!-- الوضع العادي: جدول -->
+    <div class="glass-card" *ngIf="!bookingsCardLayout">
+      <div class="header">
+        <div class="header-main">
+          <a [routerLink]="['/dashboard']" class="home-link">
+            <div class="icon-circle">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="#1976d2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+              </svg>
+            </div>
+          </a>
+          <div class="title-section">
+            <h1>{{ ui.screenText('bookings', 'pageTitle') }}</h1>
+            <p>{{ ui.screenText('bookings', 'pageSubtitle') }}</p>
+          </div>
+        </div>
+        <button class="add-btn" routerLink="/booking">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          {{ ui.screenText('bookings', 'newBooking') }}
+        </button>
+      </div>
+
+      <div class="search-container">
+        <div class="filter-group">
+          <div class="search-box">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+              stroke="#1976d2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" [(ngModel)]="searchTerm" [placeholder]="ui.screenText('bookings', 'searchPlaceholder')"
+              class="search-input">
+          </div>
+
+          <div class="date-filter-box">
+            <input type="date" [(ngModel)]="filterDate" class="date-input" [title]="ui.screenText('bookings', 'filterByDate')">
+            <button class="clear-date-btn" (click)="filterDate = ''" *ngIf="filterDate" [title]="ui.screenText('bookings', 'showAll')">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="filteredBookings.length === 0" class="empty-state">
+        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        <p>{{ ui.screenText('bookings', 'emptyState') }}</p>
+      </div>
+
+      <div *ngIf="filteredBookings.length > 0" class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>{{ ui.screenText('bookings', 'colInvoice') }}</th>
+              <th>{{ ui.screenText('bookings', 'colName') }}</th>
+              <th>{{ ui.screenText('bookings', 'colPeople') }}</th>
+              <th>{{ ui.screenText('bookings', 'colDays') }}</th>
+              <th>{{ ui.screenText('bookings', 'colRemaining') }}</th>
+              <th>{{ ui.screenText('bookings', 'colRoom') }}</th>
+              <th>{{ ui.screenText('bookings', 'colRoomType') }}</th>
+              <th>{{ ui.screenText('bookings', 'colDate') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <ng-container *ngFor="let booking of filteredBookings">
+              <tr class="main-row" [class.expanded]="expandedBookingId === booking.id">
+                <td><span class="invoice-badge">{{ booking.invoice_Number }}</span></td>
+                <td (click)="toggleExpand(booking.id)" class="clickable-name">
+                  <span class="name">{{ booking.first_Name }} {{ booking.last_Name }}</span>
+                  <i class="fas" [ngClass]="expandedBookingId === booking.id ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                </td>
+                <td>
+                  <span class="guests-count">
+                    <strong>{{ booking.people_Count || (booking.adults_Count || 0) + (booking.children_Count || 0)
+                      }}</strong>
+                  </span>
+                </td>
+                <td>
+                  <div class="days-badge" (click)="showRemainingTime(booking)" [title]="ui.screenText('bookings', 'daysRemainingTitle')">
+                    <i class="fas fa-clock"></i>
+                    {{ booking.stay_Days }} {{ ui.screenText('bookings', 'dayUnit') }}
+                  </div>
+                </td>
+                <td>
+                  <span
+                    class="amount remaining"
+                    [class.debt]="(booking.remaining_Amount || 0) > 0">
+                    {{ (booking.remaining_Amount || 0) | localeNumber:'money' }} {{ bookingCurrencySymbol(booking) }}
+                  </span>
+                </td>
+                <td><span class="room-badge">{{ booking.room_Number }}</span></td>
+                <td>{{ booking.room_Type }}</td>
+
+                <td>{{ booking.booking_Date }}</td>
+              </tr>
+
+              <tr *ngIf="expandedBookingId === booking.id" class="details-row">
+                <td colspan="8">
+                  <div class="pms-guest-detail-shell">
+                    <div class="details-bar glass-panel pms-guest-detail-panel bk-detail-panel--light">
+                      <div class="pms-guest-detail-grid">
+                        <div class="detail-item">
+                          <i class="fas fa-phone"></i>
+                          <label>{{ ui.screenText('bookings', 'detailPhone') }}</label>
+                          <span>{{ booking.phone_Number }}</span>
+                        </div>
+                        <div class="detail-item">
+                          <i class="fas fa-id-card"></i>
+                          <label>{{ ui.screenText('bookings', 'detailIdentity') }}</label>
+                          <span>{{ booking.id_Type }} ({{ booking.id_Number }})</span>
+                        </div>
+                        <div class="detail-item">
+                          <i class="fas fa-money-bill-wave"></i>
+                          <label>{{ ui.screenText('bookings', 'detailPaid') }}</label>
+                          <span class="paid">{{ booking.payment_Amount | localeNumber:'money' }} {{ bookingCurrencySymbol(booking) }}</span>
+                        </div>
+                        <div class="detail-item">
+                          <i class="fas fa-balance-scale"></i>
+                          <label>{{ ui.screenText('bookings', 'detailRemaining') }}</label>
+                          <span
+                            class="pms-balance-inline"
+                            [class.pms-balance-inline--due]="(booking.remaining_Amount || 0) > 0">
+                            {{ (booking.remaining_Amount || 0) | localeNumber:'money' }} {{ bookingCurrencySymbol(booking) }}
+                          </span>
+                        </div>
+                        <div class="detail-item">
+                          <i class="fas fa-clock"></i>
+                          <label>{{ ui.screenText('bookings', 'detailBookingTime') }}</label>
+                          <span>{{ formatTime12h(booking.booking_Time) }}</span>
+                        </div>
+                        <div class="detail-item">
+                          <i class="fas fa-user-friends"></i>
+                          <label>{{ ui.screenText('bookings', 'detailGuests') }}</label>
+                          <span>{{ booking.adults_Count }} {{ ui.screenText('bookings', 'guestAdultUnit') }} · {{ booking.children_Count }} {{ ui.screenText('bookings', 'guestChildUnit') }}</span>
+                        </div>
+                      </div>
+                      <div class="pms-checkout-banner">
+                        <i class="fas fa-hourglass-half" aria-hidden="true"></i>
+                        <span class="pms-checkout-banner-label">{{ ui.screenText('bookings', 'checkoutUntil') }}</span>
+                        <span class="pms-checkout-banner-val">{{ checkoutCountdownText(booking) }}</span>
+                      </div>
+                      <div class="detail-actions bk-detail-icon-actions">
+                        <button
+                          *ngIf="booking.status !== 'cancelled'"
+                          type="button"
+                          class="bk-detail-icon-btn bk-detail-icon-btn--edit"
+                          (click)="editBooking(booking)"
+                          [attr.aria-label]="ui.screenText('bookings', 'editBookingBtn')">
+                          <i class="fas fa-user-edit" aria-hidden="true"></i>
+                          <span class="bk-detail-icon-tooltip">{{ ui.screenText('bookings', 'editBookingBtn') }}</span>
+                        </button>
+                        <button
+                          *ngIf="!isCheckoutTodayBooking(booking)"
+                          type="button"
+                          class="bk-detail-icon-btn bk-detail-icon-btn--room"
+                          (click)="changeRoom(booking)"
+                          [attr.aria-label]="ui.screenText('bookings', 'changeRoomBtn')">
+                          <i class="fas fa-exchange-alt" aria-hidden="true"></i>
+                          <span class="bk-detail-icon-tooltip">{{ ui.screenText('bookings', 'changeRoomBtn') }}</span>
+                        </button>
+                        <button
+                          *ngIf="!isCheckoutTodayBooking(booking)"
+                          type="button"
+                          class="bk-detail-icon-btn bk-detail-icon-btn--depart"
+                          (click)="onDepartGuest(booking)"
+                          [attr.aria-label]="ui.screenText('bookings', 'departBtn')">
+                          <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+                          <span class="bk-detail-icon-tooltip">{{ ui.screenText('bookings', 'departBtn') }}</span>
+                        </button>
+                        <button
+                          *ngIf="(booking.remaining_Amount || 0) > 0"
+                          type="button"
+                          class="bk-detail-icon-btn bk-detail-icon-btn--transfer"
+                          (click)="payRemaining(booking)"
+                          [attr.aria-label]="ui.screenText('bookings', 'transferAmountBtn')">
+                          <i class="fas fa-hand-holding-usd" aria-hidden="true"></i>
+                          <span class="bk-detail-icon-tooltip">{{ ui.screenText('bookings', 'transferAmountBtn') }}</span>
+                        </button>
+                        <button
+                          *ngIf="isCheckoutTodayBooking(booking)"
+                          type="button"
+                          class="bk-detail-icon-btn bk-detail-icon-btn--renew"
+                          (click)="renewBooking(booking)"
+                          [attr.aria-label]="ui.screenText('bookings', 'renewBooking')">
+                          <i class="fas fa-redo" aria-hidden="true"></i>
+                          <span class="bk-detail-icon-tooltip">{{ ui.screenText('bookings', 'renewBooking') }}</span>
+                        </button>
+                        <button
+                          *ngIf="booking.status !== 'cancelled' && booking.status !== 'checked_out'"
+                          type="button"
+                          class="bk-detail-icon-btn bk-detail-icon-btn--add"
+                          (click)="addAnotherBookingForGuest(booking)"
+                          [attr.aria-label]="ui.screenText('bookings', 'addGuestBookingBtn')">
+                          <i class="fas fa-plus-circle" aria-hidden="true"></i>
+                          <span class="bk-detail-icon-tooltip">{{ ui.screenText('bookings', 'addGuestBookingHint') }}</span>
+                        </button>
+                        <button
+                          *ngIf="canCleanBookedDirtyRoom(booking)"
+                          type="button"
+                          class="bk-detail-icon-btn bk-detail-icon-btn--clean"
+                          (click)="cleanBookedDirtyRoom(booking)"
+                          [attr.aria-label]="ui.screenText('bookings', 'cleanRoomBtn')">
+                          <i class="fas fa-broom" aria-hidden="true"></i>
+                          <span class="bk-detail-icon-tooltip">{{ ui.screenText('bookings', 'cleanRoomHint') }}</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </ng-container>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- وضع المطوّر: نفس هيكل واجهة مخطط الغرف -->
+    <div
+      class="rooms-dev-advanced-shell bookings-pms-shell"
+      [class.rooms-dev-advanced-shell--rail-collapsed]="!bookingsStatusRailOpen || isBookingsRecordsHub()"
+      [class.bookings-pms-shell--rail-open]="bookingsStatusRailOpen && !isBookingsRecordsHub()"
+      [class.bookings-pms-shell--records-hub]="isBookingsRecordsHub()"
+      *ngIf="bookingsCardLayout">
+      <aside
+        class="rooms-dev-status-rail"
+        *ngIf="bookingsStatusRailOpen && showPmsStatusRail"
+        role="toolbar"
+        [attr.aria-label]="ui.screenText('bookings', 'pmsBookingsRailAria')"
+        [attr.aria-keyshortcuts]="ui.screenText('bookings', 'pmsRailKeysAria')">
+        <div class="rooms-dev-status-rail-head bookings-status-rail-head">
+          <span class="rooms-dev-status-rail-title">{{
+            isFrontDeskRoute()
+              ? ui.screenText('bookings', 'frontDeskRailTitle')
+              : ui.screenText('rooms', 'devStatusRailTitle')
+          }}</span>
+          <span class="bookings-rail-keys-hint">{{ ui.screenText('bookings', 'pmsRailKeysHint') }}</span>
+        </div>
+        <ng-container *ngIf="isFrontDeskRoute(); else bookingsFullPmsRail">
+          <button
+            type="button"
+            class="rooms-dev-tile rooms-dev-tile--rail tone-blue"
+            [class.rooms-dev-tile--active]="pmsTab === 'arriving'"
+            data-pms-rail-tab="arriving"
+            (click)="setPmsTab('arriving')">
+            <i class="fas fa-plane-arrival"></i>
+            <span class="rooms-dev-tile-count">{{ pmsTabCounts.arriving }}</span>
+            <span class="rooms-dev-tile-label">{{ ui.screenText('bookings', 'pmsTabArriving') }}</span>
+          </button>
+          <button
+            type="button"
+            class="rooms-dev-tile rooms-dev-tile--rail tone-green"
+            [class.rooms-dev-tile--active]="pmsTab === 'staying'"
+            data-pms-rail-tab="staying"
+            (click)="setPmsTab('staying')">
+            <i class="fas fa-bed"></i>
+            <span class="rooms-dev-tile-count">{{ pmsTabCounts.staying }}</span>
+            <span class="rooms-dev-tile-label">{{ ui.screenText('bookings', 'pmsTabStaying') }}</span>
+          </button>
+          <button
+            type="button"
+            class="rooms-dev-tile rooms-dev-tile--rail tone-amber"
+            [class.rooms-dev-tile--active]="pmsTab === 'departing'"
+            data-pms-rail-tab="departing"
+            (click)="setPmsTab('departing')">
+            <i class="fas fa-plane-departure"></i>
+            <span class="rooms-dev-tile-count">{{ pmsTabCounts.departing }}</span>
+            <span class="rooms-dev-tile-label">{{ ui.screenText('bookings', 'pmsTabDeparting') }}</span>
+          </button>
+        </ng-container>
+        <ng-template #bookingsFullPmsRail>
+        <button
+          type="button"
+          class="rooms-dev-tile rooms-dev-tile--rail tone-amber"
+          [class.rooms-dev-tile--active]="pmsTab === 'departing'"
+          data-pms-rail-tab="departing"
+          (click)="setPmsTab('departing')">
+          <i class="fas fa-plane-departure"></i>
+          <span class="rooms-dev-tile-count">{{ pmsTabCounts.departing }}</span>
+          <span class="rooms-dev-tile-label">{{ ui.screenText('bookings', 'pmsTabDeparting') }}</span>
+        </button>
+        <button
+          type="button"
+          class="rooms-dev-tile rooms-dev-tile--rail tone-green"
+          [class.rooms-dev-tile--active]="pmsTab === 'staying'"
+          data-pms-rail-tab="staying"
+          (click)="setPmsTab('staying')">
+          <i class="fas fa-bed"></i>
+          <span class="rooms-dev-tile-count">{{ pmsTabCounts.staying }}</span>
+          <span class="rooms-dev-tile-label">{{ ui.screenText('bookings', 'pmsTabStaying') }}</span>
+        </button>
+        <button
+          type="button"
+          class="rooms-dev-tile rooms-dev-tile--rail tone-blue"
+          [class.rooms-dev-tile--active]="pmsTab === 'arriving'"
+          data-pms-rail-tab="arriving"
+          (click)="setPmsTab('arriving')">
+          <i class="fas fa-plane-arrival"></i>
+          <span class="rooms-dev-tile-count">{{ pmsTabCounts.arriving }}</span>
+          <span class="rooms-dev-tile-label">{{ ui.screenText('bookings', 'pmsTabArriving') }}</span>
+        </button>
+        <button
+          type="button"
+          class="rooms-dev-tile rooms-dev-tile--rail tone-blue"
+          [class.rooms-dev-tile--active]="pmsTab === 'multi'"
+          data-pms-rail-tab="multi"
+          (click)="setPmsTab('multi')">
+          <i class="fas fa-clone"></i>
+          <span class="rooms-dev-tile-count">{{ pmsTabCounts.multi }}</span>
+          <span class="rooms-dev-tile-label">{{ ui.screenText('bookings', 'pmsTabMultiBookings') }}</span>
+        </button>
+        <button
+          type="button"
+          class="rooms-dev-tile rooms-dev-tile--rail tone-rose"
+          [class.rooms-dev-tile--active]="pmsTab === 'unconfirmed'"
+          data-pms-rail-tab="unconfirmed"
+          (click)="setPmsTab('unconfirmed')">
+          <i class="fas fa-user-clock"></i>
+          <span class="rooms-dev-tile-count">{{ pmsTabCounts.unconfirmed }}</span>
+          <span class="rooms-dev-tile-label">{{ ui.screenText('bookings', 'pmsTabCheckoutToday') }}</span>
+        </button>
+        <button
+          type="button"
+          class="rooms-dev-tile rooms-dev-tile--rail tone-xfer"
+          [class.rooms-dev-tile--active]="pmsTab === 'transferred'"
+          data-pms-rail-tab="transferred"
+          (click)="setPmsTab('transferred')">
+          <i class="fas fa-exchange-alt"></i>
+          <span class="rooms-dev-tile-count">{{ pmsTabCounts.transferred }}</span>
+          <span class="rooms-dev-tile-label">{{ ui.screenText('bookings', 'pmsTabTransferred') }}</span>
+        </button>
+        </ng-template>
+      </aside>
+
+      <button
+        type="button"
+        *ngIf="!bookingsStatusRailOpen && showPmsStatusRail"
+        class="rooms-dev-rail-reopen"
+        (click)="openBookingsStatusRail()"
+        [title]="ui.screenText('rooms', 'devShowRail')"
+        [attr.aria-label]="ui.screenText('rooms', 'devShowRail')">
+        <i class="fas fa-filter"></i>
+        <span class="rooms-dev-rail-reopen-label">{{ ui.screenText('bookings', 'pmsRailStates') }}</span>
+      </button>
+
+      <div
+        id="bookings-pms-main-panel"
+        class="rooms-dev-advanced-core"
+        tabindex="-1">
+        <header class="rooms-dev-page-head">
+          <div>
+            <h1 class="rooms-dev-title">{{ pmsPageTitle }}</h1>
+            <p class="rooms-dev-sub" *ngIf="isFrontDeskRoute() && pmsTab !== 'arriving'">
+              {{ ui.screenText('bookings', 'frontDeskPageSubtitle') }}
+            </p>
+            <p class="rooms-dev-sub rooms-dev-sub--metrics" *ngIf="bookingRateLine">
+              {{ bookingRateLine }}
+            </p>
+            <p class="rooms-dev-sub rooms-dev-sub--tab-only" *ngIf="!isBookingsRecordsHub() && !isFrontDeskRoute()">
+              {{ pmsTabLabel }}
+            </p>
+          </div>
+          <a
+            *ngIf="isBookingsRecordsHub()"
+            routerLink="/booking"
+            class="rooms-dev-clear-filter bookings-pms-new-link">{{ ui.screenText('bookings', 'newBooking') }}</a>
+        </header>
+
+        <div
+          class="rooms-dev-controls-sticky"
+          [class.rooms-dev-controls-sticky--collapsed]="!bookingsFilterToolbarOpen">
+          <button
+            type="button"
+            class="rooms-dev-controls-toggle"
+            (click)="toggleBookingsFilterToolbar()"
+            [attr.aria-expanded]="bookingsFilterToolbarOpen"
+            aria-controls="bookings-pms-filter-panel"
+            id="bookings-pms-filter-toggle">
+            <span class="rooms-dev-controls-toggle-label">
+              <i class="fas fa-sliders-h" aria-hidden="true"></i>
+              {{ ui.screenText('bookings', 'pmsSearchFilter') }}
+            </span>
+            <span class="rooms-dev-controls-toggle-hint" *ngIf="!bookingsFilterToolbarOpen">
+              {{ ui.screenText('bookings', 'pmsShowSearchHint') }}
+            </span>
+            <i
+              class="fas rooms-dev-controls-toggle-chevron"
+              [class.fa-chevron-up]="bookingsFilterToolbarOpen"
+              [class.fa-chevron-down]="!bookingsFilterToolbarOpen"
+              aria-hidden="true"></i>
+          </button>
+
+          <div
+            class="rooms-dev-controls-panel"
+            *ngIf="bookingsFilterToolbarOpen"
+            id="bookings-pms-filter-panel"
+            role="region"
+            aria-labelledby="bookings-pms-filter-toggle">
+            <div class="rooms-dev-toolbar bookings-pms-toolbar-search">
+              <div class="rooms-dev-toolbar-end bookings-pms-toolbar-search-end">
+                <div class="rooms-dev-search-wrap">
+                  <i class="fas fa-search" aria-hidden="true"></i>
+                  <input
+                    type="search"
+                    class="rooms-dev-search"
+                    [(ngModel)]="searchTerm"
+                    [placeholder]="ui.screenText('bookings', 'pmsSearchPh')" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rooms-dev-main">
+          <ng-container *ngIf="pmsTab === 'transferred'">
+            <section class="rooms-xfer-screen bookings-xfer-screen" [attr.aria-label]="ui.screenText('bookings', 'pmsTabTransferred')">
+              <header class="rooms-xfer-screen-head">
+                <h2 class="rooms-xfer-screen-title">
+                  <i class="fas fa-exchange-alt" aria-hidden="true"></i>
+                  {{ ui.screenText('bookings', 'pmsTransferredScreenTitle') }}
+                </h2>
+                <p class="rooms-xfer-screen-sub">{{ ui.screenText('bookings', 'pmsTransferredScreenSubtitle') }}</p>
+              </header>
+
+              <div class="rooms-xfer-list" *ngIf="transferDisplayRows.length; else bookingsXferEmpty">
+                <button
+                  type="button"
+                  class="rooms-xfer-row"
+                  *ngFor="let row of transferDisplayRows"
+                  (click)="openTransferRow(row)">
+                  <div class="rooms-xfer-row-pills">
+                    <div class="rooms-xfer-pill rooms-xfer-pill--from">
+                      <span class="rooms-xfer-pill-label">{{ ui.screenText('rooms', 'transferredFromLabel') }}</span>
+                      <strong>{{ row.transfer.fromRoom }}</strong>
+                      <span class="rooms-xfer-pill-status" *ngIf="roomStatusLabelForNumber(row.transfer.fromRoom) as stFrom">{{ stFrom }}</span>
+                    </div>
+                    <i class="fas fa-long-arrow-alt-left rooms-xfer-row-arrow" aria-hidden="true"></i>
+                    <div class="rooms-xfer-pill rooms-xfer-pill--to">
+                      <span class="rooms-xfer-pill-label">{{ ui.screenText('rooms', 'transferredToLabel') }}</span>
+                      <strong>{{ row.transfer.toRoom }}</strong>
+                      <span class="rooms-xfer-pill-status" *ngIf="roomStatusLabelForNumber(row.transfer.toRoom) as stTo">{{ stTo }}</span>
+                    </div>
+                  </div>
+                  <div class="rooms-xfer-row-meta">
+                    <span *ngIf="row.transfer.guestName || row.booking" class="rooms-xfer-guest">
+                      <i class="fas fa-user" aria-hidden="true"></i>
+                      {{ row.transfer.guestName || (row.booking ? row.booking.first_Name + ' ' + row.booking.last_Name : '') }}
+                    </span>
+                    <span class="rooms-xfer-time">
+                      <i class="fas fa-clock" aria-hidden="true"></i> {{ formatTransferTime(row.transfer.at) }}
+                    </span>
+                    <span *ngIf="row.booking?.invoice_Number" class="rooms-xfer-invoice">
+                      <i class="fas fa-file-invoice" aria-hidden="true"></i> {{ row.booking?.invoice_Number }}
+                    </span>
+                  </div>
+                </button>
+              </div>
+              <ng-template #bookingsXferEmpty>
+                <p class="rooms-xfer-empty">{{ ui.screenText('bookings', 'pmsTransferredScreenEmpty') }}</p>
+              </ng-template>
+
+              <section class="bookings-xfer-cards-block" *ngIf="tabFilteredBookings.length">
+                <h3 class="rooms-xfer-rooms-title">{{ ui.screenText('bookings', 'pmsTransferredBookingsTitle') }}</h3>
+                <div
+                  class="pms-cards rooms-dev-strip bookings-xfer-cards"
+                  [class.pms-cards--uniform]="bookingsCardLayout"
+                  [style.zoom]="pmsCardLayoutScale / 100">
+                  <app-pms-booking-card
+                    *ngFor="let booking of tabFilteredBookings; let idx = index"
+                    [booking]="booking"
+                    [orderIndex]="idx"
+                    [showRenew]="isCheckoutTodayBooking(booking)"
+                    [uniformCardSize]="bookingsCardLayout"
+                    (viewDetails)="openGuestDetailModal($event)"
+                    (renew)="renewBooking($event)" />
+                </div>
+              </section>
+            </section>
+          </ng-container>
+
+          <div *ngIf="pmsTab !== 'transferred' && !pmsMainHasContent" class="rooms-dev-empty">
+            <p>{{ ui.screenText('bookings', 'pmsEmptyTab') }}</p>
+          </div>
+
+          <div class="rooms-dev-strip-wrap" *ngIf="pmsTab !== 'transferred' && pmsMainHasContent">
+            <div
+              class="bookings-multi-board"
+              *ngIf="pmsTab === 'multi'; else pmsFlatCardStrip"
+              [style.zoom]="pmsCardLayoutScale / 100">
+              <section
+                class="bookings-multi-group"
+                *ngFor="let group of multiBookingGroups">
+                <header class="bookings-multi-group-head">
+                  <div class="bookings-multi-group-avatar" aria-hidden="true">
+                    <i class="fas fa-user"></i>
+                  </div>
+                  <div class="bookings-multi-group-text">
+                    <h3 class="bookings-multi-group-name">{{ group.guestName }}</h3>
+                    <p class="bookings-multi-group-meta">
+                      <span *ngIf="group.invoiceNumber" class="bookings-multi-group-invoice">
+                        <i class="fas fa-file-invoice" aria-hidden="true"></i>
+                        {{ group.invoiceNumber }}
+                      </span>
+                      <span class="bookings-multi-group-count">
+                        {{ group.bookings.length }} {{ ui.screenText('bookings', 'pmsMultiBookingUnit') }}
+                      </span>
+                    </p>
+                  </div>
+                </header>
+                <div class="pms-cards bookings-multi-group-cards" [class.pms-cards--uniform]="bookingsCardLayout">
+                  <app-pms-booking-card
+                    *ngFor="let booking of group.bookings; let idx = index"
+                    [booking]="booking"
+                    [orderIndex]="idx"
+                    [showRenew]="isCheckoutTodayBooking(booking)"
+                    [primaryAction]="pmsCardPrimaryAction()"
+                    [hideFooterActions]="pmsCardHideFooter()"
+                    [uniformCardSize]="bookingsCardLayout"
+                    (viewDetails)="openGuestDetailModal($event)"
+                    (checkIn)="checkInBooking($event)"
+                    (cancelReservation)="cancelBooking($event)"
+                    (markNoShow)="markBookingNoShow($event)"
+                    (transferRoom)="changeRoom($event)"
+                    (extendStay)="extendStayBooking($event)"
+                    (departGuest)="onDepartGuest($event)"
+                    (cancelCheckIn)="cancelCheckIn($event)"
+                    (payFromAccount)="payRemaining($event)"
+                    (renew)="renewBooking($event)" />
+                </div>
+              </section>
+            </div>
+            <ng-template #pmsFlatCardStrip>
+              <div
+                class="pms-cards rooms-dev-strip"
+                [class.pms-cards--uniform]="bookingsCardLayout"
+                [style.zoom]="pmsCardLayoutScale / 100">
+                <app-pms-booking-card
+                  *ngFor="let booking of tabFilteredBookings; let idx = index"
+                  [booking]="booking"
+                  [orderIndex]="idx"
+                  [showRenew]="isCheckoutTodayBooking(booking)"
+                  [primaryAction]="pmsCardPrimaryAction()"
+                  [hideFooterActions]="pmsCardHideFooter()"
+                  [uniformCardSize]="bookingsCardLayout"
+                  (viewDetails)="openGuestDetailModal($event)"
+                  (checkIn)="checkInBooking($event)"
+                  (cancelReservation)="cancelBooking($event)"
+                  (markNoShow)="markBookingNoShow($event)"
+                  (transferRoom)="changeRoom($event)"
+                  (extendStay)="extendStayBooking($event)"
+                  (departGuest)="onDepartGuest($event)"
+                  (cancelCheckIn)="cancelCheckIn($event)"
+                  (payFromAccount)="payRemaining($event)"
+                  (renew)="renewBooking($event)" />
+              </div>
+            </ng-template>
+          </div>
+        </div>
+
+        <footer class="rooms-dev-footer">
+          <div class="rooms-dev-footer-scale">
+            <label for="bookings-pms-scale">{{ ui.screenText('bookings', 'pmsDisplayScale') }}</label>
+            <input
+              id="bookings-pms-scale"
+              type="range"
+              min="70"
+              max="130"
+              step="1"
+              [(ngModel)]="pmsCardLayoutScale"
+              (ngModelChange)="persistPmsCardScale()" />
+            <span>{{ pmsCardLayoutScale }}%</span>
+          </div>
+          <div class="rooms-dev-footer-stats">
+            <div class="rooms-dev-stat">
+              <span class="rooms-dev-stat-label">{{ ui.screenText('bookings', 'pmsStatActiveAll') }}</span>
+              <span class="rooms-dev-stat-value">{{ bookingsActiveTotal }}</span>
+            </div>
+            <div class="rooms-dev-stat rooms-dev-stat--credit">
+              <span class="rooms-dev-stat-label">{{ ui.screenText('bookings', 'pmsStatShowingNow') }}</span>
+              <span class="rooms-dev-stat-value">{{ tabFilteredBookings.length }}</span>
+            </div>
+          </div>
+        </footer>
+      </div>
+    </div>
+  </ng-container>
+
+  <div *ngIf="guestDetailModalBooking as b" class="bk-guest-modal-wrap">
+    <button
+      type="button"
+      class="bk-guest-modal-scrim"
+      (click)="closeGuestDetailModal()"
+      [attr.aria-label]="ui.screenText('bookings', 'closeModalAria')"></button>
+    <div
+      class="bk-guest-modal-panel bk-detail-panel--light"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-labelledby]="'bk-guest-modal-title-' + b.id"
+      (click)="$event.stopPropagation()">
+      <header class="bk-guest-modal-head">
+        <div class="bk-guest-modal-hero">
+          <div class="bk-guest-modal-avatar">{{ guestInitial(b) }}</div>
+          <div class="bk-guest-modal-head-text">
+            <h2 class="bk-guest-modal-title" [id]="'bk-guest-modal-title-' + b.id">
+              {{ b.first_Name }} {{ b.last_Name }}
+            </h2>
+            <div class="bk-guest-modal-chips">
+              <span class="bk-guest-chip"><i class="fas fa-file-invoice"></i> {{ b.invoice_Number || '—' }}</span>
+              <span class="bk-guest-chip"><i class="fas fa-bed"></i> {{ b.room_Number || '—' }}</span>
+              <span class="bk-guest-chip bk-guest-chip--transfer" *ngIf="bookingTransferDisplayLine(b) as xferLine">
+                <i class="fas fa-exchange-alt"></i> {{ xferLine }}
+              </span>
+              <span class="bk-guest-chip" *ngIf="b.room_Type"><i class="fas fa-door-open"></i> {{ b.room_Type }}</span>
+            </div>
+          </div>
+        </div>
+        <button
+          type="button"
+          class="bk-guest-modal-close"
+          (click)="closeGuestDetailModal()"
+          [attr.aria-label]="ui.screenText('bookings', 'closeModal')">
+          <i class="fas fa-times"></i>
+        </button>
+      </header>
+
+      <div class="bk-guest-modal-stats">
+        <div class="bk-guest-stat">
+          <span class="bk-guest-stat-label">{{ ui.screenText('bookings', 'modalTotal') }}</span>
+          <span class="bk-guest-stat-val">{{ (b.total_Price || 0) | localeNumber:'money' }} <small>{{ bookingCurrencySymbol(b) }}</small></span>
+        </div>
+        <div class="bk-guest-stat">
+          <span class="bk-guest-stat-label">{{ ui.screenText('bookings', 'modalPaid') }}</span>
+          <span class="bk-guest-stat-val">{{ (b.payment_Amount || 0) | localeNumber:'money' }} <small>{{ bookingCurrencySymbol(b) }}</small></span>
+        </div>
+        <div class="bk-guest-stat" [class.bk-guest-stat--due]="(b.remaining_Amount || 0) > 0">
+          <span
+            class="bk-guest-stat-label"
+            [class.bk-guest-stat-label--due]="(b.remaining_Amount || 0) > 0">{{ ui.screenText('bookings', 'modalBalance') }}</span>
+          <span
+            class="bk-guest-stat-val"
+            [class.bk-guest-stat-val--due]="(b.remaining_Amount || 0) > 0">
+            {{ (b.remaining_Amount || 0) | localeNumber:'money' }} <small>{{ bookingCurrencySymbol(b) }}</small>
+          </span>
+        </div>
+      </div>
+
+      <div class="bk-guest-modal-grid">
+        <div class="bk-guest-field">
+          <i class="fas fa-phone"></i>
+          <span class="bk-guest-field-label">{{ ui.screenText('bookings', 'detailPhone') }}</span>
+          <span class="bk-guest-field-val">{{ b.phone_Number }}</span>
+        </div>
+        <div class="bk-guest-field">
+          <i class="fas fa-id-card"></i>
+          <span class="bk-guest-field-label">{{ ui.screenText('bookings', 'detailIdentity') }}</span>
+          <span class="bk-guest-field-val">{{ b.id_Type }} — {{ b.id_Number }}</span>
+        </div>
+        <div class="bk-guest-field">
+          <i class="fas fa-calendar-day"></i>
+          <span class="bk-guest-field-label">{{ ui.screenText('bookings', 'modalDateRange') }}</span>
+          <span class="bk-guest-field-val">
+            {{ formatSlashDate(checkInYmd(b)) }} → {{ formatSlashDate(checkOutYmd(b)) }}
+            <span class="bk-guest-nights">({{ b.stay_Days || 0 }} {{ ui.screenText('booking', 'nightSingular') }})</span>
+          </span>
+        </div>
+        <div class="bk-guest-field">
+          <i class="fas fa-clock"></i>
+          <span class="bk-guest-field-label">{{ ui.screenText('bookings', 'detailBookingTime') }}</span>
+          <span class="bk-guest-field-val">{{ formatTime12h(b.booking_Time) }}</span>
+        </div>
+        <div class="bk-guest-field">
+          <i class="fas fa-user-friends"></i>
+          <span class="bk-guest-field-label">{{ ui.screenText('bookings', 'detailGuests') }}</span>
+          <span class="bk-guest-field-val">{{ b.adults_Count }} {{ ui.screenText('bookings', 'guestAdultUnit') }} · {{ b.children_Count }} {{ ui.screenText('bookings', 'guestChildUnit') }}</span>
+        </div>
+        <div class="bk-guest-field" *ngIf="isBookingReserved(b)">
+          <i class="fas fa-calendar-check"></i>
+          <span class="bk-guest-field-label">{{ ui.screenText('bookings', 'statusLabel') }}</span>
+          <span class="bk-guest-field-val">{{ ui.screenText('bookings', 'statusReserved') }}</span>
+        </div>
+      </div>
+
+      <div
+        class="bk-guest-modal-countdown"
+        *ngIf="pmsCardCountdownLabelKey(b) === 'pmsBookingType'; else bkGuestCountdownRow">
+        <i class="fas" [ngClass]="bookingConfirmMeta(b).icon" aria-hidden="true"></i>
+        <span class="bk-guest-modal-countdown-val">{{ ui.screenText('booking', bookingConfirmMeta(b).labelKey) }}</span>
+      </div>
+      <ng-template #bkGuestCountdownRow>
+        <div class="bk-guest-modal-countdown">
+          <i class="fas fa-hourglass-half" aria-hidden="true"></i>
+          <span class="bk-guest-modal-countdown-label">{{ ui.screenText('bookings', pmsCardCountdownLabelKey(b)) }}</span>
+          <span class="bk-guest-modal-countdown-val">{{ pmsCardCountdownText(b) }}</span>
+        </div>
+      </ng-template>
+
+      <footer class="bk-guest-modal-actions bk-detail-icon-actions">
+        <button
+          *ngIf="isBookingReserved(b)"
+          type="button"
+          class="bk-detail-icon-btn bk-detail-icon-btn--checkin"
+          (click)="checkInBooking(b)"
+          [attr.aria-label]="ui.screenText('bookings', 'checkInBtn')">
+          <i class="fas fa-door-open" aria-hidden="true"></i>
+          <span class="bk-detail-icon-tooltip">{{ ui.screenText('bookings', 'checkInBtn') }}</span>
+        </button>
+        <button
+          *ngIf="b.status !== 'cancelled' && !isBookingReserved(b)"
+          type="button"
+          class="bk-detail-icon-btn bk-detail-icon-btn--edit"
+          (click)="editBooking(b)"
+          [attr.aria-label]="ui.screenText('bookings', 'editBookingBtn')">
+          <i class="fas fa-user-edit" aria-hidden="true"></i>
+          <span class="bk-detail-icon-tooltip">{{ ui.screenText('bookings', 'editBookingBtn') }}</span>
+        </button>
+        <button
+          *ngIf="!isCheckoutTodayBooking(b)"
+          type="button"
+          class="bk-detail-icon-btn bk-detail-icon-btn--room"
+          (click)="changeRoom(b)"
+          [attr.aria-label]="ui.screenText('bookings', 'changeRoomBtn')">
+          <i class="fas fa-exchange-alt" aria-hidden="true"></i>
+          <span class="bk-detail-icon-tooltip">{{ ui.screenText('bookings', 'changeRoomBtn') }}</span>
+        </button>
+        <button
+          *ngIf="!isCheckoutTodayBooking(b)"
+          type="button"
+          class="bk-detail-icon-btn bk-detail-icon-btn--depart"
+          (click)="onDepartGuest(b)"
+          [attr.aria-label]="ui.screenText('bookings', 'departBtn')">
+          <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+          <span class="bk-detail-icon-tooltip">{{ ui.screenText('bookings', 'departBtn') }}</span>
+        </button>
+        <button
+          *ngIf="(b.remaining_Amount || 0) > 0"
+          type="button"
+          class="bk-detail-icon-btn bk-detail-icon-btn--transfer"
+          (click)="payRemaining(b)"
+          [attr.aria-label]="ui.screenText('bookings', 'transferAmountBtn')">
+          <i class="fas fa-hand-holding-usd" aria-hidden="true"></i>
+          <span class="bk-detail-icon-tooltip">{{ ui.screenText('bookings', 'transferAmountBtn') }}</span>
+        </button>
+        <button
+          *ngIf="isCheckoutTodayBooking(b)"
+          type="button"
+          class="bk-detail-icon-btn bk-detail-icon-btn--renew"
+          (click)="renewBooking(b)"
+          [attr.aria-label]="ui.screenText('bookings', 'renewBooking')">
+          <i class="fas fa-redo" aria-hidden="true"></i>
+          <span class="bk-detail-icon-tooltip">{{ ui.screenText('bookings', 'renewBooking') }}</span>
+        </button>
+        <button
+          *ngIf="b.status !== 'cancelled' && b.status !== 'checked_out'"
+          type="button"
+          class="bk-detail-icon-btn bk-detail-icon-btn--add"
+          (click)="addAnotherBookingForGuest(b)"
+          [attr.aria-label]="ui.screenText('bookings', 'addGuestBookingBtn')">
+          <i class="fas fa-plus-circle" aria-hidden="true"></i>
+          <span class="bk-detail-icon-tooltip">{{ ui.screenText('bookings', 'addGuestBookingHint') }}</span>
+        </button>
+        <button
+          *ngIf="canCleanBookedDirtyRoom(b)"
+          type="button"
+          class="bk-detail-icon-btn bk-detail-icon-btn--clean"
+          (click)="cleanBookedDirtyRoom(b)"
+          [attr.aria-label]="ui.screenText('bookings', 'cleanRoomBtn')">
+          <i class="fas fa-broom" aria-hidden="true"></i>
+          <span class="bk-detail-icon-tooltip">{{ ui.screenText('bookings', 'cleanRoomHint') }}</span>
+        </button>
+        <button
+          type="button"
+          class="bk-detail-icon-btn bk-detail-icon-btn--print"
+          (click)="printBookingCard(b)"
+          [attr.aria-label]="ui.screenText('bookings', 'pmsPrint')">
+          <i class="fas fa-print" aria-hidden="true"></i>
+          <span class="bk-detail-icon-tooltip">{{ ui.screenText('bookings', 'pmsPrint') }}</span>
+        </button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- مغادرة مع تسوية المبلغ المتبقي -->
+  <div *ngIf="departCheckoutModalBooking as db" class="bk-transfer-modal-wrap bk-depart-checkout-wrap">
+    <button
+      type="button"
+      class="bk-transfer-modal-scrim"
+      (click)="closeDepartCheckoutModal()"
+      [attr.aria-label]="ui.screenText('bookings', 'transferModalCancel')"></button>
+    <div
+      class="bk-transfer-modal-panel bk-detail-panel--light bk-depart-checkout-panel"
+      role="dialog"
+      aria-modal="true"
+      (click)="$event.stopPropagation()">
+      <header class="bk-transfer-modal-head">
+        <h2><i class="fas fa-sign-out-alt"></i> {{ ui.screenText('bookings', 'departCheckoutTitle') }}</h2>
+        <button type="button" class="bk-transfer-modal-close" (click)="closeDepartCheckoutModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </header>
+
+      <div class="bk-transfer-guest-row">
+        <span class="bk-transfer-avatar">{{ guestInitial(db) }}</span>
+        <div>
+          <span class="bk-transfer-kicker">{{ ui.screenText('bookings', 'transferModalGuest') }}</span>
+          <strong class="bk-transfer-guest-name">{{ guestDisplayName(db) }}</strong>
+        </div>
+      </div>
+
+      <div class="bk-transfer-info-grid bk-depart-checkout-dates">
+        <div class="bk-transfer-info-item">
+          <span class="bk-transfer-info-label">{{ ui.screenText('bookings', 'departCheckoutBookingDate') }}</span>
+          <span class="bk-transfer-info-val">{{ bookingDateYmd(db) }}</span>
+        </div>
+        <div class="bk-transfer-info-item">
+          <span class="bk-transfer-info-label">{{ ui.screenText('bookings', 'departCheckoutArrivalDate') }}</span>
+          <span class="bk-transfer-info-val">{{ formatSlashDate(checkInYmd(db)) }}</span>
+        </div>
+      </div>
+
+      <div class="bk-transfer-info-grid">
+        <div class="bk-transfer-info-item">
+          <span class="bk-transfer-info-label">{{ ui.screenText('bookings', 'transferModalPaid') }}</span>
+          <span class="bk-transfer-info-val bk-transfer-info-val--paid">
+            {{ (db.payment_Amount || 0) | localeNumber:'money' }} {{ bookingCurrencySymbol(db) }}
+          </span>
+        </div>
+        <div class="bk-transfer-info-item bk-transfer-info-item--highlight">
+          <span class="bk-transfer-info-label">{{ ui.screenText('bookings', 'departCheckoutOwed') }}</span>
+          <span class="bk-transfer-info-val">{{ (db.remaining_Amount || 0) | localeNumber:'money' }} {{ bookingCurrencySymbol(db) }}</span>
+        </div>
+      </div>
+
+      <div class="bk-transfer-amount-field" *ngIf="(db.remaining_Amount || 0) > 0">
+        <label for="depart-checkout-pay-input">{{ ui.screenText('bookings', 'transferModalAmount') }}</label>
+        <div class="bk-transfer-amount-input-wrap">
+          <input
+            id="depart-checkout-pay-input"
+            type="number"
+            min="0"
+            step="0.01"
+            [(ngModel)]="departCheckoutPayInput"
+            dir="ltr"
+            [max]="db.remaining_Amount || 0" />
+          <span class="bk-transfer-currency">{{ bookingCurrencySymbol(db) }}</span>
+        </div>
+      </div>
+
+      <p class="bk-depart-checkout-hint" *ngIf="!departCheckoutCanDepart">
+        {{ ui.screenText('bookings', 'departCheckoutPayFirst') }}
+      </p>
+
+      <footer class="bk-transfer-modal-actions bk-depart-checkout-actions">
+        <button
+          type="button"
+          class="bk-transfer-btn bk-transfer-btn--primary"
+          *ngIf="(db.remaining_Amount || 0) > 0"
+          [disabled]="departCheckoutBusy"
+          (click)="submitDepartCheckoutPayment()">
+          <i class="fas fa-money-bill-wave"></i>
+          {{ ui.screenText('bookings', 'departCheckoutPayBtn') }}
+        </button>
+        <button
+          type="button"
+          class="bk-transfer-btn bk-depart-checkout-btn"
+          [disabled]="departCheckoutBusy || !departCheckoutCanDepart"
+          (click)="confirmDepartCheckout()">
+          <i class="fas fa-sign-out-alt"></i>
+          {{ ui.screenText('bookings', 'departCheckoutDepartBtn') }}
+        </button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- نافذة ترحيل المبلغ -->
+  <div *ngIf="transferAmountModalBooking as tb" class="bk-transfer-modal-wrap">
+    <button
+      type="button"
+      class="bk-transfer-modal-scrim"
+      (click)="closeTransferAmountModal()"
+      [attr.aria-label]="ui.screenText('bookings', 'transferModalCancel')"></button>
+    <div
+      class="bk-transfer-modal-panel bk-detail-panel--light"
+      role="dialog"
+      aria-modal="true"
+      (click)="$event.stopPropagation()">
+      <header class="bk-transfer-modal-head">
+        <h2><i class="fas fa-hand-holding-usd"></i> {{ ui.screenText('bookings', 'transferModalTitle') }}</h2>
+        <button type="button" class="bk-transfer-modal-close" (click)="closeTransferAmountModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </header>
+
+      <div class="bk-transfer-guest-row">
+        <span class="bk-transfer-avatar">{{ guestInitial(tb) }}</span>
+        <div>
+          <span class="bk-transfer-kicker">{{ ui.screenText('bookings', 'transferModalGuest') }}</span>
+          <strong class="bk-transfer-guest-name">{{ guestDisplayName(tb) }}</strong>
+        </div>
+      </div>
+
+      <div class="bk-transfer-info-grid">
+        <div class="bk-transfer-info-item">
+          <span class="bk-transfer-info-label">{{ ui.screenText('bookings', 'transferModalRoom') }}</span>
+          <span class="bk-transfer-info-val">
+            {{ tb.room_Number || '—' }}
+            <small *ngIf="tb.room_Type"> · {{ tb.room_Type }}</small>
+          </span>
+        </div>
+        <div class="bk-transfer-info-item">
+          <span class="bk-transfer-info-label">{{ ui.screenText('bookings', 'transferModalTotal') }}</span>
+          <span class="bk-transfer-info-val">{{ (tb.total_Price || 0) | localeNumber:'money' }} {{ bookingCurrencySymbol(tb) }}</span>
+        </div>
+        <div class="bk-transfer-info-item">
+          <span class="bk-transfer-info-label">{{ ui.screenText('bookings', 'transferModalPaid') }}</span>
+          <span class="bk-transfer-info-val bk-transfer-info-val--paid">{{ (tb.payment_Amount || 0) | localeNumber:'money' }} {{ bookingCurrencySymbol(tb) }}</span>
+        </div>
+        <div class="bk-transfer-info-item bk-transfer-info-item--highlight">
+          <span class="bk-transfer-info-label">{{ ui.screenText('bookings', 'transferModalRemaining') }}</span>
+          <span class="bk-transfer-info-val">{{ (tb.remaining_Amount || 0) | localeNumber:'money' }} {{ bookingCurrencySymbol(tb) }}</span>
+        </div>
+      </div>
+
+      <div class="bk-transfer-amount-field">
+        <label for="transfer-amount-input">{{ ui.screenText('bookings', 'transferModalAmount') }}</label>
+        <div class="bk-transfer-amount-input-wrap">
+          <input
+            id="transfer-amount-input"
+            type="number"
+            min="0"
+            step="0.01"
+            [(ngModel)]="transferAmountInput"
+            dir="ltr"
+            [max]="tb.remaining_Amount || 0" />
+          <span class="bk-transfer-currency">{{ bookingCurrencySymbol(tb) }}</span>
+        </div>
+      </div>
+
+      <footer class="bk-transfer-modal-actions">
+        <button type="button" class="bk-transfer-btn bk-transfer-btn--ghost" (click)="closeTransferAmountModal()">
+          {{ ui.screenText('bookings', 'transferModalCancel') }}
+        </button>
+        <button
+          type="button"
+          class="bk-transfer-btn bk-transfer-btn--primary"
+          [disabled]="transferAmountBusy"
+          (click)="submitTransferAmount()">
+          <i class="fas fa-paper-plane"></i>
+          {{ ui.screenText('bookings', 'transferModalSubmit') }}
+        </button>
+      </footer>
+    </div>
+  </div>
+</div>

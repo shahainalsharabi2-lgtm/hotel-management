@@ -1,0 +1,241 @@
+﻿.details-page {
+  max-width: 900px;
+  margin: 3rem auto;
+  padding: 3rem;
+  direction: rtl;
+}
+
+.details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 3rem;
+  position: relative;
+}
+
+.back-link {
+  position: absolute;
+  top: -2rem;
+  right: 0;
+  color: var(--app-primary-mid);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.back-link:hover {
+  transform: translateX(-5px);
+}
+
+.details-header h1 {
+  font-size: 2.5rem;
+  margin: 0;
+  background: linear-gradient(135deg, var(--app-primary) 0%, var(--app-primary-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.status-badge {
+  padding: 8px 20px;
+  border-radius: 30px;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.status-badge.available    { background: rgba(76, 175, 80, 0.2);  color: #4caf50; }
+.status-badge.occupied     { background: rgba(255, 152, 0, 0.2);  color: #ff9800; }
+.status-badge.dirty        { background: rgba(230, 126, 34, 0.2); color: #e67e22; }
+.status-badge.maintenance  { background: rgba(251, 146, 60, 0.22);  color: #fb923c; }
+.status-badge.suspended    { background: rgba(244, 63, 94, 0.2);     color: #f43f5e; }
+
+.details-content {
+  margin-bottom: 3rem;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.info-item label {
+  display: block;
+  color: var(--app-text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.info-item .value {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--app-text);
+}
+
+.info-item .value.highlight {
+  color: var(--app-primary-mid);
+  font-size: 1.8rem;
+}
+
+.status-box {
+  display: flex;
+  gap: 2rem;
+  padding: 2rem;
+  background: var(--app-input-bg);
+  border-radius: 20px;
+  border: 1px solid var(--app-border);
+  align-items: center;
+}
+
+.status-icon {
+  font-size: 3rem;
+}
+
+.status-box.available .status-icon { color: #4caf50; }
+.status-box.occupied .status-icon { color: #ff9800; }
+.status-box.maintenance .status-icon { color: #fb923c; }
+.status-box.suspended .status-icon { color: #f43f5e; }
+
+.status-info h3 {
+  margin: 0 0 0.5rem 0;
+  color: var(--app-text);
+}
+
+.status-info p {
+  margin: 0;
+  color: var(--app-text-muted);
+}
+
+.details-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ── Status Quick-Change Controls ── */
+.status-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 1.2rem 1.5rem;
+  background: var(--app-surface);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 16px;
+}
+
+.controls-label {
+  color: var(--app-text-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-btn {
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  transition: all 0.25s ease;
+  opacity: 0.6;
+}
+.status-btn:hover:not(:disabled) { opacity: 1; transform: translateY(-2px); }
+.status-btn:disabled { cursor: default; }
+.status-btn.active { opacity: 1; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+
+.status-btn.available         { background: rgba(76,175,80,0.12); color: #4caf50; border-color: rgba(76,175,80,0.3); }
+.status-btn.available.active  { background: rgba(76,175,80,0.25); }
+.status-btn.dirty             { background: rgba(230,126,34,0.12); color: #e67e22; border-color: rgba(230,126,34,0.3); }
+.status-btn.dirty.active      { background: rgba(230,126,34,0.25); }
+.status-btn.maintenance       { background: rgba(251,146,60,0.14); color: #fb923c; border-color: rgba(251,146,60,0.35); }
+.status-btn.maintenance.active { background: rgba(251,146,60,0.28); }
+.status-btn.suspended         { background: rgba(244,63,94,0.14); color: #f43f5e; border-color: rgba(244,63,94,0.35); }
+.status-btn.suspended.active  { background: rgba(244,63,94,0.28); }
+
+.saving-indicator {
+  color: var(--app-primary-mid);
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: auto;
+}
+
+.actions-row {
+  display: flex;
+  gap: 1.2rem;
+}
+
+.edit-btn, .booking-btn {
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.3s;
+}
+
+.edit-btn {
+  background: var(--app-input-bg);
+  color: var(--app-text);
+  border: 1px solid var(--app-border);
+}
+
+.edit-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.booking-btn {
+  background: linear-gradient(135deg, var(--app-primary-mid) 0%, var(--app-primary) 100%);
+  color: var(--app-text);
+}
+
+.booking-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0, 212, 255, 0.3);
+}
+
+.glass-card {
+  background: var(--app-surface);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--app-border);
+  border-radius: 30px;
+}
+
+/* Spinner */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-top: 4px solid var(--app-primary-mid);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

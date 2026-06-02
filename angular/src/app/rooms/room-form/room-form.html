@@ -1,0 +1,114 @@
+<div class="form-page glass-card">
+  <div class="form-header">
+    <h1>{{ isEditMode ? ui.screenText('roomForm', 'titleEdit') : ui.screenText('roomForm', 'titleAdd') }}</h1>
+    <p>{{ ui.screenText('roomForm', 'subtitle') }}</p>
+  </div>
+
+  <form (submit)="onSubmit(); $event.preventDefault()" class="room-form">
+    <div class="form-grid">
+      <ng-container *ngIf="!isEditMode; else editModeView">
+        <div class="form-group">
+          <label>{{ ui.screenText('roomForm', 'roomNumberLabel') }}</label>
+          <div class="input-wrapper">
+            <i class="fas fa-door-open"></i>
+            <input type="text" [(ngModel)]="room.roomNumber" name="roomNumber" [placeholder]="ui.screenText('roomForm', 'roomNumberPh')" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>{{ ui.screenText('roomForm', 'typeLabel') }}</label>
+          <div class="input-wrapper">
+            <i class="fas fa-bed"></i>
+            <select [(ngModel)]="room.type" name="type">
+              <option *ngFor="let t of roomTypeOptions" [value]="t">{{ ui.roomTypeLabel(t) }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>{{ ui.screenText('roomForm', 'floorLabel') }}</label>
+          <div class="input-wrapper">
+            <i class="fas fa-layer-group"></i>
+            <select [(ngModel)]="room.floor" name="floor" required>
+              <option *ngIf="floors.length === 0" [ngValue]="room.floor" disabled>{{ ui.screenText('roomForm', 'noFloors') }}</option>
+              <option *ngFor="let floor of floors" [ngValue]="floor.level">{{ ui.screenText('roomForm', 'floorOption') }} {{ floor.level }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>{{ ui.screenText('roomForm', 'priceLabel') }}</label>
+          <div class="input-wrapper input-wrapper--price">
+            <i class="fas fa-money-bill-wave"></i>
+            <input type="number" [(ngModel)]="room.price" name="price" [placeholder]="ui.screenText('roomForm', 'pricePh')" required>
+            <span class="input-currency-suffix" dir="ltr">{{ priceCurrencySymbol() }}</span>
+          </div>
+        </div>
+      </ng-container>
+
+      <ng-template #editModeView>
+        <div class="form-group readonly-group">
+          <label>{{ ui.screenText('roomForm', 'roomNumberLabel') }}</label>
+          <div class="readonly-value">{{ room.roomNumber }}</div>
+        </div>
+        <div class="form-group readonly-group">
+          <label>{{ ui.screenText('roomForm', 'typeLabel') }}</label>
+          <div class="readonly-value">{{ ui.roomTypeLabel(room.type) }}</div>
+        </div>
+        <div class="form-group readonly-group">
+          <label>{{ ui.screenText('roomForm', 'floorLabel') }}</label>
+          <div class="readonly-value">{{ room.floor }}</div>
+        </div>
+        <div class="form-group readonly-group">
+          <label>السعر ({{ priceCurrencySymbol() }})</label>
+          <div class="readonly-value">{{ room.price }} {{ priceCurrencySymbol() }}</div>
+        </div>
+      </ng-template>
+
+      <div class="form-group full-width">
+        <label>{{ ui.screenText('roomForm', 'changeStatus') }}</label>
+        <div class="status-options">
+          <label class="status-radio available">
+            <input type="radio" [(ngModel)]="room.status" name="status" value="available">
+            <span class="radio-card">
+              <i class="fas fa-broom"></i>
+              {{ ui.screenText('roomForm', 'statusClean') }}
+            </span>
+          </label>
+          <label class="status-radio dirty">
+            <input type="radio" [(ngModel)]="room.status" name="status" value="dirty">
+            <span class="radio-card">
+              <i class="fas fa-spray-can"></i>
+              {{ ui.screenText('roomForm', 'statusDirty') }}
+            </span>
+          </label>
+          <label class="status-radio maintenance">
+            <input type="radio" [(ngModel)]="room.status" name="status" value="maintenance">
+            <span class="radio-card">
+              <i class="fas fa-screwdriver-wrench"></i>
+              {{ ui.screenText('roomForm', 'statusMaintenance') }}
+            </span>
+          </label>
+          <label class="status-radio suspended">
+            <input type="radio" [(ngModel)]="room.status" name="status" value="suspended">
+            <span class="radio-card">
+              <i class="fas fa-hand-paper"></i>
+              {{ ui.screenText('roomForm', 'statusSuspended') }}
+            </span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="submit-btn">
+        <i class="fas fa-save"></i>
+        {{ isEditMode ? ui.screenText('roomForm', 'saveEdit') : ui.screenText('roomForm', 'saveAdd') }}
+      </button>
+      <button type="button" class="cancel-btn" (click)="cancel()">
+        <i class="fas fa-times"></i>
+        {{ ui.screenText('roomForm', 'cancel') }}
+      </button>
+    </div>
+  </form>
+</div>

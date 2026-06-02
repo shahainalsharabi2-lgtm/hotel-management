@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <Import Project="..\..\common.props" />
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Modiaf.Al.Arab.Hotel</RootNamespace>
+    <PreserveCompilationReferences>true</PreserveCompilationReferences>
+    <UserSecretsId>Modiaf.Al.Arab.Hotel-4681b4fd-151f-4221-84a4-929d86723e4c</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
+    <PackageReference Include="Serilog.Sinks.Async" Version="2.1.0" />
+    <PackageReference Include="Volo.Abp.AspNetCore.MultiTenancy" Version="10.3.0" />
+    <PackageReference Include="Volo.Abp.Autofac" Version="10.3.0" />
+    <PackageReference Include="Volo.Abp.AspNetCore.Serilog" Version="10.3.0" />
+    <PackageReference Include="Volo.Abp.Swashbuckle" Version="10.3.0" />
+    <PackageReference Include="Volo.Abp.Account.Web.OpenIddict" Version="10.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Volo.Abp.AspNetCore.Mvc.UI.Theme.LeptonXLite" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Modiaf.Al.Arab.Hotel.Application\Modiaf.Al.Arab.Hotel.Application.csproj" />
+    <ProjectReference Include="..\Modiaf.Al.Arab.Hotel.EntityFrameworkCore\Modiaf.Al.Arab.Hotel.EntityFrameworkCore.csproj" />
+    <ProjectReference Include="..\Modiaf.Al.Arab.Hotel.HttpApi\Modiaf.Al.Arab.Hotel.HttpApi.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="UiTranslations\*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Logs\**" />
+    <Content Remove="Logs\**" />
+    <EmbeddedResource Remove="Logs\**" />
+    <None Remove="Logs\**" />
+  </ItemGroup>
+
+</Project>

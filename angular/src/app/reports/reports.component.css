@@ -1,0 +1,564 @@
+.reports-page {
+  min-height: 100vh;
+  padding: 2.5rem;
+  color: var(--app-text);
+  background: var(--app-bg);
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.eyebrow {
+  color: var(--app-primary-mid);
+  font-weight: 700;
+  margin: 0 0 0.4rem;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 2.35rem;
+}
+
+.page-header p {
+  color: var(--app-text-muted);
+}
+
+.header-actions,
+.filters-card {
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.filters-card,
+.report-sheet,
+.state-card {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 22px;
+  box-shadow: var(--app-shadow-sm);
+}
+
+.filters-card {
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.filters-card label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--app-text);
+}
+
+.filters-card input {
+  min-width: 190px;
+  padding: 0.7rem 0.85rem;
+  color: var(--app-text);
+  background: var(--app-input-bg);
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+}
+
+.filters-hint {
+  flex: 1 1 100%;
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--app-text-muted);
+  line-height: 1.45;
+}
+
+.report-section--head h3 {
+  margin-bottom: 0.35rem;
+}
+
+.report-type-kicker {
+  margin: 0 0 0.5rem;
+  color: var(--app-text-muted);
+  font-size: 0.95rem;
+}
+
+.report-count-line {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.report-count-line strong {
+  color: var(--app-primary-mid);
+  font-size: 1.15rem;
+}
+
+.summary-grid--staying {
+  margin-bottom: 1.25rem;
+}
+
+.btn {
+  border: 0;
+  border-radius: 13px;
+  padding: 0.8rem 1.1rem;
+  color: var(--app-text);
+  cursor: pointer;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn.primary {
+  background: linear-gradient(135deg, var(--app-primary), var(--app-primary-mid));
+}
+
+.btn.secondary,
+.btn.ghost {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  color: var(--app-text);
+}
+
+.state-card {
+  padding: 1.2rem;
+}
+
+.state-card.error {
+  color: #ffb4b4;
+  border-color: rgba(255, 80, 80, 0.35);
+}
+
+.report-sheet {
+  padding: 1.5rem;
+}
+
+.report-brand-top {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.25rem;
+  padding-bottom: 1.1rem;
+  border-bottom: 1px solid var(--app-border);
+  margin-bottom: 1.25rem;
+}
+
+.rbt-col {
+  flex: 1;
+  min-width: 0;
+}
+
+.rbt-center {
+  flex: 0 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.rbt-side {
+  text-align: right;
+}
+
+.rbt-label {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--app-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.rbt-val {
+  margin: 0.2rem 0 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--app-text-muted);
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.rbt-gap {
+  margin-top: 0.65rem;
+}
+
+.rbt-ltr {
+  direction: ltr;
+  unicode-bidi: embed;
+  text-align: right;
+}
+
+.rbt-logo-ring {
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.28);
+  box-shadow: none;
+  background: rgba(4, 10, 22, 0.85);
+}
+
+.rbt-logo-ring img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.rbt-hotel {
+  margin: 0.55rem 0 0;
+  font-size: 1.35rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.rbt-addr-under {
+  margin: 0.45rem 0 0;
+  max-width: 20rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--app-text-muted);
+}
+
+.rbt-kicker {
+  margin: 0.35rem 0 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--app-text-muted);
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 1rem;
+}
+
+.summary-card {
+  padding: 1rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.summary-card span {
+  color: var(--app-text-muted);
+}
+
+.summary-card strong {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 1.7rem;
+}
+
+.summary-card.success strong {
+  color: #4ade80;
+}
+
+.summary-card.warning strong {
+  color: #fbbf24;
+}
+
+.summary-card.danger strong {
+  color: #fb7185;
+}
+
+.report-section {
+  margin-top: 1.5rem;
+}
+
+.report-section h3 {
+  margin: 0 0 0.9rem;
+}
+
+.status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+
+.status-row span {
+  padding: 0.75rem 1rem;
+  border-radius: 14px;
+  background: rgba(0, 212, 255, 0.08);
+  border: 1px solid rgba(0, 212, 255, 0.16);
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 0.9rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: right;
+}
+
+th {
+  color: var(--app-primary-mid);
+  font-weight: 600;
+}
+
+td {
+  color: var(--app-text-muted);
+}
+
+.empty-cell {
+  text-align: center;
+  color: var(--app-text-muted);
+}
+
+.print-page-hint {
+  display: none;
+  margin: 0;
+}
+
+.latest-bookings-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  align-items: flex-end;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border-radius: 16px;
+  background: rgba(0, 212, 255, 0.06);
+  border: 1px solid rgba(0, 212, 255, 0.14);
+}
+
+.latest-bookings-toolbar .search-mode,
+.latest-bookings-toolbar .search-text {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--app-text-muted);
+  font-size: 0.92rem;
+}
+
+.latest-bookings-toolbar select {
+  min-width: 220px;
+  padding: 0.65rem 0.75rem;
+  color: var(--app-text);
+  background: rgba(4, 10, 22, 0.9);
+  border: 1px solid rgba(0, 212, 255, 0.28);
+  border-radius: 12px;
+}
+
+.latest-bookings-toolbar input[type='search'] {
+  min-width: 240px;
+  padding:0.65rem 0.8rem;
+  color: var(--app-text);
+  background: rgba(4, 10, 22, 0.9);
+  border: 1px solid rgba(0, 212, 255, 0.28);
+  border-radius: 12px;
+}
+
+.latest-bookings-toolbar .search-hint {
+  flex: 1 1 100%;
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--app-text-muted);
+}
+
+.btn.small-toolbar-btn {
+  padding: 0.55rem 0.9rem;
+  font-size: 0.88rem;
+}
+
+.booking-print-row td {
+  padding-top: 0.35rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.print-row-btn {
+  background: rgba(0, 212, 255, 0.14);
+  border: 1px solid rgba(0, 212, 255, 0.35);
+  font-size: 0.9rem;
+  padding: 0.55rem 1rem;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 6mm;
+  }
+
+  :host {
+    display: block;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-page-hint {
+    display: block;
+    font-size: 7.5pt;
+    color: #333;
+    margin: 0 0 0.35rem;
+    line-height: 1.35;
+  }
+
+  .reports-page {
+    min-height: auto;
+    padding: 0;
+    color: #111;
+    background: #fff;
+  }
+
+  .page-header p,
+  .eyebrow {
+    color: #333;
+  }
+
+  .report-sheet {
+    box-shadow: none;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    background: #fff;
+    font-size: 8.5pt;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .report-brand-top {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.6rem;
+    padding-bottom: 0.4rem;
+    margin-bottom: 0.4rem;
+    border-bottom: 1px solid #ccc;
+  }
+
+  .rbt-label {
+    font-size: 6.5pt;
+    color: #555;
+  }
+
+  .rbt-val {
+    font-size: 8pt;
+    color: #111;
+    margin-top: 0.08rem;
+  }
+
+  .rbt-gap {
+    margin-top: 0.35rem;
+  }
+
+  .rbt-logo-ring {
+    width: 88px;
+    height: 88px;
+    border-width: 2px;
+    box-shadow: none;
+  }
+
+  .rbt-hotel {
+    font-size: 11.5pt;
+    margin-top: 0.3rem;
+    color: #111;
+  }
+
+  .rbt-addr-under {
+    font-size: 8pt;
+    color: #333;
+    max-width: 48mm;
+    margin-top: 0.25rem;
+  }
+
+  .rbt-kicker {
+    font-size: 7pt;
+    margin-top: 0.15rem;
+    color: #666;
+  }
+
+  .summary-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.35rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .summary-card {
+    padding: 0.35rem 0.45rem;
+    border-radius: 8px;
+    background: #fff;
+    border: 1px solid #ddd;
+  }
+
+  .summary-card span {
+    font-size: 6.5pt;
+    color: #444;
+  }
+
+  .summary-card strong {
+    font-size: 10pt;
+    margin-top: 0.15rem;
+  }
+
+  .report-section {
+    margin-top: 0.4rem;
+  }
+
+  .report-section h3 {
+    margin: 0 0 0.2rem;
+    font-size: 10pt;
+    padding-bottom: 0.15rem;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .status-row {
+    gap: 0.35rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .status-row span {
+    padding: 0.25rem 0.45rem;
+    font-size: 7.5pt;
+    border-radius: 8px;
+  }
+
+  .table-wrapper {
+    overflow: visible;
+  }
+
+  /* كل حجز = صف بيانات + صف أزرار (مخفي في الطباعة)؛ 14 حجز = 28 صفاً */
+  .print-one-page-table tbody tr:nth-child(n + 29) {
+    display: none !important;
+  }
+
+  table {
+    font-size: 7.5pt;
+  }
+
+  th,
+  td {
+    padding: 0.2rem 0.35rem;
+    border-color: #ccc;
+  }
+
+  th {
+    font-size: 7pt;
+    color: #0c4a6e;
+  }
+
+  td {
+    color: #222;
+  }
+
+  .report-brand-top,
+  .summary-card,
+  .status-row span,
+  th,
+  td {
+    color: #111;
+    border-color: #ccc;
+  }
+}

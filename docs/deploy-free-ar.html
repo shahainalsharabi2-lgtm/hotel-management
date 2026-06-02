@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>خطوات رفع المشروع مجانًا</title>
+    <style>
+      :root { --ink:#0f172a; --muted:#475569; --bg:#ffffff; --border:#e2e8f0; --accent:#2563eb; }
+      html,body{ background:var(--bg); color:var(--ink); font-family: "Segoe UI", Tahoma, Arial, sans-serif; }
+      body{ margin:0; padding:32px; line-height:1.6; }
+      h1{ margin:0 0 8px; font-size:26px; }
+      .sub{ color:var(--muted); margin:0 0 18px; }
+      .box{ border:1px solid var(--border); border-radius:14px; padding:14px 16px; margin:14px 0; }
+      h2{ margin:0 0 10px; font-size:18px; }
+      ol{ margin:0; padding:0 20px 0 0; }
+      li{ margin:8px 0; }
+      code{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; background:#f1f5f9; padding:2px 6px; border-radius:8px; }
+      .kv{ margin-top:8px; }
+      .kv div{ padding:6px 0; border-top:1px dashed var(--border); }
+      .kv div:first-child{ border-top:0; }
+      .k{ color:var(--muted); }
+      .footer{ margin-top:18px; font-size:12px; color:var(--muted); }
+      .badge{ display:inline-block; border:1px solid var(--border); border-radius:999px; padding:2px 10px; font-size:12px; color:var(--muted); }
+      a{ color:var(--accent); text-decoration:none; }
+    </style>
+  </head>
+  <body>
+    <h1>خطوات رفع مشروع الفندق مجانًا</h1>
+    <p class="sub">
+      الخطة: <span class="badge">Angular</span> على Cloudflare Pages + <span class="badge">API (.NET)</span> على Render + <span class="badge">PostgreSQL</span> على Neon
+    </p>
+
+    <div class="box">
+      <h2>المتطلبات قبل البدء</h2>
+      <ol>
+        <li>حساب GitHub لرفع المشروع.</li>
+        <li>حساب Render لنشر الـ API.</li>
+        <li>حساب Neon لقاعدة البيانات PostgreSQL.</li>
+        <li>حساب Cloudflare Pages لنشر واجهة Angular.</li>
+      </ol>
+    </div>
+
+    <div class="box">
+      <h2>1) رفع المشروع على GitHub</h2>
+      <ol>
+        <li>أنشئ Repository جديد على GitHub.</li>
+        <li>ارفع مجلد المشروع كاملًا (الذي يحتوي <code>angular</code> و <code>aspnet-core</code>).</li>
+      </ol>
+    </div>
+
+    <div class="box">
+      <h2>2) إنشاء قاعدة بيانات Neon (PostgreSQL)</h2>
+      <ol>
+        <li>أنشئ Project جديد في Neon.</li>
+        <li>انسخ Connection String الخاص بـ PostgreSQL.</li>
+      </ol>
+      <div class="kv">
+        <div><span class="k">مثال Connection String:</span> <code>Host=...;Port=5432;Database=...;Username=...;Password=...;SSL Mode=Require;Trust Server Certificate=true</code></div>
+      </div>
+    </div>
+
+    <div class="box">
+      <h2>3) نشر الـ API على Render (Docker)</h2>
+      <ol>
+        <li>في Render اختر: New → Web Service.</li>
+        <li>اربط الـ Repo من GitHub.</li>
+        <li>اختر Deploy method: <strong>Docker</strong>.</li>
+        <li>حدد Root Directory: <code>aspnet-core</code>.</li>
+      </ol>
+
+      <div class="kv">
+        <div><span class="k">متغيرات البيئة (Environment Variables):</span></div>
+        <div><code>ASPNETCORE_ENVIRONMENT</code> = <code>Production</code></div>
+        <div><code>Database__Provider</code> = <code>PostgreSql</code></div>
+        <div><code>ConnectionStrings__Default</code> = <code>&lt;Neon connection string&gt;</code></div>
+        <div><code>App__SelfUrl</code> = <code>&lt;Render API URL&gt;</code></div>
+        <div><code>AuthServer__Authority</code> = <code>&lt;Render API URL&gt;</code></div>
+        <div><code>App__ClientUrl</code> = <code>&lt;Cloudflare Pages URL&gt;</code></div>
+        <div><code>App__CorsOrigins</code> = <code>&lt;Cloudflare Pages URL&gt;</code></div>
+      </div>
+    </div>
+
+    <div class="box">
+      <h2>4) تشغيل DbMigrator (مرة واحدة) لإنشاء الجداول</h2>
+      <ol>
+        <li>على جهازك محليًا، افتح مشروع <code>aspnet-core/src/Modiaf.Al.Arab.Hotel.DbMigrator</code>.</li>
+        <li>ضع نفس إعدادات PostgreSQL:</li>
+      </ol>
+      <div class="kv">
+        <div><code>Database:Provider</code> = <code>PostgreSql</code></div>
+        <div><code>ConnectionStrings:Default</code> = <code>&lt;Neon connection string&gt;</code></div>
+      </div>
+      <ol>
+        <li>شغّل الأمر:</li>
+      </ol>
+      <div class="kv">
+        <div><code>dotnet run -c Release --project aspnet-core/src/Modiaf.Al.Arab.Hotel.DbMigrator</code></div>
+      </div>
+    </div>
+
+    <div class="box">
+      <h2>5) نشر Angular على Cloudflare Pages</h2>
+      <ol>
+        <li>Cloudflare Pages → Create project → اختر نفس Repo.</li>
+        <li>إعدادات البناء:</li>
+      </ol>
+      <div class="kv">
+        <div><code>Build command</code> = <code>npm ci &amp;&amp; npm run build</code></div>
+        <div><code>Output directory</code> = <code>angular/dist/Hotel</code></div>
+      </div>
+      <ol>
+        <li>بعد أن تحصل على رابط API من Render، حدّث ملف الإنتاج في Angular:</li>
+      </ol>
+      <div class="kv">
+        <div><code>angular/src/environments/environment.prod.ts</code>:</div>
+        <div><code>oAuthConfig.issuer</code> = <code>&lt;Render API URL&gt;</code></div>
+        <div><code>apis.default.url</code> = <code>&lt;Render API URL&gt;</code></div>
+        <div><code>application.baseUrl</code> = <code>&lt;Cloudflare Pages URL&gt;</code></div>
+      </div>
+    </div>
+
+    <div class="box">
+      <h2>6) اختبار سريع بعد النشر</h2>
+      <ol>
+        <li>افتح رابط Cloudflare Pages.</li>
+        <li>تأكد أن الصفحات تعمل (Dashboard / Rooms / Bookings / Settings).</li>
+        <li>إذا ظهر خطأ CORS: راجع متغير <code>App__CorsOrigins</code> في Render.</li>
+      </ol>
+    </div>
+
+    <p class="footer">
+      تم توليد هذا الملف من داخل المشروع. إذا أردت أضيف لك نسخة إنجليزية أو صور، أخبرني.
+    </p>
+  </body>
+</html>

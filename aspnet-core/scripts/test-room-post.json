@@ -1,0 +1,9 @@
+{
+  "roomNumber": "9999-test",
+  "type": "غرفة عادية",
+  "status": "available",
+  "price": 100,
+  "floor": 1,
+  "currencyCode": "TRY",
+  "currencySymbol": "₺"
+}

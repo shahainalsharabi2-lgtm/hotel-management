@@ -1,0 +1,402 @@
+<div class="dashboard-page" [class.database-page--advanced]="databaseAdvancedLayout">
+  <div class="glass-card" *ngIf="!databaseAdvancedLayout">
+    <!-- Header & Navigation -->
+    <header class="card-header">
+      <a routerLink="/dashboard" class="icon-circle-link">
+        <div class="icon-circle">
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1976d2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+        </div>
+      </a>
+      <div class="header-text">
+        <h1>{{ ui.screenText('database', 'pageTitle') }}</h1>
+        <p>{{ ui.screenText('database', 'pageSubtitle') }}</p>
+      </div>
+    </header>
+
+    <div *ngIf="loading" class="loader-container">
+      <div class="loader"></div>
+      <p>{{ ui.screenText('database', 'loading') }}</p>
+    </div>
+
+    <div *ngIf="error" class="error-msg">
+      {{ error }}
+    </div>
+
+    <div *ngIf="!loading && !error" class="dashboard-content">
+
+      <!-- Filters -->
+      <div class="filters-section">
+        <div class="filter-box">
+          <label>{{ ui.screenText('database', 'searchByName') }}</label>
+          <div class="input-wrapper">
+            <input type="text" [(ngModel)]="filterName" [placeholder]="ui.screenText('database', 'searchPh')">
+          </div>
+        </div>
+        <div class="filter-box">
+          <label>{{ ui.screenText('database', 'filterDate') }}</label>
+          <div class="input-wrapper date-wrapper">
+            <input type="date" [(ngModel)]="filterDate">
+            <button class="clear-btn" (click)="filterDate = ''" *ngIf="filterDate" [title]="ui.screenText('database', 'showAll')">
+              ✕
+            </button>
+          </div>
+        </div>
+        <div class="filter-box">
+          <label>{{ ui.screenText('database', 'statusFilter') }}</label>
+          <div class="input-wrapper">
+            <select [(ngModel)]="filterStatus" class="premium-select">
+              <option value="all">{{ ui.screenText('database', 'statusAll') }}</option>
+              <option value="active">{{ ui.screenText('database', 'statusActive') }}</option>
+              <option value="checked_out">{{ ui.screenText('database', 'statusCheckout') }}</option>
+              <option value="cancelled">{{ ui.screenText('database', 'statusCancelled') }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Summary Cards -->
+      <div class="stats-grid top-stats">
+        <div class="stat-card highlight-card">
+          <div class="stat-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#1976d2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+          </div>
+          <div class="stat-details">
+            <h3>{{ ui.screenText('database', 'receivedAmount') }}</h3>
+            <p class="stat-number text-highlight">{{ totalReceivedAmount | number:'1.0-2' }} <span class="currency">{{ '' | hotelSymbol }}</span></p>
+            <span class="stat-desc">{{ ui.screenText('database', 'filterHint') }}</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+          </div>
+          <div class="stat-details">
+            <h3>{{ ui.screenText('database', 'totalFloors') }}</h3>
+            <p class="stat-number">{{ totalFloors }}</p>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+          </div>
+          <div class="stat-details">
+            <h3>{{ ui.screenText('database', 'totalRooms') }}</h3>
+            <p class="stat-number">{{ totalRooms }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Room Status Cards -->
+      <h3 class="section-title">{{ ui.screenText('database', 'roomStatusSection') }}</h3>
+      <div class="stats-grid room-stats">
+        <div class="stat-card status-available">
+          <div class="stat-details">
+            <h3>{{ ui.screenText('database', 'roomsAvailable') }}</h3>
+            <p class="stat-number">{{ availableRooms }}</p>
+          </div>
+        </div>
+
+        <div class="stat-card status-occupied">
+          <div class="stat-details">
+            <h3>{{ ui.screenText('database', 'roomsOccupied') }}</h3>
+            <p class="stat-number">{{ occupiedRooms }}</p>
+          </div>
+        </div>
+
+        <div class="stat-card status-maintenance">
+          <div class="stat-details">
+            <h3>{{ ui.screenText('database', 'roomsMaintenance') }}</h3>
+            <p class="stat-number">{{ maintenanceRooms }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filtered Bookings Table -->
+      <h3 class="section-title">{{ ui.screenText('database', 'bookingsSection') }} ({{ filteredBookings.length }})</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>{{ ui.screenText('database', 'colGuest') }}</th>
+              <th>{{ ui.screenText('database', 'colPhone') }}</th>
+              <th>{{ ui.screenText('database', 'colRoom') }}</th>
+              <th>{{ ui.screenText('database', 'colBookingDate') }}</th>
+              <th>{{ ui.screenText('database', 'colStatus') }}</th>
+              <th>{{ ui.screenText('database', 'colReceived') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let b of filteredBookings">
+              <td>{{ b.first_Name }} {{ b.last_Name }}</td>
+              <td>{{ b.phone_Number }}</td>
+              <td><span class="room-badge">{{ b.room_Number }}</span></td>
+              <td dir="ltr" style="text-align: right;">
+                {{ b.booking_Date }}
+                <span class="time-small">{{ formatTime12h(b.booking_Time) }}</span>
+              </td>
+              <td>
+                <span class="status-indicator" [ngClass]="b.status || 'active'">
+                  {{ b.status === 'checked_out' ? ui.screenText('database', 'statusLeft') : (b.status === 'cancelled' ? ui.screenText('database', 'statusCancelledShort') : ui.screenText('database', 'statusActiveShort')) }}
+                </span>
+              </td>
+              <td class="amount">{{ b.payment_Amount }} {{ '' | hotelSymbol }}</td>
+            </tr>
+            <tr *ngIf="filteredBookings.length === 0">
+              <td colspan="6" class="empty-state">{{ ui.screenText('database', 'emptyFilter') }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- العرض المطوّر (لوحة التحكم): شبكة غرف + ملخص + أقراص التصفية -->
+  <div class="db-adv-shell" *ngIf="databaseAdvancedLayout">
+    <div *ngIf="loading" class="db-adv-loader">
+      <div class="loader"></div>
+      <p>{{ ui.screenText('database', 'advLoading') }}</p>
+    </div>
+
+    <div *ngIf="error" class="db-adv-error">{{ error }}</div>
+
+    <div class="db-adv-body" *ngIf="!loading">
+      <div class="db-adv-scale-host">
+      <div class="db-adv-scale-inner" [style.zoom]="dbAdvLayoutScale / 100">
+      <header class="db-adv-topbar">
+        <div class="db-adv-topbar-text">
+          <h1 class="db-adv-title">{{ ui.screenText('database', 'advTitle') }}</h1>
+          <p class="db-adv-kicker">{{ ui.screenText('database', 'advKicker') }}</p>
+        </div>
+        <div class="db-adv-topbar-actions">
+          <button type="button" class="db-adv-icon-btn" (click)="fetchData()" [title]="ui.screenText('database', 'advRefresh')" [attr.aria-label]="ui.screenText('database', 'advRefresh')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 4v6h-6"></path>
+              <path d="M1 20v-6h6"></path>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+          </button>
+          <button
+            type="button"
+            class="db-adv-clear"
+            *ngIf="dbAdvStatusFilter || dbAdvStayingOnly || dbAdvBookingsPanel"
+            (click)="dbAdvStatusFilter = ''; dbAdvStayingOnly = false; dbAdvBookingsPanel = ''; closeOccupiedRoomNote()"
+          >
+            {{ ui.screenText('database', 'advClearFilter') }}
+          </button>
+        </div>
+      </header>
+
+      <div class="db-adv-summary-scroll">
+        <button type="button" class="db-adv-tile" *ngFor="let tile of dbAdvSummaryTiles"
+          [class.db-adv-tile--active]="isDbAdvTileActive(tile)" (click)="onDbAdvSummaryTile(tile)">
+          <span class="db-adv-tile-count">{{ tile.count }}</span>
+          <span class="db-adv-tile-label">{{ ui.screenText('database', tile.labelKey) }}</span>
+        </button>
+      </div>
+
+      <div class="db-adv-section" *ngIf="dbAdvBookingsPanel">
+        <h2 class="db-adv-section-title">{{ ui.screenText('database', dbAdvBookingsPanelTitleKey) }}</h2>
+        <span class="db-adv-section-badge">{{ dbAdvPanelBookings.length }}</span>
+      </div>
+
+      <div class="db-adv-residents-wrap" *ngIf="dbAdvBookingsPanel">
+        <ng-container *ngIf="dbAdvPanelBookings.length; else dbAdvBookingsPanelEmpty">
+        <div class="db-residents-strip-wrap" *ngIf="dbAdvBookingsPanel === 'residents'; else dbAdvDepartingCards">
+          <div class="db-sticky-board db-sticky-board--residents">
+          <article class="db-resident-card" *ngFor="let b of dbAdvPanelBookings">
+            <h3 class="db-resident-card__name">{{ guestDisplayName(b) }}</h3>
+            <ul class="db-resident-card__facts">
+              <li>
+                <i class="fas fa-layer-group" aria-hidden="true"></i>
+                <div class="db-resident-card__row-body">
+                  <span class="db-resident-card__label">{{ ui.screenText('database', 'advFloor') }}</span>
+                  <span class="db-resident-card__value">{{ guestFloorLabel(b) || '—' }}</span>
+                </div>
+              </li>
+              <li>
+                <i class="fas fa-door-open" aria-hidden="true"></i>
+                <div class="db-resident-card__row-body">
+                  <span class="db-resident-card__label">{{ ui.screenText('database', 'advType') }}</span>
+                  <span class="db-resident-card__value">{{ guestRoomType(b) }}</span>
+                </div>
+              </li>
+              <li>
+                <i class="fas fa-bed" aria-hidden="true"></i>
+                <div class="db-resident-card__row-body">
+                  <span class="db-resident-card__label">{{ ui.screenText('database', 'colRoom') }}</span>
+                  <span class="db-resident-card__value">{{ b.room_Number || '—' }}</span>
+                </div>
+              </li>
+              <li class="db-resident-card__fact--end">
+                <i class="fas fa-calendar-check" aria-hidden="true"></i>
+                <div class="db-resident-card__row-body db-resident-card__row-body--end">
+                  <span class="db-resident-card__label">{{ ui.screenText('database', 'advCheckoutEnd') }}</span>
+                  <span class="db-resident-card__end-date">{{ formatBookingCheckOutDate(b) }}</span>
+                  <span class="db-resident-card__end-time" dir="ltr">{{ formatBookingCheckOutTime(b) }}</span>
+                </div>
+              </li>
+            </ul>
+          </article>
+          </div>
+        </div>
+        <ng-template #dbAdvDepartingCards>
+          <div class="pms-cards db-adv-pms-cards">
+            <app-pms-booking-card
+              *ngFor="let b of dbAdvPanelBookings; let idx = index"
+              [booking]="b"
+              [orderIndex]="idx"
+              (viewDetails)="openGuestDetailFromBooking($event)" />
+          </div>
+        </ng-template>
+        </ng-container>
+        <ng-template #dbAdvBookingsPanelEmpty>
+          <p class="db-adv-empty">{{ ui.screenText('database', dbAdvBookingsPanelEmptyKey) }}</p>
+        </ng-template>
+      </div>
+
+      <div class="db-adv-section" *ngIf="!dbAdvBookingsPanel">
+        <h2 class="db-adv-section-title"></h2>
+        <span class="db-adv-section-badge">{{ dbAdvFilteredRooms.length }}</span>
+      </div>
+
+      <div class="db-adv-grid-wrap" *ngIf="!dbAdvBookingsPanel">
+        <div class="db-adv-grid" *ngIf="dbAdvFilteredRooms.length; else dbAdvEmpty">
+          <button type="button" class="db-adv-mini-card" *ngFor="let room of dbAdvFilteredRooms"
+            [ngClass]="dbAdvCardTone(room.status)" (click)="onAdvRoomClick(room)">
+            <span class="db-adv-mini-menu" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+            </span>
+            <span class="db-adv-mini-num">{{ room.roomNumber }}</span>
+            <span class="db-adv-mini-floor">{{ ui.screenText('database', 'advFloorLabel') }} {{ room.floor }}</span>
+            <div class="db-adv-mini-price" [attr.aria-label]="ui.screenText('database', 'advPriceNightAria')">
+              <span class="db-adv-mini-price-val">{{ room.price | number:'1.0-0' }}</span>
+              <abbr class="db-adv-mini-price-unit" [attr.title]="room.currencyCode || 'YER'">{{
+                room.currencySymbol || ('' | hotelSymbol)
+              }}</abbr>
+            </div>
+          </button>
+        </div>
+        <ng-template #dbAdvEmpty>
+          <p class="db-adv-empty">{{ ui.screenText('database', 'advEmpty') }}</p>
+        </ng-template>
+      </div>
+      </div>
+      </div>
+    </div>
+
+    <div
+      class="db-adv-filter-bar"
+      *ngIf="!loading"
+      role="region"
+      [attr.aria-label]="ui.screenText('database', 'advFilterBarAria')">
+      <div class="db-adv-filter-inner">
+        <div class="db-adv-filter-scale">
+          <label class="db-adv-filter-cap" for="db-adv-scale">{{ ui.screenText('bookings', 'pmsDisplayScale') }}</label>
+          <input
+            id="db-adv-scale"
+            class="db-adv-filter-range"
+            type="range"
+            min="55"
+            max="110"
+            step="1"
+            [(ngModel)]="dbAdvLayoutScale"
+            (ngModelChange)="persistDbAdvLayoutScale()" />
+          <span class="db-adv-filter-scale-val" aria-live="polite">{{ dbAdvLayoutScale }}%</span>
+        </div>
+        <ng-container *ngIf="dbAdvBookingsPanel !== 'residents'">
+          <div class="db-adv-filter-field">
+            <span class="db-adv-filter-cap" id="db-adv-floor-cap">{{ ui.screenText('database', 'advFloor') }}</span>
+            <select
+              id="db-adv-floor-select"
+              class="db-adv-filter-select"
+              [(ngModel)]="dbAdvFloorFilter"
+              aria-labelledby="db-adv-floor-cap">
+              <option [ngValue]="null">{{ ui.screenText('database', 'advFilterAll') }}</option>
+              <option *ngFor="let fl of dbAdvDistinctFloors" [ngValue]="fl">{{ fl }}</option>
+            </select>
+          </div>
+          <div class="db-adv-filter-field">
+            <span class="db-adv-filter-cap" id="db-adv-type-cap">{{ ui.screenText('database', 'advType') }}</span>
+            <select
+              id="db-adv-type-select"
+              class="db-adv-filter-select"
+              [(ngModel)]="dbAdvTypePill"
+              aria-labelledby="db-adv-type-cap">
+              <option *ngFor="let p of dbAdvTypePills" [value]="p.key">{{ p.label }}</option>
+            </select>
+          </div>
+          <div class="db-adv-filter-count" aria-live="polite">
+            <span class="db-adv-filter-count-num">{{ dbAdvFilteredRooms.length }}</span>
+            <span class="db-adv-filter-count-suffix">{{ dbAdvFilteredRooms.length === 1 ? ui.screenText('database', 'advRoomOne') : ui.screenText('database', 'advRoomMany') }}</span>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+
+    <div class="db-occ-note-overlay" *ngIf="occupiedRoomNote as note">
+      <button
+        type="button"
+        class="db-occ-note-scrim"
+        (click)="closeOccupiedRoomNote()"
+        [attr.aria-label]="ui.screenText('bookings', 'closeModalAria')"></button>
+      <article
+        class="db-sticky-note db-sticky-note--blue db-sticky-note--popup"
+        [class.db-sticky-note--open]="expandedNoteBookingId === note.booking.id"
+        (click)="$event.stopPropagation()">
+        <span class="db-sticky-pin" aria-hidden="true"></span>
+        <span class="db-sticky-icon" aria-hidden="true">
+          <i class="fas fa-user-tag"></i>
+        </span>
+        <button
+          type="button"
+          class="db-sticky-name"
+          (click)="toggleNoteExpand(note.booking.id)"
+          [attr.aria-expanded]="expandedNoteBookingId === note.booking.id">
+          {{ guestDisplayName(note.booking) }}
+        </button>
+        <div class="db-sticky-meta" *ngIf="expandedNoteBookingId !== note.booking.id">
+          <span class="db-sticky-chip db-sticky-chip--room">
+            <i class="fas fa-bed" aria-hidden="true"></i>
+            {{ note.booking.room_Number || note.room.roomNumber || '—' }}
+          </span>
+          <span class="db-sticky-chip">
+            <i class="fas fa-layer-group" aria-hidden="true"></i>
+            {{ guestFloorLabel(note.booking) || note.room.floor }}
+          </span>
+        </div>
+        <div class="db-sticky-details db-sticky-details--compact" *ngIf="expandedNoteBookingId === note.booking.id">
+          <ul class="db-sticky-detail-list">
+            <li>
+              <i class="fas fa-phone" aria-hidden="true"></i>
+              <span>{{ note.booking.phone_Number || '—' }}</span>
+            </li>
+            <li>
+              <i class="fas fa-calendar-day" aria-hidden="true"></i>
+              <span>
+                {{ formatSlashDate(checkInYmd(note.booking)) }} → {{ formatSlashDate(checkOutYmd(note.booking)) }}
+              </span>
+            </li>
+            <li>
+              <i class="fas fa-hourglass-half" aria-hidden="true"></i>
+              <span>{{ checkoutCountdownText(note.booking) }}</span>
+            </li>
+          </ul>
+        </div>
+      </article>
+    </div>
+
+    <app-room-preview-sheet
+      [room]="roomPreview"
+      [booking]="roomPreviewBooking"
+      [editableStatus]="true"
+      (dismiss)="closeRoomPreview()"
+      (roomUpdated)="onRoomPreviewUpdated($event)">
+    </app-room-preview-sheet>
+  </div>
+</div>

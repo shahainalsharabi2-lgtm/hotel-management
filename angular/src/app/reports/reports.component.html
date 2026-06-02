@@ -1,0 +1,222 @@
+<section class="reports-page" dir="rtl">
+  <header class="page-header no-print">
+    <div>
+      <p class="eyebrow">{{ ui.screenText('reports', 'eyebrow') }}</p>
+      <h1>{{ ui.screenText('reports', 'pageTitle') }}</h1>
+      <p>{{ ui.screenText('reports', reportSubtitleKey) }}</p>
+    </div>
+
+    <div class="header-actions">
+      <button type="button" class="btn secondary" (click)="loadReportData()">
+        <i class="fas fa-sync-alt"></i>
+        {{ ui.screenText('reports', 'refresh') }}
+      </button>
+      <button type="button" class="btn primary" (click)="printReport()">
+        <i class="fas fa-print"></i>
+        {{ ui.screenText('reports', 'print') }}
+      </button>
+    </div>
+  </header>
+
+  <div class="filters-card no-print">
+    <label>
+      {{ ui.screenText('reports', 'fromDate') }}
+      <input type="date" [(ngModel)]="fromDate" />
+    </label>
+    <label>
+      {{ ui.screenText('reports', 'toDate') }}
+      <input type="date" [(ngModel)]="toDate" />
+    </label>
+    <button type="button" class="btn ghost" (click)="clearFilters()">{{ ui.screenText('reports', 'clearFilter') }}</button>
+    <p class="filters-hint" *ngIf="reportUsesSnapshot">{{ ui.screenText('reports', 'snapshotDateHint') }}</p>
+    <p class="filters-hint" *ngIf="!reportUsesSnapshot">{{ ui.screenText('reports', 'periodDateHint') }}</p>
+  </div>
+
+  <div *ngIf="loading" class="state-card">{{ ui.screenText('reports', 'loading') }}</div>
+  <div *ngIf="error" class="state-card error">{{ error }}</div>
+
+  <article class="report-sheet" *ngIf="!loading && !error">
+    <header class="report-brand-top" dir="ltr">
+      <div class="rbt-col rbt-side rbt-side-start" dir="rtl">
+        <p class="rbt-label">{{ ui.screenText('reports', 'labelPhone') }}</p>
+        <p class="rbt-val rbt-ltr">{{ reportBranding.phone || '—' }}</p>
+        <p class="rbt-label rbt-gap">{{ ui.screenText('reports', 'labelEmail') }}</p>
+        <p class="rbt-val rbt-ltr">{{ reportBranding.email || '—' }}</p>
+      </div>
+      <div class="rbt-col rbt-center" dir="rtl">
+        <div class="rbt-logo-ring">
+          <img [src]="reportBranding.imageSrc" alt="" />
+        </div>
+        <h2 class="rbt-hotel">{{ reportBranding.name }}</h2>
+        <p class="rbt-addr-under">{{ reportBranding.address || '—' }}</p>
+        <p class="rbt-kicker">{{ ui.screenText('reports', 'hotelReport') }}</p>
+      </div>
+      <div class="rbt-col rbt-side rbt-side-end" dir="rtl">
+        <p class="rbt-label">{{ ui.screenText('reports', 'printDate') }}</p>
+        <p class="rbt-val">{{ reportPrintedAt }}</p>
+        <p class="rbt-label rbt-gap">{{ ui.screenText('reports', 'reportPeriod') }}</p>
+        <p class="rbt-val rbt-ltr">
+          {{ fromDate || '—' }} — {{ toDate || '—' }}
+        </p>
+      </div>
+    </header>
+
+    <section class="report-section report-section--head">
+      <h3>{{ ui.screenText('reports', reportTitleKey) }}</h3>
+      <p class="report-type-kicker">{{ ui.screenText('reports', reportSubtitleKey) }}</p>
+      <p class="report-count-line">
+        {{ ui.screenText('reports', 'reportRowsCount') }}
+        <strong>{{ reportBookings.length }}</strong>
+      </p>
+    </section>
+
+    <!-- ملخص عام — تقرير الحجوزات فقط -->
+    <ng-container *ngIf="activeReportKind === 'bookings'">
+      <div class="summary-grid">
+        <div class="summary-card">
+          <span>{{ ui.screenText('reports', 'summaryTotalRooms') }}</span>
+          <strong>{{ totalRooms }}</strong>
+        </div>
+        <div class="summary-card success">
+          <span>{{ ui.screenText('reports', 'summaryAvailable') }}</span>
+          <strong>{{ availableRooms }}</strong>
+        </div>
+        <div class="summary-card warning">
+          <span>{{ ui.screenText('reports', 'summaryOccupied') }}</span>
+          <strong>{{ occupiedRooms }}</strong>
+        </div>
+        <div class="summary-card">
+          <span>{{ ui.screenText('reports', 'summaryOccupancy') }}</span>
+          <strong>{{ roomOccupancyRate }}%</strong>
+        </div>
+        <div class="summary-card">
+          <span>{{ ui.screenText('reports', 'summaryBookings') }}</span>
+          <strong>{{ totalBookings }}</strong>
+        </div>
+        <div class="summary-card success">
+          <span>{{ ui.screenText('reports', 'summaryCollected') }}</span>
+          <strong>{{ totalRevenue | number }} {{ '' | hotelSymbol }}</strong>
+        </div>
+        <div class="summary-card danger">
+          <span>{{ ui.screenText('reports', 'summaryRemaining') }}</span>
+          <strong>{{ totalRemaining | number }} {{ '' | hotelSymbol }}</strong>
+        </div>
+        <div class="summary-card">
+          <span>{{ ui.screenText('reports', 'summaryMaintDirty') }}</span>
+          <strong>{{ maintenanceRooms }} / {{ dirtyRooms }}</strong>
+        </div>
+      </div>
+
+      <section class="report-section">
+        <h3>{{ ui.screenText('reports', 'bookingStatusSection') }}</h3>
+        <div class="status-row">
+          <span>{{ ui.screenText('reports', 'statusActiveCount') }} <strong>{{ activeBookings }}</strong></span>
+          <span>{{ ui.screenText('reports', 'statusCheckedOutCount') }} <strong>{{ checkedOutBookings }}</strong></span>
+          <span>{{ ui.screenText('reports', 'statusCancelledCount') }} <strong>{{ cancelledBookings }}</strong></span>
+          <span>{{ ui.screenText('reports', 'statusNoShowCount') }} <strong>{{ noShowBookings }}</strong></span>
+        </div>
+      </section>
+    </ng-container>
+
+    <!-- ملخص المقيمين — تقرير مالي -->
+    <div class="summary-grid summary-grid--staying" *ngIf="activeReportKind === 'staying-summary'">
+      <div class="summary-card">
+        <span>{{ ui.screenText('reports', 'stayingSummaryGuests') }}</span>
+        <strong>{{ stayingSummaryCount }}</strong>
+      </div>
+      <div class="summary-card">
+        <span>{{ ui.screenText('reports', 'stayingSummaryTotal') }}</span>
+        <strong>{{ stayingSummaryTotal | number }} {{ '' | hotelSymbol }}</strong>
+      </div>
+      <div class="summary-card success">
+        <span>{{ ui.screenText('reports', 'stayingSummaryPaid') }}</span>
+        <strong>{{ stayingSummaryPaid | number }} {{ '' | hotelSymbol }}</strong>
+      </div>
+      <div class="summary-card danger">
+        <span>{{ ui.screenText('reports', 'stayingSummaryRemaining') }}</span>
+        <strong>{{ stayingSummaryRemaining | number }} {{ '' | hotelSymbol }}</strong>
+      </div>
+    </div>
+
+    <section class="report-section">
+      <h3 *ngIf="activeReportKind === 'bookings'">{{ ui.screenText('reports', 'latestBookingsTitle') }}</h3>
+      <p class="print-page-hint">{{ ui.screenText('reports', 'printPageHint') }}</p>
+
+      <div class="latest-bookings-toolbar no-print" *ngIf="activeReportKind === 'bookings'">
+        <label class="search-mode">
+          <span>{{ ui.screenText('reports', 'searchTypeLabel') }}</span>
+          <select [(ngModel)]="latestSearchMode" name="latestSearchMode">
+            <option value="all">{{ ui.screenText('reports', 'searchAllInPeriod') }}</option>
+            <option value="last_hour">{{ ui.screenText('reports', 'searchLastHour') }}</option>
+            <option value="guest">{{ ui.screenText('reports', 'searchGuest') }}</option>
+            <option value="room">{{ ui.screenText('reports', 'searchRoom') }}</option>
+            <option value="floor">{{ ui.screenText('reports', 'searchFloor') }}</option>
+          </select>
+        </label>
+        <label class="search-text" *ngIf="latestSearchMode !== 'all' && latestSearchMode !== 'last_hour'">
+          <span>{{ ui.screenText('reports', 'searchLabel') }}</span>
+          <input
+            type="search"
+            [(ngModel)]="latestSearchText"
+            name="latestSearchText"
+            [placeholder]="latestSearchPlaceholder"
+          />
+        </label>
+        <p *ngIf="latestSearchMode === 'last_hour'" class="search-hint">
+          {{ ui.screenText('reports', 'searchLastHourHint') }}
+        </p>
+        <button type="button" class="btn ghost small-toolbar-btn" (click)="clearLatestSearch()">{{ ui.screenText('reports', 'clearSearch') }}</button>
+      </div>
+
+      <div class="table-wrapper print-one-page-table">
+        <table>
+          <thead>
+            <tr>
+              <th>{{ ui.screenText('reports', 'colInvoice') }}</th>
+              <th>{{ ui.screenText('reports', 'colGuest') }}</th>
+              <th>{{ ui.screenText('reports', 'colRoom') }}</th>
+              <th>{{ ui.screenText('reports', 'colFloor') }}</th>
+              <th *ngIf="reportUsesSnapshot">{{ ui.screenText('reports', 'colCheckIn') }}</th>
+              <th *ngIf="reportUsesSnapshot">{{ ui.screenText('reports', 'colCheckOut') }}</th>
+              <th *ngIf="!reportUsesSnapshot">{{ ui.screenText('reports', 'colDate') }}</th>
+              <th>{{ ui.screenText('reports', 'colTotal') }}</th>
+              <th>{{ ui.screenText('reports', 'colPaid') }}</th>
+              <th>{{ ui.screenText('reports', 'colRemaining') }}</th>
+              <th>{{ ui.screenText('reports', 'colStatus') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <ng-container *ngFor="let booking of reportTableRows">
+              <tr>
+                <td>{{ booking.invoice_Number || '-' }}</td>
+                <td>{{ booking.first_Name }} {{ booking.last_Name }}</td>
+                <td>{{ booking.room_Number || '-' }}</td>
+                <td>{{ booking.floor ?? '-' }}</td>
+                <td *ngIf="reportUsesSnapshot">{{ displayCheckInDate(booking) }}</td>
+                <td *ngIf="reportUsesSnapshot">{{ displayCheckOutDate(booking) }}</td>
+                <td *ngIf="!reportUsesSnapshot">{{ displayBookingDate(booking) }}</td>
+                <td>{{ booking.total_Price | number }} {{ '' | hotelSymbol }}</td>
+                <td>{{ booking.payment_Amount | number }} {{ '' | hotelSymbol }}</td>
+                <td>{{ booking.remaining_Amount || 0 | number }} {{ '' | hotelSymbol }}</td>
+                <td>{{ bookingStatusLabel(booking.status) }}</td>
+              </tr>
+              <tr class="booking-print-row no-print">
+                <td [attr.colspan]="reportUsesSnapshot ? 11 : 9">
+                  <button type="button" class="btn print-row-btn" (click)="printBooking(booking)">
+                    <i class="fas fa-print"></i>
+                    {{ ui.screenText('reports', 'printReceiptRow') }}
+                  </button>
+                </td>
+              </tr>
+            </ng-container>
+            <tr *ngIf="reportTableRows.length === 0">
+              <td [attr.colspan]="reportUsesSnapshot ? 11 : 9" class="empty-cell">
+                {{ ui.screenText('reports', 'emptyBookings') }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </article>
+</section>
