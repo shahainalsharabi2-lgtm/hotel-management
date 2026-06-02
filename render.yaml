@@ -7,7 +7,6 @@ services:
     runtime: docker
     rootDir: aspnet-core
     plan: free
-    healthCheckPath: /health-status
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
