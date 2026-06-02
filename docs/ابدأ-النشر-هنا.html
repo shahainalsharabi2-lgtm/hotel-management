@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <title>نشر الفندق — 3 نقرات فقط</title>
+  <style>
+    body { font-family:Segoe UI,Tahoma,sans-serif; max-width:720px; margin:2rem auto; padding:0 1rem; line-height:1.7; background:#0f1419; color:#e7ecf1; }
+    h1 { color:#7dd3fc; font-size:1.5rem; }
+    .step { background:#1a2332; border-radius:12px; padding:1rem 1.25rem; margin:1rem 0; border-right:4px solid #38bdf8; }
+    .step b { color:#fbbf24; }
+    a.btn { display:inline-block; margin:.5rem 0; padding:.75rem 1.25rem; background:#2563eb; color:#fff; text-decoration:none; border-radius:8px; font-weight:bold; }
+    a.btn:hover { background:#1d4ed8; }
+    .warn { color:#fca5a5; }
+    .ok { color:#86efac; }
+    code { background:#334155; padding:.15rem .4rem; border-radius:4px; }
+  </style>
+</head>
+<body>
+  <h1>نشر مشروع الفندق — اتبع الأرقام فقط</h1>
+  <p class="warn">لا أستطيع الدخول بحسابك — لكن هذه الصفحة تفتح الروابط الصحيحة وتقلّل الخطوات.</p>
+
+  <div class="step">
+    <p><b>الخطوة 1 — Render (بدون CAPTCHA)</b></p>
+    <p>اضغط الزر → اختر <b>Sign in with GitHub</b> (لا تستخدم Create Account بالبريد)</p>
+    <a class="btn" href="https://dashboard.render.com/register/github" target="_blank">1) فتح Render + GitHub</a>
+  </div>
+
+  <div class="step">
+    <p><b>الخطوة 2 — قاعدة البيانات Neon</b></p>
+    <p>سجّل → New Project → انسخ <b>Connection string</b> واحفظه في ملف نصي</p>
+    <a class="btn" href="https://console.neon.tech/" target="_blank">2) فتح Neon</a>
+  </div>
+
+  <div class="step">
+    <p><b>الخطوة 3 — ربط المشروع في Render</b></p>
+    <p>بعد الدخول: <b>New +</b> → <b>Blueprint</b> → اختر مستودع <code>hotel-management</code></p>
+    <p>عندما يطلب قيمًا سرية، الصق <b>سلسلة Neon</b> في <code>ConnectionStrings__Default</code></p>
+    <p>باقي الروابط يمكن تعديلها لاحقًا.</p>
+    <a class="btn" href="https://dashboard.render.com/blueprints" target="_blank">3) Blueprints في Render</a>
+  </div>
+
+  <div class="step">
+    <p><b>الخطوة 4 — على جهازك (مرة واحدة)</b></p>
+    <p>في PowerShell:</p>
+    <pre style="background:#0f172a;padding:1rem;overflow:auto">cd "aspnet-core\src\Modiaf.Al.Arab.Hotel.DbMigrator"
+# عدّل appsettings.json: Provider=PostgreSql + Connection string من Neon
+dotnet run -c Release</pre>
+  </div>
+
+  <div class="step">
+    <p><b>الخطوة 5 — الواجهة Cloudflare</b></p>
+    <a class="btn" href="https://dash.cloudflare.com/" target="_blank">5) فتح Cloudflare</a>
+    <p>Pages → Create → GitHub → مجلد <code>angular</code> → Build: <code>npm ci && npm run build</code> → Output: <code>dist/Hotel</code></p>
+  </div>
+
+  <p class="ok">بعد كل خطوة أرسل للمساعد: «انتهيت من 1» أو «انتهيت من 2» وسيكمل معك الباقي.</p>
+</body>
+</html>

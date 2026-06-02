@@ -1,0 +1,27 @@
+# Render Blueprint — بعد ربط GitHub: New → Blueprint → اختر هذا المستودع
+# https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: hotel-api
+    runtime: docker
+    rootDir: aspnet-core
+    plan: free
+    healthCheckPath: /health-status
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: Database__Provider
+        value: PostgreSql
+      - key: ConnectionStrings__Default
+        sync: false
+      - key: App__SelfUrl
+        sync: false
+      - key: App__ClientUrl
+        sync: false
+      - key: App__CorsOrigins
+        sync: false
+      - key: AuthServer__Authority
+        sync: false
+      - key: AuthServer__RequireHttpsMetadata
+        value: "true"
