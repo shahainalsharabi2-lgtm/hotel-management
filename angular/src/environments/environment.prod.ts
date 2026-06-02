@@ -1,6 +1,7 @@
 import { Environment } from '@abp/ng.core';
 
-const baseUrl = 'https://localhost:4200';
+const apiUrl = 'https://hotel-api-fo0z.onrender.com';
+const baseUrl = 'https://example.pages.dev';
 
 export const environment = {
   production: true,
@@ -10,7 +11,7 @@ export const environment = {
     logoUrl: '',
   },
   oAuthConfig: {
-    issuer: 'https://localhost:44367/',
+    issuer: `${apiUrl}/`,
     redirectUri: baseUrl,
     clientId: 'Hotel_App',
     responseType: 'code',
@@ -19,7 +20,7 @@ export const environment = {
   },
   apis: {
     default: {
-      url: 'https://localhost:44367',
+      url: apiUrl,
       rootNamespace: 'Modiaf.Al.Arab.Hotel',
     },
   },
