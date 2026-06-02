@@ -39,7 +39,7 @@
 ---
 
 ### 3) تشغيل migrations (مرة واحدة)
-بعد نشر الـ API، شغّل `DbMigrator` على PostgreSQL لإنشاء الجداol والبيانات الأولية:
+بعد نشر الـ API، شغّل `DbMigrator` على PostgreSQL لإنشاء الجداول والبيانات الأولية:
 
 1. في `aspnet-core/src/Modiaf.Al.Arab.Hotel.DbMigrator/appsettings.json`:
    - `"Database": { "Provider": "PostgreSql" }`
@@ -57,8 +57,8 @@
 2. Cloudflare Pages → Create project → اختر repo.
 3. إعدادات build:
    - Framework preset: Angular
-   - Build command: `npm ci && npm run build`
-   - Build output directory: `angular/dist/Hotel`
+   - Build command: `npm ci && npm run build:prod`
+   - Build output directory: `angular/dist/Hotel/browser`
 4. عدّل `angular/src/environments/environment.prod.ts` ليستخدم رابط Render بدل localhost:
    - `oAuthConfig.issuer` = رابط الـ API في Render
    - `apis.default.url` = رابط الـ API في Render
