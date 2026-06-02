@@ -15,12 +15,12 @@ services:
       - key: ConnectionStrings__Default
         sync: false
       - key: App__SelfUrl
-        sync: false
+        value: https://hotel-api-fo0z.onrender.com
       - key: App__ClientUrl
-        sync: false
+        value: https://hotel-management.shahainalsharabi2.workers.dev
       - key: App__CorsOrigins
-        sync: false
+        value: https://hotel-management.shahainalsharabi2.workers.dev
       - key: AuthServer__Authority
-        sync: false
+        value: https://hotel-api-fo0z.onrender.com
       - key: AuthServer__RequireHttpsMetadata
         value: "true"
