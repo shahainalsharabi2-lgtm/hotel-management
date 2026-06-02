@@ -1,7 +1,9 @@
 import { Environment } from '@abp/ng.core';
 
-const apiUrl = 'https://hotel-api-fo0z.onrender.com';
 const baseUrl = 'https://hotel-management.shahainalsharabi2.workers.dev';
+/** Same origin — Cloudflare worker proxies /api to Render (avoids CORS). */
+const apiUrl = baseUrl;
+const authIssuer = 'https://hotel-api-fo0z.onrender.com';
 
 export const environment = {
   production: true,
@@ -11,7 +13,7 @@ export const environment = {
     logoUrl: '',
   },
   oAuthConfig: {
-    issuer: `${apiUrl}/`,
+    issuer: `${authIssuer}/`,
     redirectUri: baseUrl,
     clientId: 'Hotel_App',
     responseType: 'code',

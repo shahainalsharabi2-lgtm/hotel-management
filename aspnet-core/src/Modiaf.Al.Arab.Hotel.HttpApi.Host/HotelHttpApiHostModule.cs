@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -186,30 +187,48 @@ public class HotelHttpApiHostModule : AbpModule
 
     private void ConfigureCors(ServiceConfigurationContext context, IConfiguration configuration)
     {
-        var configuredOrigins = configuration["App:CorsOrigins"]?
-            .Split(",", StringSplitOptions.RemoveEmptyEntries)
-            .Select(o => o.RemovePostFix("/"))
-            .ToArray() ?? Array.Empty<string>();
+        var hostingEnvironment = context.Services.GetHostingEnvironment();
+        var originSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var origin in configuration["App:CorsOrigins"]?
+                     .Split(",", StringSplitOptions.RemoveEmptyEntries)
+                     .Select(o => o.Trim().RemovePostFix("/"))
+                     .Where(o => !string.IsNullOrWhiteSpace(o)) ?? Array.Empty<string>())
+        {
+            originSet.Add(origin);
+        }
+
+        if (hostingEnvironment.IsProduction())
+        {
+            originSet.Add("https://hotel-management.shahainalsharabi2.workers.dev");
+        }
+
+        var origins = originSet.ToArray();
 
         context.Services.AddCors(options =>
         {
             options.AddDefaultPolicy(builder =>
             {
+                if (origins.Length > 0)
+                {
+                    builder
+                        .WithOrigins(origins)
+                        .WithAbpExposedHeaders()
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowCredentials()
+                        .SetIsOriginAllowedToAllowWildcardSubdomains();
+                    return;
+                }
+
                 builder
                     .SetIsOriginAllowed(origin =>
                     {
-                        var normalizedOrigin = origin.RemovePostFix("/");
-                        if (configuredOrigins.Contains(normalizedOrigin))
-                        {
-                            return true;
-                        }
-
                         return Uri.TryCreate(origin, UriKind.Absolute, out var uri) &&
                                (uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase) ||
                                 uri.Host.Equals("127.0.0.1", StringComparison.OrdinalIgnoreCase));
                     })
                     .WithAbpExposedHeaders()
-                    .SetIsOriginAllowedToAllowWildcardSubdomains()
                     .AllowAnyHeader()
                     .AllowAnyMethod()
                     .AllowCredentials();
@@ -225,6 +244,29 @@ public class HotelHttpApiHostModule : AbpModule
         if (env.IsDevelopment())
         {
             app.UseDeveloperExceptionPage();
+        }
+        else
+        {
+            app.Use(async (ctx, next) =>
+            {
+                var origin = ctx.Request.Headers.Origin.ToString();
+                if (string.Equals(origin, "https://hotel-management.shahainalsharabi2.workers.dev", StringComparison.OrdinalIgnoreCase))
+                {
+                    ctx.Response.Headers["Access-Control-Allow-Origin"] = origin;
+                    ctx.Response.Headers["Access-Control-Allow-Credentials"] = "true";
+                    ctx.Response.Headers["Access-Control-Allow-Headers"] =
+                        "authorization,content-type,x-requested-with,x-xsrf-token,accept";
+                    ctx.Response.Headers["Access-Control-Allow-Methods"] =
+                        "GET,POST,PUT,DELETE,OPTIONS,PATCH";
+                    if (HttpMethods.IsOptions(ctx.Request.Method))
+                    {
+                        ctx.Response.StatusCode = StatusCodes.Status204NoContent;
+                        return;
+                    }
+                }
+
+                await next();
+            });
         }
 
         app.UseAbpRequestLocalization();
