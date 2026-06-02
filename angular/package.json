@@ -15,8 +15,10 @@
   },
   "private": true,
   "engines": {
-    "node": ">=20.19.0"
+    "node": ">=20.19.0",
+    "npm": ">=10.0.0"
   },
+  "packageManager": "npm@10.9.2",
   "dependencies": {
     "@abp/ng.account": "~10.3.0",
     "@abp/ng.account.core": "~10.3.0",
@@ -54,7 +56,7 @@
     "@angular/cli": "~21.2.0",
     "@angular/compiler-cli": "~21.2.0",
     "@angular/language-service": "~21.2.0",
-    "@types/node": "~20.11.0",
+    "@types/node": "~22.12.0",
     "@typescript-eslint/eslint-plugin": "7.16.0",
     "@typescript-eslint/parser": "7.16.0",
     "eslint": "^8.0.0",
