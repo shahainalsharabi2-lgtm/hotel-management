@@ -20,6 +20,7 @@ using Volo.Abp.Account;
 using Volo.Abp.Account.Web;
 using Volo.Abp.AspNetCore.MultiTenancy;
 using Volo.Abp.AspNetCore.Mvc;
+using Volo.Abp.AspNetCore.Mvc.Libs;
 using Volo.Abp.AspNetCore.Mvc.AntiForgery;
 using Volo.Abp.AspNetCore.Mvc.UI.Bundling;
 using Volo.Abp.AspNetCore.Mvc.UI.Theme.Shared;
@@ -66,6 +67,7 @@ public class HotelHttpApiHostModule : AbpModule
         var hostingEnvironment = context.Services.GetHostingEnvironment();
 
         ConfigureAuthentication(context);
+        ConfigureAbpLibsCheck();
         ConfigureBundles();
         ConfigureUrls(configuration);
         ConfigureAntiForgery();
@@ -82,6 +84,15 @@ public class HotelHttpApiHostModule : AbpModule
         Configure<UiTranslationsOptions>(options =>
         {
             options.RootDirectory = Path.Combine(hostingEnvironment.ContentRootPath, folderName);
+        });
+    }
+
+    private void ConfigureAbpLibsCheck()
+    {
+        // Angular runs on Cloudflare; API host does not serve wwwroot/libs.
+        Configure<AbpMvcLibsOptions>(options =>
+        {
+            options.CheckLibs = false;
         });
     }
 
