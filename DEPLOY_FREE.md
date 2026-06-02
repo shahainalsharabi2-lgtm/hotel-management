@@ -39,16 +39,16 @@
 ---
 
 ### 3) تشغيل migrations (مرة واحدة)
-بعد نشر الـ API وتشغيله بنجاح، يجب تشغيل `DbMigrator` على PostgreSQL لإنشاء الجداول.
+بعد نشر الـ API، شغّل `DbMigrator` على PostgreSQL لإنشاء الجداol والبيانات الأولية:
 
-أفضل طريقة:
-- في جهازك محليًا:
-  1. افتح `aspnet-core/src/Modiaf.Al.Arab.Hotel.DbMigrator/appsettings.json`
-  2. ضع:
-     - `"Database": { "Provider": "PostgreSql" }`
-     - و `ConnectionStrings:Default` إلى Neon
-  3. شغّل:
-     - `dotnet run -c Release --project aspnet-core/src/Modiaf.Al.Arab.Hotel.DbMigrator`
+1. في `aspnet-core/src/Modiaf.Al.Arab.Hotel.DbMigrator/appsettings.json`:
+   - `"Database": { "Provider": "PostgreSql" }`
+2. في `appsettings.secrets.json` (محلي — لا يُرفع لـ Git):
+   - `ConnectionStrings:Default` = سلسلة Neon بصيغة `Host=...;Port=5432;...`
+3. شغّل:
+   - `dotnet run -c Release --project aspnet-core/src/Modiaf.Al.Arab.Hotel.DbMigrator`
+
+> migrations SQL Server القديمة محفوظة في `Migrations/LegacySqlServer/` للتطوير المحلي. النشر على Neon يستخدم `Initial_PostgreSql`.
 
 ---
 

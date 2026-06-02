@@ -183,8 +183,8 @@ public class HotelDbContext(DbContextOptions<HotelDbContext> options) :
         {
             b.ToTable(HotelConsts.DbTablePrefix + "HotelSettingsDocuments", HotelConsts.DbSchema);
             b.Property(x => x.SettingsPassword).IsRequired().HasMaxLength(128);
-            b.Property(x => x.HotelImageDataUrl).HasColumnType("nvarchar(max)");
-            b.Property(x => x.ProfileJson).IsRequired().HasColumnType("nvarchar(max)");
+            b.Property(x => x.HotelImageDataUrl);
+            b.Property(x => x.ProfileJson).IsRequired();
             b.Property(x => x.CurrencyId).IsRequired().HasMaxLength(32);
             b.Property(x => x.CurrencySymbol).HasMaxLength(16);
             b.Property(x => x.CurrencyCode).HasMaxLength(16);

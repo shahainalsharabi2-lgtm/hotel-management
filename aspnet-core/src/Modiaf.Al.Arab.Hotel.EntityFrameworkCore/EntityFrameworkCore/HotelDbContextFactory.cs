@@ -38,7 +38,8 @@ public class HotelDbContextFactory : IDesignTimeDbContextFactory<HotelDbContext>
     {
         var builder = new ConfigurationBuilder()
             .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "../Modiaf.Al.Arab.Hotel.DbMigrator/"))
-            .AddJsonFile("appsettings.json", optional: false);
+            .AddJsonFile("appsettings.json", optional: false)
+            .AddJsonFile("appsettings.secrets.json", optional: true);
 
         return builder.Build();
     }
