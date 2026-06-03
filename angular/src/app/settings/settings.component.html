@@ -1,7 +1,7 @@
 <div class="settings-container">
 
-  <!-- â•گâ•گ LOGIN OVERLAY â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ -->
-  <div *ngIf="!isAuthorized" class="login-overlay">
+  <!-- login overlay removed — الإعدادات مفتوحة مباشرة -->
+  <div *ngIf="false" class="login-overlay login-overlay--removed">
     <div class="login-background">
       <div class="blob blob-1"></div>
       <div class="blob blob-2"></div>
@@ -61,9 +61,8 @@
     </div>
   </div>
 
-  <!-- تأكيد كلمة المرور قبل حفظ / إضافة / تعديل / حذف -->
   <div
-    *ngIf="isAuthorized && passwordGateOpen"
+    *ngIf="false && passwordGateOpen"
     class="password-gate-overlay"
     role="dialog"
     aria-modal="true"
@@ -109,7 +108,7 @@
   </div>
 
   <!-- â•گâ•گ SETTINGS MAIN â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ -->
-  <div class="settings-main" *ngIf="isAuthorized">
+  <div class="settings-main">
     <div class="settings-content">
       <header class="settings-toolbar">
         <button type="button" class="btn-save-settings primary" (click)="saveSettings()">
@@ -207,35 +206,6 @@
               <small class="hint">{{ uiTranslations.screenText('settings', 'hintImage') }}</small>
             </div>
 
-            <div class="hotel-info-section-label full-span">
-              <i class="fas fa-lock"></i>
-              {{ uiTranslations.screenText('settings', 'generalSectionSecurity') }}
-            </div>
-
-            <div class="field-group full-span">
-              <label>{{ uiTranslations.screenText('settings', 'fieldSettingsPassword') }}</label>
-              <div class="input-wrapper input-wrapper--password">
-                <i class="fas fa-key"></i>
-                <input
-                  [type]="showSettingsPassword ? 'text' : 'password'"
-                  [(ngModel)]="password"
-                  maxlength="128"
-                  [placeholder]="uiTranslations.screenText('settings', 'phPassword')"
-                  autocomplete="new-password" />
-                <button
-                  type="button"
-                  class="password-toggle"
-                  (click)="toggleSettingsPasswordVisible()"
-                  [attr.aria-label]="
-                    showSettingsPassword
-                      ? uiTranslations.screenText('settings', 'toggleHidePassword')
-                      : uiTranslations.screenText('settings', 'toggleShowPassword')
-                  ">
-                  <i class="fas" [class.fa-eye]="!showSettingsPassword" [class.fa-eye-slash]="showSettingsPassword" aria-hidden="true"></i>
-                </button>
-              </div>
-              <small class="hint">{{ uiTranslations.screenText('settings', 'hintPassword') }}</small>
-            </div>
           </div>
         </div>
       </div>
@@ -576,6 +546,161 @@
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- USERS TAB -->
+      <div class="tab-content" *ngIf="activeTab === 'users'">
+        <div class="content-header">
+          <h2><i class="fas fa-user-cog" style="color:var(--app-primary-mid);margin-left:10px"></i>{{ uiTranslations.screenText('settings', 'usersTitle') }}</h2>
+          <p>{{ uiTranslations.screenText('settings', 'usersSubtitle') }}</p>
+        </div>
+
+        <div class="settings-grid">
+          <div class="settings-frame full-width" *ngIf="!editingAppUser">
+            <h3><i class="fas fa-user-plus"></i> {{ uiTranslations.screenText('settings', 'usersAddTitle') }}</h3>
+            <div class="form-grid">
+              <div class="field-group">
+                <label>{{ uiTranslations.screenText('settings', 'usersFieldFirstName') }}</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-user"></i>
+                  <input type="text" [(ngModel)]="newAppUser.firstName" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label>{{ uiTranslations.screenText('settings', 'usersFieldLastName') }}</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-user"></i>
+                  <input type="text" [(ngModel)]="newAppUser.lastName" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label>{{ uiTranslations.screenText('settings', 'usersFieldUserName') }}</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-at"></i>
+                  <input type="text" [(ngModel)]="newAppUser.userName" dir="ltr" autocomplete="username" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label>{{ uiTranslations.screenText('settings', 'usersFieldEmail') }}</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-envelope"></i>
+                  <input type="email" [(ngModel)]="newAppUser.email" dir="ltr" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label>{{ uiTranslations.screenText('settings', 'usersFieldPhone') }}</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-phone"></i>
+                  <input type="tel" [(ngModel)]="newAppUser.phoneNumber" dir="ltr" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label>{{ uiTranslations.screenText('settings', 'usersFieldPassword') }}</label>
+                <div class="input-wrapper input-wrapper--password">
+                  <i class="fas fa-key"></i>
+                  <input type="password" [(ngModel)]="newAppUser.password" autocomplete="new-password" />
+                </div>
+              </div>
+              <button type="button" class="action-btn" (click)="addAppUser()">
+                <i class="fas fa-plus"></i> {{ uiTranslations.screenText('settings', 'usersAddBtn') }}
+              </button>
+            </div>
+          </div>
+
+          <div class="settings-frame full-width" *ngIf="!editingAppUser">
+            <h3><i class="fas fa-users-cog"></i> {{ uiTranslations.screenText('settings', 'usersListTitle') }} ({{ appUsers.length }})</h3>
+            <div class="table-container users-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>{{ uiTranslations.screenText('settings', 'usersColFirstName') }}</th>
+                    <th>{{ uiTranslations.screenText('settings', 'usersColLastName') }}</th>
+                    <th>{{ uiTranslations.screenText('settings', 'usersColUserName') }}</th>
+                    <th>{{ uiTranslations.screenText('settings', 'usersColEmail') }}</th>
+                    <th>{{ uiTranslations.screenText('settings', 'usersColPhone') }}</th>
+                    <th>{{ uiTranslations.screenText('settings', 'usersColPassword') }}</th>
+                    <th>{{ uiTranslations.screenText('settings', 'usersColActions') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let u of appUsers">
+                    <td>{{ u.firstName }}</td>
+                    <td>{{ u.lastName }}</td>
+                    <td dir="ltr">{{ u.userName }}</td>
+                    <td dir="ltr">{{ u.email }}</td>
+                    <td dir="ltr">{{ u.phoneNumber }}</td>
+                    <td dir="ltr">{{ u.password }}</td>
+                    <td class="table-actions">
+                      <button type="button" class="btn-icon-edit" (click)="editAppUser(u)" [title]="uiTranslations.screenText('settings', 'editBtn')">
+                        <i class="fas fa-pen"></i>
+                      </button>
+                      <button type="button" class="btn-icon-delete" (click)="deleteAppUser(u)" [title]="uiTranslations.screenText('settings', 'deleteBtn')">
+                        <i class="fas fa-trash-alt"></i>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr *ngIf="appUsers.length === 0">
+                    <td colspan="7" class="empty-state">{{ uiTranslations.screenText('settings', 'usersEmpty') }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="settings-frame full-width" *ngIf="editingAppUser">
+            <div class="frame-header">
+              <h3><i class="fas fa-edit"></i> {{ uiTranslations.screenText('settings', 'usersEditHeader') }}: {{ editingAppUser.userName }}</h3>
+              <button type="button" class="close-btn" (click)="cancelEditAppUser()">✕</button>
+            </div>
+            <div class="form-grid">
+              <div class="field-group">
+                <label>{{ uiTranslations.screenText('settings', 'usersFieldFirstName') }}</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-user"></i>
+                  <input type="text" [(ngModel)]="editingAppUser.firstName" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label>{{ uiTranslations.screenText('settings', 'usersFieldLastName') }}</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-user"></i>
+                  <input type="text" [(ngModel)]="editingAppUser.lastName" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label>{{ uiTranslations.screenText('settings', 'usersFieldUserName') }}</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-at"></i>
+                  <input type="text" [(ngModel)]="editingAppUser.userName" dir="ltr" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label>{{ uiTranslations.screenText('settings', 'usersFieldEmail') }}</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-envelope"></i>
+                  <input type="email" [(ngModel)]="editingAppUser.email" dir="ltr" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label>{{ uiTranslations.screenText('settings', 'usersFieldPhone') }}</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-phone"></i>
+                  <input type="tel" [(ngModel)]="editingAppUser.phoneNumber" dir="ltr" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label>{{ uiTranslations.screenText('settings', 'usersFieldPassword') }}</label>
+                <div class="input-wrapper input-wrapper--password">
+                  <i class="fas fa-key"></i>
+                  <input type="password" [(ngModel)]="editingAppUser.password" autocomplete="new-password" />
+                </div>
+              </div>
+              <button type="button" class="action-btn" (click)="saveAppUserEdit()">
+                <i class="fas fa-save"></i> {{ uiTranslations.screenText('settings', 'usersSaveBtn') }}
+              </button>
             </div>
           </div>
         </div>

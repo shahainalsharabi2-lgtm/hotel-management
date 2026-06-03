@@ -31,11 +31,13 @@ import { UiMessageService } from '../services/ui-message.service';
 import { GeneralCodesComponent } from '../general-codes/general-codes.component';
 import { HotelSystemSettingsLoader } from '../services/hotel-system-settings.loader';
 import { PaymentMethodService, PaymentMethodDto } from '../services/payment-method.service';
+import {
+  CreateUpdateHotelAppUserDto,
+  HotelAppUserDto,
+  HotelAppUserService,
+} from '../services/hotel-app-user.service';
 import type { UiExtraLocaleCode } from '../utils/ui-translation.constants';
 import type { UiLocaleFilePayload } from '../utils/ui-translations-locale.util';
-
-/** يبقى بعد تسجيل الدخول حتى إغلاق المتصفح (لا يُعاد طلب كلمة المرور عند F5) */
-const SETTINGS_SESSION_AUTH_KEY = 'hotelSettingsSessionAuth';
 
 @Component({
   selector: 'app-settings',
@@ -49,7 +51,7 @@ export class SettingsComponent implements OnInit {
   hotelImageDataUrl = '';
   password = ''; // The actual password stored
 
-  isAuthorized = false;
+  isAuthorized = true;
   inputPassword = '';
   passwordError = '';
   showLoginPassword = false;
@@ -69,8 +71,14 @@ export class SettingsComponent implements OnInit {
     | 'identities'
     | 'guests'
     | 'currency'
+    | 'users'
     | 'translations'
     | 'uiTranslations' = 'general';
+
+  appUsers: HotelAppUserDto[] = [];
+  appUsersLoading = false;
+  editingAppUser: HotelAppUserDto | null = null;
+  newAppUser: CreateUpdateHotelAppUserDto = this.emptyAppUserForm();
 
   readonly currencyPresets = HOTEL_CURRENCY_PRESETS;
   readonly currencyCustomId = HOTEL_CURRENCY_CUSTOM_ID;
@@ -158,6 +166,7 @@ export class SettingsComponent implements OnInit {
   private readonly uiMsg = inject(UiMessageService);
   private readonly hotelSystemSettings = inject(HotelSystemSettingsLoader);
   private readonly paymentMethodService = inject(PaymentMethodService);
+  private readonly hotelAppUserService = inject(HotelAppUserService);
 
   private readonly settingsTabKeys = new Set([
     'general',
@@ -166,6 +175,7 @@ export class SettingsComponent implements OnInit {
     'identities',
     'guests',
     'currency',
+    'users',
     'translations',
     'uiTranslations',
   ]);
@@ -406,7 +416,7 @@ export class SettingsComponent implements OnInit {
 
   ngOnInit(): void {
     bindUiTranslationRefresh(this.cdr, this.destroyRef);
-    this.restoreSettingsSessionAuth();
+    this.isAuthorized = true;
     this.applyTabFromRoute();
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.applyTabFromRoute();
@@ -426,6 +436,130 @@ export class SettingsComponent implements OnInit {
     this.loadPaymentMethods();
     this.loadIdentityTypes();
     this.loadBookings();
+    this.loadAppUsers();
+  }
+
+  private emptyAppUserForm(): CreateUpdateHotelAppUserDto {
+    return {
+      firstName: '',
+      lastName: '',
+      userName: '',
+      email: '',
+      phoneNumber: '',
+      password: '',
+    };
+  }
+
+  loadAppUsers(): void {
+    this.appUsersLoading = true;
+    this.hotelAppUserService.getAll().subscribe({
+      next: (rows) => {
+        this.appUsers = rows;
+        this.appUsersLoading = false;
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        console.error('loadAppUsers', err);
+        this.appUsersLoading = false;
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  addAppUser(): void {
+    const input = this.normalizeAppUserInput(this.newAppUser);
+    if (!input.firstName || !input.lastName || !input.userName || !input.password) {
+      this.uiMsg.show(this.uiTranslations.screenText('settings', 'usersRequiredFields'));
+      return;
+    }
+    if (this.appUsers.some((u) => u.userName.toLowerCase() === input.userName.toLowerCase())) {
+      this.uiMsg.show(this.uiTranslations.screenText('settings', 'usersDuplicateUserName'));
+      return;
+    }
+    this.hotelAppUserService.create(input).subscribe({
+      next: () => {
+        this.newAppUser = this.emptyAppUserForm();
+        this.loadAppUsers();
+        this.uiMsg.show(this.uiTranslations.screenText('settings', 'usersAddSuccess'));
+      },
+      error: (err) => {
+        console.error('addAppUser', err);
+        this.uiMsg.show(this.uiTranslations.screenText('settings', 'usersSaveFail'));
+      },
+    });
+  }
+
+  editAppUser(user: HotelAppUserDto): void {
+    this.editingAppUser = { ...user };
+  }
+
+  cancelEditAppUser(): void {
+    this.editingAppUser = null;
+  }
+
+  saveAppUserEdit(): void {
+    if (!this.editingAppUser?.id) {
+      return;
+    }
+    const input = this.normalizeAppUserInput(this.editingAppUser);
+    if (!input.firstName || !input.lastName || !input.userName) {
+      this.uiMsg.show(this.uiTranslations.screenText('settings', 'usersRequiredFields'));
+      return;
+    }
+    const duplicate = this.appUsers.some(
+      (u) =>
+        u.id !== this.editingAppUser!.id &&
+        u.userName.toLowerCase() === input.userName.toLowerCase(),
+    );
+    if (duplicate) {
+      this.uiMsg.show(this.uiTranslations.screenText('settings', 'usersDuplicateUserName'));
+      return;
+    }
+    this.hotelAppUserService.update(this.editingAppUser.id, input).subscribe({
+      next: () => {
+        this.editingAppUser = null;
+        this.loadAppUsers();
+        this.uiMsg.show(this.uiTranslations.screenText('settings', 'usersUpdateSuccess'));
+      },
+      error: (err) => {
+        console.error('saveAppUserEdit', err);
+        this.uiMsg.show(this.uiTranslations.screenText('settings', 'usersSaveFail'));
+      },
+    });
+  }
+
+  deleteAppUser(user: HotelAppUserDto): void {
+    if (!user.id) {
+      return;
+    }
+    void this.uiMsg.confirm('هل تريد حذف هذا المستخدم؟').then((ok) => {
+      if (!ok) {
+        return;
+      }
+      this.hotelAppUserService.delete(user.id).subscribe({
+        next: () => {
+          this.loadAppUsers();
+          this.uiMsg.show(this.uiTranslations.screenText('settings', 'usersDeleteSuccess'));
+        },
+        error: (err) => {
+          console.error('deleteAppUser', err);
+          this.uiMsg.show(this.uiTranslations.screenText('settings', 'usersDeleteFail'));
+        },
+      });
+    });
+  }
+
+  private normalizeAppUserInput(
+    raw: CreateUpdateHotelAppUserDto | HotelAppUserDto,
+  ): CreateUpdateHotelAppUserDto {
+    return {
+      firstName: (raw.firstName ?? '').trim(),
+      lastName: (raw.lastName ?? '').trim(),
+      userName: (raw.userName ?? '').trim(),
+      email: (raw.email ?? '').trim(),
+      phoneNumber: (raw.phoneNumber ?? '').trim(),
+      password: (raw.password ?? '').trim(),
+    };
   }
 
   private applyTabFromRoute(): void {
@@ -434,6 +568,9 @@ export class SettingsComponent implements OnInit {
       this.activeTab = tab as typeof this.activeTab;
       if (this.activeTab === 'uiTranslations') {
         this.openUiTranslationsEditor();
+      }
+      if (this.activeTab === 'users') {
+        this.loadAppUsers();
       }
       return;
     }
@@ -518,6 +655,9 @@ export class SettingsComponent implements OnInit {
 
   setActiveTab(tab: typeof this.activeTab): void {
     this.activeTab = tab;
+    if (tab === 'users') {
+      this.loadAppUsers();
+    }
     void this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { tab },
@@ -726,28 +866,9 @@ export class SettingsComponent implements OnInit {
     if (this.isSettingsPasswordValid(this.inputPassword)) {
       this.isAuthorized = true;
       this.passwordError = '';
-      this.persistSettingsSessionAuth();
       this.cdr.markForCheck();
     } else {
       this.passwordError = this.uiTranslations.screenText('settings', 'wrongPassword');
-    }
-  }
-
-  private restoreSettingsSessionAuth(): void {
-    try {
-      if (sessionStorage.getItem(SETTINGS_SESSION_AUTH_KEY) === '1') {
-        this.isAuthorized = true;
-      }
-    } catch {
-      /* ignore */
-    }
-  }
-
-  private persistSettingsSessionAuth(): void {
-    try {
-      sessionStorage.setItem(SETTINGS_SESSION_AUTH_KEY, '1');
-    } catch {
-      /* ignore */
     }
   }
 
@@ -758,25 +879,7 @@ export class SettingsComponent implements OnInit {
   }
 
   requirePasswordConfirm(action: () => void): void {
-    if (this.isSettingsSessionAuthenticated()) {
-      action();
-      return;
-    }
-
-    this.pendingGateAction = action;
-    this.passwordGateInput = '';
-    this.passwordGateError = '';
-    this.showPasswordGateVisible = false;
-    this.passwordGateOpen = true;
-    this.cdr.markForCheck();
-  }
-
-  private isSettingsSessionAuthenticated(): boolean {
-    try {
-      return sessionStorage.getItem(SETTINGS_SESSION_AUTH_KEY) === '1';
-    } catch {
-      return false;
-    }
+    action();
   }
 
   confirmPasswordGate(): void {
@@ -785,7 +888,6 @@ export class SettingsComponent implements OnInit {
       this.cdr.markForCheck();
       return;
     }
-    this.persistSettingsSessionAuth();
     this.passwordGateOpen = false;
     this.passwordGateError = '';
     const run = this.pendingGateAction;

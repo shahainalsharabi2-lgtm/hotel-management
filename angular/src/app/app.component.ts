@@ -444,6 +444,40 @@ interface AppSearchEntry {
                   </a>
                 </div>
               </div>
+              <div
+                class="sidebar-nav-subgroup"
+                [class.sidebar-nav-subgroup--open]="userMgmtNavOpen"
+                [class.sidebar-nav-subgroup--active]="userMgmtSectionActive">
+                <button
+                  type="button"
+                  class="sidebar-nav-subgroup__head"
+                  (click)="toggleUserMgmtNav()"
+                  [attr.aria-expanded]="userMgmtNavOpen"
+                  [attr.title]="ui.screenText('settings', 'tabUserManagement')"
+                  [attr.aria-label]="ui.screenText('settings', 'tabUserManagement')">
+                  <i class="fas fa-users-cog sidebar-nav-group__main-icon" aria-hidden="true"></i>
+                  <span class="sidebar-nav-label">{{ ui.screenText('settings', 'tabUserManagement') }}</span>
+                  <i
+                    class="fas sidebar-nav-group__chevron"
+                    [class.fa-chevron-up]="userMgmtNavOpen"
+                    [class.fa-chevron-down]="!userMgmtNavOpen"
+                    aria-hidden="true"></i>
+                </button>
+                <div class="sidebar-nav-subgroup__tree" *ngIf="userMgmtNavOpen">
+                  <a
+                    *ngFor="let item of settingsUserMgmtItems"
+                    [routerLink]="item.path"
+                    [queryParams]="{ tab: item.tab }"
+                    routerLinkActive="active"
+                    [routerLinkActiveOptions]="item.linkActive"
+                    class="sidebar-nav-group__link sidebar-nav-group__link--nested"
+                    [attr.title]="ui.screenText('settings', item.labelKey)"
+                    [attr.aria-label]="ui.screenText('settings', item.labelKey)">
+                    <i class="fas" [ngClass]="item.icon" aria-hidden="true"></i>
+                    <span class="sidebar-nav-label">{{ ui.screenText('settings', item.labelKey) }}</span>
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
           <div
@@ -648,6 +682,19 @@ interface AppSearchEntry {
                   <use [attr.href]="navIconHref(item.icon)" />
                 </svg>
                 <i *ngIf="!isSvgNavIcon(item.icon)" class="fas sidebar-nav-flyout__icon-fa" [ngClass]="item.icon" aria-hidden="true"></i>
+                <span>{{ ui.screenText('settings', item.labelKey) }}</span>
+              </a>
+              <p class="sidebar-nav-flyout__section sidebar-nav-flyout__section--divider">{{ ui.screenText('settings', 'tabUserManagement') }}</p>
+              <a
+                *ngFor="let item of settingsUserMgmtItems"
+                [routerLink]="item.path"
+                [queryParams]="{ tab: item.tab }"
+                routerLinkActive="active"
+                [routerLinkActiveOptions]="item.linkActive"
+                class="sidebar-nav-flyout__link"
+                (click)="closeCollapsedNavFlyout()"
+                [attr.title]="ui.screenText('settings', item.labelKey)">
+                <i class="fas sidebar-nav-flyout__icon-fa" [ngClass]="item.icon" aria-hidden="true"></i>
                 <span>{{ ui.screenText('settings', item.labelKey) }}</span>
               </a>
             </ng-container>
@@ -2850,6 +2897,9 @@ export class AppComponent implements OnInit {
   /** تهيئة النظام — ترميزات عامة */
   systemSetupNavOpen = false;
 
+  /** إدارة المستخدمين */
+  userMgmtNavOpen = false;
+
   readonly settingsSystemSetupItems: ReadonlyArray<{
     path: string;
     tab: 'translations' | 'uiTranslations';
@@ -2869,6 +2919,22 @@ export class AppComponent implements OnInit {
       tab: 'uiTranslations',
       labelKey: 'tabUiTranslations',
       icon: 'svg-language',
+      linkActive: { exact: true, queryParams: 'exact' },
+    },
+  ];
+
+  readonly settingsUserMgmtItems: ReadonlyArray<{
+    path: string;
+    tab: 'users';
+    labelKey: string;
+    icon: string;
+    linkActive: { exact: boolean; queryParams: 'exact' | 'ignored' };
+  }> = [
+    {
+      path: '/settings',
+      tab: 'users',
+      labelKey: 'tabUsers',
+      icon: 'fa-user-cog',
       linkActive: { exact: true, queryParams: 'exact' },
     },
   ];
@@ -3135,6 +3201,10 @@ export class AppComponent implements OnInit {
   get systemSetupSectionActive(): boolean {
     const tab = this.settingsTabFromUrl(this.router.url);
     return tab === 'translations' || tab === 'uiTranslations';
+  }
+
+  get userMgmtSectionActive(): boolean {
+    return this.settingsTabFromUrl(this.router.url) === 'users';
   }
 
   get reportsSectionActive(): boolean {
@@ -3536,6 +3606,11 @@ export class AppComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
+  toggleUserMgmtNav(): void {
+    this.userMgmtNavOpen = !this.userMgmtNavOpen;
+    this.cdr.markForCheck();
+  }
+
   private isHotelMgmtSettingsTab(tab: string): boolean {
     return (
       tab === 'general' ||
@@ -3551,11 +3626,19 @@ export class AppComponent implements OnInit {
     if (tab === 'translations' || tab === 'uiTranslations') {
       this.systemSetupNavOpen = true;
       this.hotelMgmtNavOpen = false;
+      this.userMgmtNavOpen = false;
+      return;
+    }
+    if (tab === 'users') {
+      this.userMgmtNavOpen = true;
+      this.hotelMgmtNavOpen = false;
+      this.systemSetupNavOpen = false;
       return;
     }
     if (this.isHotelMgmtSettingsTab(tab)) {
       this.hotelMgmtNavOpen = true;
       this.systemSetupNavOpen = false;
+      this.userMgmtNavOpen = false;
     }
   }
 

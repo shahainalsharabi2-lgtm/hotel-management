@@ -21,6 +21,7 @@ using Modiaf.Al.Arab.Hotel.Floors;
 using Modiaf.Al.Arab.Hotel.RoomTypes;
 using Modiaf.Al.Arab.Hotel.GeneralCodes;
 using Modiaf.Al.Arab.Hotel.HotelSettings;
+using Modiaf.Al.Arab.Hotel.HotelUsers;
 using Modiaf.Al.Arab.Hotel.PaymentMethods;
 using Modiaf.Al.Arab.Hotel.UiTranslations;
 using Volo.Abp.EntityFrameworkCore.Modeling;
@@ -73,6 +74,7 @@ public class HotelDbContext(DbContextOptions<HotelDbContext> options) :
     public DbSet<UiTranslationsStore> UiTranslationsStores { get; set; }
     public DbSet<GeneralCodeItem> GeneralCodeItems { get; set; }
     public DbSet<PaymentMethod> PaymentMethods { get; set; }
+    public DbSet<HotelAppUser> HotelAppUsers { get; set; }
     public DbSet<HotelSettingsDocument> HotelSettingsDocuments { get; set; }
 
     #endregion
@@ -177,6 +179,19 @@ public class HotelDbContext(DbContextOptions<HotelDbContext> options) :
         {
             b.ToTable(HotelConsts.DbTablePrefix + "PaymentMethods", HotelConsts.DbSchema);
             b.Property(x => x.Name).IsRequired().HasMaxLength(128);
+        });
+
+        builder.Entity<HotelAppUser>(b =>
+        {
+            b.ToTable(HotelConsts.DbTablePrefix + "HotelAppUsers", HotelConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.FirstName).IsRequired().HasMaxLength(128);
+            b.Property(x => x.LastName).IsRequired().HasMaxLength(128);
+            b.Property(x => x.UserName).IsRequired().HasMaxLength(64);
+            b.Property(x => x.Email).HasMaxLength(256);
+            b.Property(x => x.PhoneNumber).HasMaxLength(32);
+            b.Property(x => x.Password).IsRequired().HasMaxLength(128);
+            b.HasIndex(x => x.UserName).IsUnique();
         });
 
         builder.Entity<HotelSettingsDocument>(b =>

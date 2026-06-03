@@ -116,6 +116,9 @@ export function isBookingArriving(booking: Booking): boolean {
     }
     return !!ci && ci >= today;
   }
+  if (booking.status === 'active') {
+    return false;
+  }
   const checkIn = parseBookingCheckInLocal(booking);
   if (checkIn) {
     return Date.now() < checkIn.getTime();
@@ -139,7 +142,7 @@ export function isBookingCurrentlyStaying(booking: Booking): boolean {
     return false;
   }
   const checkIn = parseBookingCheckInLocal(booking);
-  if (checkIn && Date.now() < checkIn.getTime()) {
+  if (booking.status !== 'active' && checkIn && Date.now() < checkIn.getTime()) {
     return false;
   }
   const ms = msUntilScheduledCheckout(booking);
@@ -169,7 +172,7 @@ export function isBookingDepartingWithinWindow(
     return true;
   }
   const checkIn = parseBookingCheckInLocal(booking);
-  if (checkIn && Date.now() < checkIn.getTime()) {
+  if (booking.status !== 'active' && checkIn && Date.now() < checkIn.getTime()) {
     return false;
   }
   const ms = msUntilScheduledCheckout(booking);
