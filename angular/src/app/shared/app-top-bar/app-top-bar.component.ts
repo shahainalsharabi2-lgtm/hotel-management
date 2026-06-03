@@ -12,6 +12,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
+import { HotelAuthService } from '../../services/hotel-auth.service';
 import { filter } from 'rxjs/operators';
 import { UiTranslationsService } from '../../services/ui-translations.service';
 import type { UiExtraLocaleCode } from '../../utils/ui-translation.constants';
@@ -36,6 +37,7 @@ interface TopBarLocaleOption {
 })
 export class AppTopBarComponent implements OnInit {
   readonly ui = inject(UiTranslationsService);
+  private readonly auth = inject(HotelAuthService);
   private readonly router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly destroyRef = inject(DestroyRef);
@@ -219,5 +221,19 @@ export class AppTopBarComponent implements OnInit {
     }
 
     this.breadcrumb = `/ ${home}`;
+  }
+
+  currentUserLabel(): string {
+    const u = this.auth.currentUser();
+    if (!u) {
+      return '';
+    }
+    const name = [u.firstName, u.lastName].filter((x) => x?.trim()).join(' ').trim();
+    return name || u.userName;
+  }
+
+  logout(): void {
+    this.auth.logout();
+    void this.router.navigate(['/login']);
   }
 }

@@ -43,6 +43,8 @@
     "searchTagReports": "تقارير",
     "searchOpenTitle": "بحث",
     "searchOpenAria": "فتح البحث السريع",
+    "logoutBtn": "تسجيل الخروج",
+    "logoutAria": "إنهاء الجلسة والعودة لصفحة الدخول",
     "accountSettingsLink": "إعدادات النظام",
     "settingsMenuHotel": "الفندق",
     "settingsMenuUiTranslation": "ترجمة واجهة النظام",
@@ -93,6 +95,22 @@
     "langRailCollapseAria": "طي شريط اللغة إلى أعلام فقط"
   },
   "screenCopy": {
+    "login": {
+      "pageSubtitle": "سجّل الدخول للمتابعة إلى نظام إدارة الفندق",
+      "userNameLabel": "اسم المستخدم",
+      "userNamePh": "أدخل اسم المستخدم",
+      "passwordLabel": "كلمة المرور",
+      "passwordPh": "أدخل كلمة المرور",
+      "submitBtn": "تسجيل الدخول",
+      "submitting": "جاري التحقق...",
+      "errorRequired": "أدخل اسم المستخدم وكلمة المرور",
+      "errorInvalid": "اسم المستخدم أو كلمة المرور غير صحيحة",
+      "errorNetwork": "تعذّر الاتصال بالخادم. حاول مرة أخرى",
+      "showPassword": "إظهار كلمة المرور",
+      "hidePassword": "إخفاء كلمة المرور",
+      "footerHint": "بيانات الدخول من حسابات المستخدمين المسجّلة في النظام",
+      "defaultHotelName": "مضياف العرب"
+    },
     "dashboard": {
       "topbarKicker": "لوحة التحكم",
       "viewTitleNormal": "العرض العادي",

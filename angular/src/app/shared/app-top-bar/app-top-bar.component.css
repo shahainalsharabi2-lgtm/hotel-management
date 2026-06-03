@@ -359,6 +359,36 @@
   font-size: 0.74rem;
 }
 
+.app-top-bar__user {
+  max-width: 9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #455a64;
+}
+
+.app-top-bar__logout {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid #cfd8dc;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #37474f;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.app-top-bar__logout:hover {
+  background: #eceff1;
+  border-color: #b0bec5;
+}
+
 @media (max-width: 900px) {
   .app-top-bar {
     padding-inline: 0.65rem;
@@ -375,7 +405,12 @@
 
   .app-top-bar__search-label,
   .app-top-bar__clock,
-  .app-top-bar__brand--leading {
+  .app-top-bar__brand--leading,
+  .app-top-bar__user {
+    display: none;
+  }
+
+  .app-top-bar__logout span {
     display: none;
   }
 

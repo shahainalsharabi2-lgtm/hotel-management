@@ -39,8 +39,10 @@ interface AppSearchEntry {
       class="app-shell"
       dir="rtl"
       [class.app-shell--lang-rail-open]="!langRailClosed"
+      [class.app-shell--login]="!showMainChrome"
       [style.--nav-rail-width.px]="navRailCollapsed ? 76 : 260"
       [style.--lang-rail-width.px]="langRailClosed ? 0 : 224">
+      <ng-container *ngIf="showMainChrome">
       <aside
         class="app-sidebar"
         [class.app-sidebar--advanced-nav]="dashboardPenMotion && isDashboardUrl"
@@ -752,9 +754,11 @@ interface AppSearchEntry {
             </ng-container>
           </div>
         </div>
+      </ng-container>
 
-      <div class="app-main-column">
+      <div class="app-main-column" [class.app-main-column--login]="!showMainChrome">
         <app-top-bar
+          *ngIf="showMainChrome"
           [hotelDisplayName]="hotelDisplayName"
           [hotelImageSrc]="hotelImageSrc"
           [hotelNameInitial]="hotelNameInitial"
@@ -762,12 +766,13 @@ interface AppSearchEntry {
           (searchOpen)="openSearchOverlay()"
           (notificationsOpen)="openNotificationsFromTopBar()" />
 
-        <main class="app-content">
+        <main class="app-content" [class.app-content--login]="!showMainChrome">
           <router-outlet />
-          <app-ui-messages />
+          <app-ui-messages *ngIf="showMainChrome" />
         </main>
       </div>
 
+      <ng-container *ngIf="showMainChrome">
       <button
         type="button"
         class="sidebar-edge-toggle lang-rail-edge-toggle"
@@ -916,6 +921,7 @@ interface AppSearchEntry {
         [openOnScreenCopy]="true"
         (closed)="onAccountLocaleEditorClosed()"
         (saved)="onAccountLocaleEditorSaved()" />
+      </ng-container>
     </div>
   `,
   styles: [
@@ -925,6 +931,20 @@ interface AppSearchEntry {
       display: flex;
       background: var(--app-bg);
       color: var(--app-text);
+    }
+
+    .app-shell--login {
+      display: block;
+    }
+
+    .app-main-column--login {
+      width: 100%;
+      min-height: 100vh;
+    }
+
+    .app-content--login {
+      padding: 0;
+      min-height: 100vh;
     }
 
     .app-sidebar {
@@ -3191,6 +3211,7 @@ export class AppComponent implements OnInit {
   hotelDisplayName = 'فندق مضياف العرب';
   /** صورة من الإعدادات (data URL) */
   hotelImageSrc: string | null = null;
+  showMainChrome = true;
 
   get bookingsSectionActive(): boolean {
     return this.isBookingsSectionUrl(this.router.url);
@@ -3264,6 +3285,13 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.syncMainChromeForUrl(this.router.url);
+    this.router.events
+      .pipe(
+        filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((e) => this.syncMainChromeForUrl(e.urlAfterRedirects));
     this.restoreNavRail();
     this.restoreLangRail();
     this.syncSidebarNavForUrl(this.router.url);
@@ -3961,6 +3989,12 @@ export class AppComponent implements OnInit {
     } catch {
       /* ignore */
     }
+  }
+
+  private syncMainChromeForUrl(url: string): void {
+    const path = (url.split('?')[0] || '').replace(/\/$/, '') || '/';
+    this.showMainChrome = path !== '/login';
+    this.cdr.markForCheck();
   }
 
   private loadHotelBranding(): void {
