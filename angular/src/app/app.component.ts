@@ -455,7 +455,9 @@ interface AppSearchEntry {
                   [attr.aria-expanded]="userMgmtNavOpen"
                   [attr.title]="ui.screenText('settings', 'tabUserManagement')"
                   [attr.aria-label]="ui.screenText('settings', 'tabUserManagement')">
-                  <i class="fas fa-users-cog sidebar-nav-group__main-icon" aria-hidden="true"></i>
+                  <svg class="nav-icon-svg nav-icon-svg--hotel" viewBox="0 0 24 24" aria-hidden="true">
+                    <use href="#nav-icon-hotel" />
+                  </svg>
                   <span class="sidebar-nav-label">{{ ui.screenText('settings', 'tabUserManagement') }}</span>
                   <i
                     class="fas sidebar-nav-group__chevron"
@@ -473,7 +475,15 @@ interface AppSearchEntry {
                     class="sidebar-nav-group__link sidebar-nav-group__link--nested"
                     [attr.title]="ui.screenText('settings', item.labelKey)"
                     [attr.aria-label]="ui.screenText('settings', item.labelKey)">
-                    <i class="fas" [ngClass]="item.icon" aria-hidden="true"></i>
+                    <svg
+                      *ngIf="isSvgNavIcon(item.icon)"
+                      class="nav-icon-svg"
+                      [ngClass]="navIconModifier(item.icon)"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true">
+                      <use [attr.href]="navIconHref(item.icon)" />
+                    </svg>
+                    <i *ngIf="!isSvgNavIcon(item.icon)" class="fas" [ngClass]="item.icon" aria-hidden="true"></i>
                     <span class="sidebar-nav-label">{{ ui.screenText('settings', item.labelKey) }}</span>
                   </a>
                 </div>
@@ -694,7 +704,15 @@ interface AppSearchEntry {
                 class="sidebar-nav-flyout__link"
                 (click)="closeCollapsedNavFlyout()"
                 [attr.title]="ui.screenText('settings', item.labelKey)">
-                <i class="fas sidebar-nav-flyout__icon-fa" [ngClass]="item.icon" aria-hidden="true"></i>
+                <svg
+                  *ngIf="isSvgNavIcon(item.icon)"
+                  class="nav-icon-svg sidebar-nav-flyout__icon"
+                  [ngClass]="navIconModifier(item.icon)"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true">
+                  <use [attr.href]="navIconHref(item.icon)" />
+                </svg>
+                <i *ngIf="!isSvgNavIcon(item.icon)" class="fas sidebar-nav-flyout__icon-fa" [ngClass]="item.icon" aria-hidden="true"></i>
                 <span>{{ ui.screenText('settings', item.labelKey) }}</span>
               </a>
             </ng-container>
@@ -2934,7 +2952,7 @@ export class AppComponent implements OnInit {
       path: '/settings',
       tab: 'users',
       labelKey: 'tabUsers',
-      icon: 'fa-user-cog',
+      icon: 'svg-hotel',
       linkActive: { exact: true, queryParams: 'exact' },
     },
   ];
