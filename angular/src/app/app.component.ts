@@ -107,15 +107,16 @@ interface AppSearchEntry {
               <path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M4 20V6l8-4 8 4v14H4zm4-8h8M8 16h2m6 0h2" />
             </symbol>
             <symbol id="nav-icon-user-cog" viewBox="0 0 24 24" fill="none">
-              <circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.75" />
-              <path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M3 19c0-2.8 2.5-5 6-5s6 2.2 6 5" />
-              <circle cx="17.5" cy="17" r="2.25" stroke="currentColor" stroke-width="1.5" />
-              <path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M17.5 14.6v1M17.5 19.4v1M15.1 17h1M19.9 17h1" />
+              <circle cx="9.5" cy="7.5" r="3.5" stroke="currentColor" stroke-width="1.75" />
+              <path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M3 20c0-3.2 2.9-5.5 6.5-5.5s6.5 2.3 6.5 5.5" />
+              <circle cx="17.5" cy="17" r="3" stroke="currentColor" stroke-width="1.75" />
+              <circle cx="17.5" cy="17" r="1.15" stroke="currentColor" stroke-width="1.75" />
+              <path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M17.5 13.5v1.4M17.5 20.1v1.4M14.1 17h1.4M20.9 17h1.4M15.1 15.1l1 1M19.9 19.9l1 1M19.9 15.1l-1 1M15.1 19.9l-1-1" />
             </symbol>
             <symbol id="nav-icon-user-plus" viewBox="0 0 24 24" fill="none">
-              <circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.75" />
-              <path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M3 19c0-2.8 2.5-5 6-5s6 2.2 6 5" />
-              <path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M17 8v6M14 11h6" />
+              <circle cx="9.5" cy="7.5" r="3.5" stroke="currentColor" stroke-width="1.75" />
+              <path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M3 20c0-3.2 2.9-5.5 6.5-5.5s6.5 2.3 6.5 5.5" />
+              <path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M17 7.5v7M13.5 11h7" />
             </symbol>
             <symbol id="nav-icon-layout" viewBox="0 0 24 24" fill="none">
               <path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M4 5h7v7H4V5zm9 0h7v4h-7V5zM4 14h7v5H4v-5zm9 3h7v2h-7v-2z" />
@@ -2216,15 +2217,21 @@ interface AppSearchEntry {
       font-size: 0.7rem;
     }
 
-    .sidebar-nav-subgroup__head .nav-icon-svg {
+    .sidebar-nav-subgroup__head .nav-icon-svg--hotel,
+    .sidebar-nav-subgroup__head .nav-icon-svg--settings,
+    .sidebar-nav-subgroup__head .nav-icon-svg--user-cog {
       width: 26px;
       height: 26px;
       flex-shrink: 0;
+      color: rgba(255, 255, 255, 0.92);
     }
 
-    .sidebar-nav-group__link .nav-icon-svg--user-plus {
-      width: 22px;
-      height: 22px;
+    .sidebar-nav-subgroup__head .nav-icon-svg--user-cog circle,
+    .sidebar-nav-subgroup__head .nav-icon-svg--user-cog path,
+    .sidebar-nav-group__link .nav-icon-svg--user-plus circle,
+    .sidebar-nav-group__link .nav-icon-svg--user-plus path {
+      fill: none;
+      stroke: currentColor;
     }
 
     .sidebar-nav-subgroup__tree {
