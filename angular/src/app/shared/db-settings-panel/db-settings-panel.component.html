@@ -54,6 +54,20 @@
           <i class="fas fa-circle-notch fa-spin" aria-hidden="true"></i>
         </span>
       </button>
+
+      <button
+        type="button"
+        class="db-panel__action db-panel__action--logout"
+        [disabled]="backupLoading || updateLoading"
+        (click)="logout()">
+        <span class="db-panel__action-icon" aria-hidden="true">
+          <i class="fas fa-right-from-bracket"></i>
+        </span>
+        <span class="db-panel__action-text">
+          <span class="db-panel__action-label">{{ ui.chromeLabel('logoutBtn') }}</span>
+          <span class="db-panel__action-hint">{{ ui.chromeLabel('logoutHint') }}</span>
+        </span>
+      </button>
     </nav>
 
     <p

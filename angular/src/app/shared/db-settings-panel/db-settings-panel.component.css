@@ -130,6 +130,19 @@
   color: #5d4037;
 }
 
+.db-panel__action--logout {
+  margin-top: 0.35rem;
+  border-color: #ffcdd2;
+}
+
+.db-panel__action--logout .db-panel__action-icon {
+  background: linear-gradient(135deg, #c62828, #ef5350);
+}
+
+.db-panel__action--logout:hover:not(:disabled) {
+  border-color: #ef9a9a;
+}
+
 .db-panel__action-text {
   display: flex;
   flex-direction: column;

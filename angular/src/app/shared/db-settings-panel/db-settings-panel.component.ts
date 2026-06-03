@@ -10,7 +10,9 @@ import {
   inject,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { HotelAuthService } from '../../services/hotel-auth.service';
 import { HotelDatabaseAdminService } from '../../services/hotel-database-admin.service';
+import { Router } from '@angular/router';
 import { UiTranslationsService } from '../../services/ui-translations.service';
 import { bindUiTranslationRefresh } from '../../utils/ui-screen-i18n.helper';
 
@@ -23,6 +25,8 @@ import { bindUiTranslationRefresh } from '../../utils/ui-screen-i18n.helper';
 })
 export class DbSettingsPanelComponent {
   readonly ui = inject(UiTranslationsService);
+  private readonly auth = inject(HotelAuthService);
+  private readonly router = inject(Router);
   private readonly dbAdmin = inject(HotelDatabaseAdminService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly destroyRef = inject(DestroyRef);
@@ -111,6 +115,12 @@ export class DbSettingsPanelComponent {
         this.cdr.markForCheck();
       },
     });
+  }
+
+  logout(): void {
+    this.auth.logout();
+    this.requestClose();
+    void this.router.navigate(['/login']);
   }
 
   private downloadJson(fileName: string, json: string): void {

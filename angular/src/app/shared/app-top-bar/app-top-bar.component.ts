@@ -241,11 +241,6 @@ export class AppTopBarComponent implements OnInit {
     return name || u.userName;
   }
 
-  logout(): void {
-    this.auth.logout();
-    void this.router.navigate(['/login']);
-  }
-
   toggleDbPanel(event: Event): void {
     event.stopPropagation();
     this.dbPanelOpen = !this.dbPanelOpen;
