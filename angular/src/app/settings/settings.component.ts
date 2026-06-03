@@ -758,6 +758,11 @@ export class SettingsComponent implements OnInit {
   }
 
   requirePasswordConfirm(action: () => void): void {
+    if (this.isSettingsSessionAuthenticated()) {
+      action();
+      return;
+    }
+
     this.pendingGateAction = action;
     this.passwordGateInput = '';
     this.passwordGateError = '';
@@ -766,12 +771,21 @@ export class SettingsComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
+  private isSettingsSessionAuthenticated(): boolean {
+    try {
+      return sessionStorage.getItem(SETTINGS_SESSION_AUTH_KEY) === '1';
+    } catch {
+      return false;
+    }
+  }
+
   confirmPasswordGate(): void {
     if (!this.isSettingsPasswordValid(this.passwordGateInput)) {
       this.passwordGateError = this.uiTranslations.screenText('settings', 'wrongPassword');
       this.cdr.markForCheck();
       return;
     }
+    this.persistSettingsSessionAuth();
     this.passwordGateOpen = false;
     this.passwordGateError = '';
     const run = this.pendingGateAction;
