@@ -121,6 +121,10 @@
   color: #fff;
 }
 
+.db-panel__action--users .db-panel__action-icon {
+  background: linear-gradient(135deg, #1976d2, #64b5f6);
+}
+
 .db-panel__action--backup .db-panel__action-icon {
   background: linear-gradient(135deg, #1565c0, #42a5f5);
 }

@@ -92,28 +92,33 @@ export class UiTranslationsService {
     });
   }
 
-  /** يكمّل مفاتيح شاشة الإعدادات (مثل حسابات المستخدمين) من ملف ar.json المحلي */
+  /** يكمّل مفاتيح العربية الناقصة من ملف ar.json المحلي */
   private mergeArabicSettingsScreenCopyFromAssets(done?: () => void): void {
     this.http
       .get<UiLocaleFilePayload>('/assets/ui-translations/ar.json')
       .pipe(catchError(() => of(null)))
       .subscribe((file) => {
-        const fromAssets = file?.screenCopy?.['settings'];
+        const fromAssets = file?.screenCopy;
         if (fromAssets) {
           const current = this.payload();
           const arScreen = { ...(current.screenCopy?.ar ?? {}) };
-          const settings = { ...(arScreen['settings'] ?? {}) };
-          for (const [key, value] of Object.entries(fromAssets)) {
-            const trimmed = (value ?? '').trim();
-            if (!trimmed) {
+          for (const [screenId, msgs] of Object.entries(fromAssets)) {
+            if (!msgs || typeof msgs !== 'object') {
               continue;
             }
-            const existing = (settings[key] ?? '').trim();
-            if (!existing || existing === key) {
-              settings[key] = trimmed;
+            const merged = { ...(arScreen[screenId] ?? {}) };
+            for (const [key, value] of Object.entries(msgs)) {
+              const trimmed = (value ?? '').trim();
+              if (!trimmed) {
+                continue;
+              }
+              const existing = (merged[key] ?? '').trim();
+              if (!existing || existing === key) {
+                merged[key] = trimmed;
+              }
             }
+            arScreen[screenId] = merged;
           }
-          arScreen['settings'] = settings;
           this.payload.set({
             ...current,
             screenCopy: { ...current.screenCopy, ar: arScreen },

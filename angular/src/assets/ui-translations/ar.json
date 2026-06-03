@@ -59,6 +59,7 @@
     "dbBackupSuccess": "تم تنزيل النسخة الاحتياطية بنجاح",
     "dbUpdateSuccess": "تم تحديث قاعدة البيانات بنجاح",
     "dbOpFailed": "تعذّرت العملية. حاول مرة أخرى",
+    "dbUsersLinkHint": "فتح إضافة وتعديل حسابات تسجيل الدخول",
     "accountSettingsLink": "إعدادات النظام",
     "settingsMenuHotel": "الفندق",
     "settingsMenuUiTranslation": "ترجمة واجهة النظام",
