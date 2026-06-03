@@ -106,6 +106,17 @@ interface AppSearchEntry {
             <symbol id="nav-icon-hotel" viewBox="0 0 24 24" fill="none">
               <path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M4 20V6l8-4 8 4v14H4zm4-8h8M8 16h2m6 0h2" />
             </symbol>
+            <symbol id="nav-icon-user-cog" viewBox="0 0 24 24" fill="none">
+              <circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.75" />
+              <path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M3 19c0-2.8 2.5-5 6-5s6 2.2 6 5" />
+              <circle cx="17.5" cy="17" r="2.25" stroke="currentColor" stroke-width="1.5" />
+              <path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M17.5 14.6v1M17.5 19.4v1M15.1 17h1M19.9 17h1" />
+            </symbol>
+            <symbol id="nav-icon-user-plus" viewBox="0 0 24 24" fill="none">
+              <circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.75" />
+              <path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M3 19c0-2.8 2.5-5 6-5s6 2.2 6 5" />
+              <path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M17 8v6M14 11h6" />
+            </symbol>
             <symbol id="nav-icon-layout" viewBox="0 0 24 24" fill="none">
               <path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M4 5h7v7H4V5zm9 0h7v4h-7V5zM4 14h7v5H4v-5zm9 3h7v2h-7v-2z" />
             </symbol>
@@ -455,7 +466,9 @@ interface AppSearchEntry {
                   [attr.aria-expanded]="userMgmtNavOpen"
                   [attr.title]="ui.screenText('settings', 'tabUserManagement')"
                   [attr.aria-label]="ui.screenText('settings', 'tabUserManagement')">
-                  <i class="fas fa-user-cog sidebar-nav-group__main-icon" aria-hidden="true"></i>
+                  <svg class="nav-icon-svg nav-icon-svg--user-cog" viewBox="0 0 24 24" aria-hidden="true">
+                    <use href="#nav-icon-user-cog" />
+                  </svg>
                   <span class="sidebar-nav-label">{{ ui.screenText('settings', 'tabUserManagement') }}</span>
                   <i
                     class="fas sidebar-nav-group__chevron"
@@ -2203,6 +2216,17 @@ interface AppSearchEntry {
       font-size: 0.7rem;
     }
 
+    .sidebar-nav-subgroup__head .nav-icon-svg {
+      width: 26px;
+      height: 26px;
+      flex-shrink: 0;
+    }
+
+    .sidebar-nav-group__link .nav-icon-svg--user-plus {
+      width: 22px;
+      height: 22px;
+    }
+
     .sidebar-nav-subgroup__tree {
       display: flex;
       flex-direction: column;
@@ -2950,7 +2974,7 @@ export class AppComponent implements OnInit {
       path: '/settings',
       tab: 'users',
       labelKey: 'tabUsers',
-      icon: 'fa-user-plus',
+      icon: 'svg-user-plus',
       linkActive: { exact: true, queryParams: 'exact' },
     },
   ];
