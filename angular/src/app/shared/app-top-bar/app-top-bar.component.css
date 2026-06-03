@@ -55,12 +55,38 @@
   color: #1565c0;
 }
 
-/* يسار الشريط — بديل أيقونة التاج (شعار الفندق الدائري) */
-.app-top-bar__brand--leading {
+.app-top-bar__account-hub {
   width: 40px;
   height: 40px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.app-top-bar__account-hub-ring {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 1rem;
+  color: #fff;
+  background: linear-gradient(145deg, #1565c0 0%, #42a5f5 100%);
   border: 2px solid #ffe082;
-  box-shadow: 0 2px 10px rgba(21, 101, 192, 0.14), 0 0 0 1px rgba(249, 168, 37, 0.2);
+  box-shadow: 0 2px 10px rgba(21, 101, 192, 0.18), 0 0 0 1px rgba(249, 168, 37, 0.25);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.app-top-bar__account-hub:hover .app-top-bar__account-hub-ring,
+.app-top-bar__account-hub--active .app-top-bar__account-hub-ring {
+  transform: scale(1.04);
+  box-shadow: 0 4px 14px rgba(21, 101, 192, 0.28), 0 0 0 2px rgba(255, 224, 130, 0.45);
+}
+
+.app-top-bar__account-hub--active .app-top-bar__account-hub-ring {
+  background: linear-gradient(145deg, #0d47a1 0%, #1976d2 100%);
 }
 
 .app-top-bar__tools {

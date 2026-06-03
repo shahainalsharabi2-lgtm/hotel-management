@@ -18,6 +18,7 @@ import { UiTranslationsService } from '../../services/ui-translations.service';
 import type { UiExtraLocaleCode } from '../../utils/ui-translation.constants';
 import { formatLocalePickerLabel } from '../../utils/locale-picker-label';
 import { bindUiTranslationRefresh } from '../../utils/ui-screen-i18n.helper';
+import { DbSettingsPanelComponent } from '../db-settings-panel/db-settings-panel.component';
 
 type TopBarLocale = UiExtraLocaleCode | 'ar';
 
@@ -31,7 +32,7 @@ interface TopBarLocaleOption {
 @Component({
   selector: 'app-top-bar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, DbSettingsPanelComponent],
   templateUrl: './app-top-bar.component.html',
   styleUrls: ['./app-top-bar.component.css'],
 })
@@ -61,6 +62,7 @@ export class AppTopBarComponent implements OnInit {
   clockDate = '';
   clockTime = '';
   langPickerOpen = false;
+  dbPanelOpen = false;
 
   ngOnInit(): void {
     bindUiTranslationRefresh(this.cdr, this.destroyRef);
@@ -84,9 +86,16 @@ export class AppTopBarComponent implements OnInit {
 
   @HostListener('document:keydown', ['$event'])
   onDocumentKeydown(event: KeyboardEvent): void {
-    if (event.key === 'Escape' && this.langPickerOpen) {
-      this.langPickerOpen = false;
-      this.cdr.markForCheck();
+    if (event.key === 'Escape') {
+      if (this.dbPanelOpen) {
+        this.dbPanelOpen = false;
+        this.cdr.markForCheck();
+        return;
+      }
+      if (this.langPickerOpen) {
+        this.langPickerOpen = false;
+        this.cdr.markForCheck();
+      }
     }
   }
 
@@ -235,5 +244,26 @@ export class AppTopBarComponent implements OnInit {
   logout(): void {
     this.auth.logout();
     void this.router.navigate(['/login']);
+  }
+
+  toggleDbPanel(event: Event): void {
+    event.stopPropagation();
+    this.dbPanelOpen = !this.dbPanelOpen;
+    if (this.dbPanelOpen) {
+      this.langPickerOpen = false;
+    }
+    this.cdr.markForCheck();
+  }
+
+  closeDbPanel(): void {
+    if (this.dbPanelOpen) {
+      this.dbPanelOpen = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  userInitial(): string {
+    const label = this.currentUserLabel().trim();
+    return label ? label.charAt(0) : 'م';
   }
 }

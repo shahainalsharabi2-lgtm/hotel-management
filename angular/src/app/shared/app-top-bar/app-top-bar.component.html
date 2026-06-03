@@ -90,9 +90,23 @@
       <i class="fas fa-right-from-bracket" aria-hidden="true"></i>
       <span>{{ ui.chromeLabel('logoutBtn') }}</span>
     </button>
-    <div class="app-top-bar__brand app-top-bar__brand--leading" [title]="hotelDisplayName">
-      <img *ngIf="hotelImageSrc" [src]="hotelImageSrc" alt="" class="app-top-bar__brand-img" />
-      <span *ngIf="!hotelImageSrc" class="app-top-bar__brand-fallback">{{ hotelNameInitial }}</span>
-    </div>
+    <button
+      type="button"
+      class="app-top-bar__account-hub"
+      [class.app-top-bar__account-hub--active]="dbPanelOpen"
+      (click)="toggleDbPanel($event)"
+      [attr.title]="ui.chromeLabel('accountHubTitle')"
+      [attr.aria-label]="ui.chromeLabel('accountHubAria')"
+      [attr.aria-expanded]="dbPanelOpen">
+      <span class="app-top-bar__account-hub-ring" aria-hidden="true">
+        <i class="fas fa-user-cog"></i>
+      </span>
+    </button>
   </div>
+
+  <app-db-settings-panel
+    [open]="dbPanelOpen"
+    [userLabel]="currentUserLabel()"
+    [userInitial]="userInitial()"
+    (closed)="closeDbPanel()" />
 </header>
