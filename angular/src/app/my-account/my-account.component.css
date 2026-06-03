@@ -1,0 +1,14 @@
+.my-account-page {
+  padding: 1rem 1.15rem 1.5rem;
+}
+
+.my-account-card {
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.my-account-loading {
+  text-align: center;
+  color: var(--app-text-muted, #607d8b);
+  padding: 2rem 0;
+}

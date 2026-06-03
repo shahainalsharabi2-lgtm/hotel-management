@@ -31,6 +31,10 @@ export class HotelAppUserService {
     return `${environment.apis.default.url}/api/app/hotel-app-user`;
   }
 
+  get(id: number): Observable<HotelAppUserDto> {
+    return this.http.get<HotelAppUserDto>(`${this.apiUrl}/${id}`);
+  }
+
   getAll(): Observable<HotelAppUserDto[]> {
     return this.http
       .get<PagedResultDto<HotelAppUserDto>>(this.apiUrl, {

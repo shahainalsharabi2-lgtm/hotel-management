@@ -56,6 +56,10 @@ export class HotelAuthService {
       );
   }
 
+  updateSession(user: HotelAppUserSession): void {
+    this.persistSession(user);
+  }
+
   logout(): void {
     this.session = null;
     try {

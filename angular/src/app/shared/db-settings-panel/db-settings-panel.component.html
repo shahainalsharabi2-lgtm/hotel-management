@@ -23,15 +23,15 @@
     <nav class="db-panel__actions" [attr.aria-label]="ui.chromeLabel('dbSettingsTitle')">
       <button
         type="button"
-        class="db-panel__action db-panel__action--users"
+        class="db-panel__action db-panel__action--my-account"
         [disabled]="backupLoading || updateLoading"
-        (click)="openUserAccounts()">
+        (click)="openMyAccount()">
         <span class="db-panel__action-icon" aria-hidden="true">
-          <i class="fas fa-users-cog"></i>
+          <i class="fas fa-id-card"></i>
         </span>
         <span class="db-panel__action-text">
-          <span class="db-panel__action-label">{{ ui.screenText('settings', 'tabUserManagement') }}</span>
-          <span class="db-panel__action-hint">{{ ui.chromeLabel('dbUsersLinkHint') }}</span>
+          <span class="db-panel__action-label">{{ ui.chromeLabel('myAccountBtn') }}</span>
+          <span class="db-panel__action-hint">{{ ui.chromeLabel('myAccountHint') }}</span>
         </span>
       </button>
 

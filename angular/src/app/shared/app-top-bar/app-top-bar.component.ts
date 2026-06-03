@@ -218,6 +218,11 @@ export class AppTopBarComponent implements OnInit {
       return;
     }
 
+    if (path === '/my-account') {
+      this.breadcrumb = `/ ${this.ui.chromeLabel('myAccountBtn')}`;
+      return;
+    }
+
     if (path === '/settings') {
       const tab = params.get('tab')?.trim() || 'general';
       const settingsTitle = this.ui.chromeLabel('helpSettingsLink');

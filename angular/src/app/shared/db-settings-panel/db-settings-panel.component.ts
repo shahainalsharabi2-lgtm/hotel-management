@@ -117,9 +117,9 @@ export class DbSettingsPanelComponent {
     });
   }
 
-  openUserAccounts(): void {
+  openMyAccount(): void {
     this.requestClose();
-    void this.router.navigate(['/settings'], { queryParams: { tab: 'users' } });
+    void this.router.navigate(['/my-account']);
   }
 
   logout(): void {

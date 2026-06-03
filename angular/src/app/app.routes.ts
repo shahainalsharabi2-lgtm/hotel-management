@@ -9,6 +9,7 @@ import { RoomDetailsComponent } from './rooms/room-details/room-details';
 import { SettingsComponent } from './settings/settings.component';
 import { ReportsComponent } from './reports/reports.component';
 import { LoginComponent } from './login/login.component';
+import { MyAccountComponent } from './my-account/my-account.component';
 import { authGuard, loginPageGuard } from './guards/auth.guard';
 
 export const appRoutes: Routes = [
@@ -25,4 +26,5 @@ export const appRoutes: Routes = [
   { path: 'database', component: DatabaseComponent, canActivate: [authGuard] },
   { path: 'reports', component: ReportsComponent, canActivate: [authGuard] },
   { path: 'settings', component: SettingsComponent, canActivate: [authGuard] },
+  { path: 'my-account', component: MyAccountComponent, canActivate: [authGuard] },
 ];

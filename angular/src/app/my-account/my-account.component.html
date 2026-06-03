@@ -1,0 +1,68 @@
+<div class="settings-container my-account-page">
+  <div class="glass-card my-account-card">
+    <div class="content-header">
+      <h2>
+        <i class="fas fa-id-card-clip" style="color: var(--app-primary-mid); margin-left: 10px"></i>
+        {{ ui.screenText('myAccount', 'pageTitle') }}
+      </h2>
+      <p>{{ ui.screenText('myAccount', 'pageSubtitle') }}</p>
+    </div>
+
+    <p class="my-account-loading" *ngIf="loading">{{ ui.screenText('myAccount', 'loading') }}</p>
+
+    <div class="settings-frame full-width" *ngIf="!loading && profile">
+      <div class="form-grid">
+        <div class="field-group">
+          <label>{{ ui.screenText('myAccount', 'fieldFirstName') }}</label>
+          <div class="input-wrapper">
+            <i class="fas fa-user"></i>
+            <input type="text" [(ngModel)]="profile.firstName" />
+          </div>
+        </div>
+        <div class="field-group">
+          <label>{{ ui.screenText('myAccount', 'fieldLastName') }}</label>
+          <div class="input-wrapper">
+            <i class="fas fa-user"></i>
+            <input type="text" [(ngModel)]="profile.lastName" />
+          </div>
+        </div>
+        <div class="field-group">
+          <label>{{ ui.screenText('myAccount', 'fieldUserName') }}</label>
+          <div class="input-wrapper">
+            <i class="fas fa-at"></i>
+            <input type="text" [(ngModel)]="profile.userName" dir="ltr" autocomplete="username" />
+          </div>
+        </div>
+        <div class="field-group">
+          <label>{{ ui.screenText('myAccount', 'fieldEmail') }}</label>
+          <div class="input-wrapper">
+            <i class="fas fa-envelope"></i>
+            <input type="email" [(ngModel)]="profile.email" dir="ltr" />
+          </div>
+        </div>
+        <div class="field-group">
+          <label>{{ ui.screenText('myAccount', 'fieldPhone') }}</label>
+          <div class="input-wrapper">
+            <i class="fas fa-phone"></i>
+            <input type="tel" [(ngModel)]="profile.phoneNumber" dir="ltr" />
+          </div>
+        </div>
+        <div class="field-group">
+          <label>{{ ui.screenText('myAccount', 'fieldPassword') }}</label>
+          <div class="input-wrapper input-wrapper--password">
+            <i class="fas fa-key"></i>
+            <input
+              type="password"
+              [(ngModel)]="profile.password"
+              [placeholder]="ui.screenText('myAccount', 'passwordPh')"
+              autocomplete="new-password" />
+          </div>
+        </div>
+        <button type="button" class="action-btn" [disabled]="saving" (click)="save()">
+          <i class="fas fa-save"></i>
+          {{ saving ? ui.screenText('myAccount', 'saving') : ui.screenText('myAccount', 'saveBtn') }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
