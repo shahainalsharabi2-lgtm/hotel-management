@@ -84,12 +84,44 @@ export class UiTranslationsService {
     this.http.get<UiTranslationsBlobDto>(this.apiUrl).subscribe({
       next: (dto) => {
         this.applyPayloadJson(dto?.payloadJson);
-        done?.();
+        this.mergeArabicSettingsScreenCopyFromAssets(done);
       },
       error: () => {
         this.loadFallbackFromAssets(done);
       },
     });
+  }
+
+  /** يكمّل مفاتيح شاشة الإعدادات (مثل حسابات المستخدمين) من ملف ar.json المحلي */
+  private mergeArabicSettingsScreenCopyFromAssets(done?: () => void): void {
+    this.http
+      .get<UiLocaleFilePayload>('/assets/ui-translations/ar.json')
+      .pipe(catchError(() => of(null)))
+      .subscribe((file) => {
+        const fromAssets = file?.screenCopy?.['settings'];
+        if (fromAssets) {
+          const current = this.payload();
+          const arScreen = { ...(current.screenCopy?.ar ?? {}) };
+          const settings = { ...(arScreen['settings'] ?? {}) };
+          for (const [key, value] of Object.entries(fromAssets)) {
+            const trimmed = (value ?? '').trim();
+            if (!trimmed) {
+              continue;
+            }
+            const existing = (settings[key] ?? '').trim();
+            if (!existing || existing === key) {
+              settings[key] = trimmed;
+            }
+          }
+          arScreen['settings'] = settings;
+          this.payload.set({
+            ...current,
+            screenCopy: { ...current.screenCopy, ar: arScreen },
+          });
+          window.dispatchEvent(new Event('hotelUiTranslationsUpdated'));
+        }
+        done?.();
+      });
   }
 
   /** When API is unavailable (e.g. Render down), use bundled locale JSON files. */
@@ -111,7 +143,7 @@ export class UiTranslationsService {
       });
       this.payload.set(payload);
       window.dispatchEvent(new Event('hotelUiTranslationsUpdated'));
-      done?.();
+      this.mergeArabicSettingsScreenCopyFromAssets(done);
     });
   }
 
