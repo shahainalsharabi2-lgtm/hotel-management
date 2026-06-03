@@ -16,6 +16,8 @@ public class HotelAppUser : Entity<int>
 
     public string Password { get; set; } = string.Empty;
 
+    public string Role { get; set; } = HotelUserRoles.Default;
+
     protected HotelAppUser()
     {
     }
@@ -26,7 +28,8 @@ public class HotelAppUser : Entity<int>
         string userName,
         string email,
         string phoneNumber,
-        string password)
+        string password,
+        string role)
     {
         FirstName = firstName;
         LastName = lastName;
@@ -34,5 +37,6 @@ public class HotelAppUser : Entity<int>
         Email = email;
         PhoneNumber = phoneNumber;
         Password = password;
+        Role = HotelUserRoles.Normalize(role);
     }
 }

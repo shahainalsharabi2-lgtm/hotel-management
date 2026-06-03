@@ -8,6 +8,7 @@ import { HotelAuthService } from '../services/hotel-auth.service';
 import { UiMessageService } from '../services/ui-message.service';
 import { UiTranslationsService } from '../services/ui-translations.service';
 import { bindUiTranslationRefresh } from '../utils/ui-screen-i18n.helper';
+import { HOTEL_USER_ROLE_OPTIONS, normalizeHotelUserRole } from '../utils/hotel-user-role';
 
 @Component({
   selector: 'app-my-account',
@@ -50,6 +51,13 @@ export class MyAccountComponent implements OnInit {
     });
   }
 
+  roleLabel(role: string | null | undefined): string {
+    const key = HOTEL_USER_ROLE_OPTIONS.find(
+      (o) => o.value === normalizeHotelUserRole(role),
+    )?.labelKey;
+    return key ? this.ui.screenText('settings', key) : '';
+  }
+
   save(): void {
     if (!this.profile?.id || this.saving) {
       return;
@@ -61,6 +69,7 @@ export class MyAccountComponent implements OnInit {
       email: (this.profile.email ?? '').trim(),
       phoneNumber: (this.profile.phoneNumber ?? '').trim(),
       password: (this.profile.password ?? '').trim(),
+      role: normalizeHotelUserRole(this.profile.role),
     };
     if (!input.firstName || !input.lastName || !input.userName) {
       this.uiMsg.show(this.ui.screenText('myAccount', 'requiredFields'));
@@ -88,6 +97,7 @@ export class MyAccountComponent implements OnInit {
               userName: input.userName,
               email: input.email,
               phoneNumber: input.phoneNumber,
+              role: input.role,
             });
             this.uiMsg.show(this.ui.screenText('myAccount', 'saveSuccess'));
             this.cdr.markForCheck();

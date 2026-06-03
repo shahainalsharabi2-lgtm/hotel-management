@@ -48,6 +48,13 @@
           </div>
         </div>
         <div class="field-group">
+          <label>{{ ui.screenText('myAccount', 'fieldRole') }}</label>
+          <div class="input-wrapper">
+            <i class="fas fa-user-shield"></i>
+            <input type="text" [value]="roleLabel(profile.role)" readonly />
+          </div>
+        </div>
+        <div class="field-group">
           <label>{{ ui.screenText('myAccount', 'fieldPassword') }}</label>
           <div class="input-wrapper input-wrapper--password">
             <i class="fas fa-key"></i>

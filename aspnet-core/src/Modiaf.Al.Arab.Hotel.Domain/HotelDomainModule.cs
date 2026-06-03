@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Modiaf.Al.Arab.Hotel.MultiTenancy;
 using Volo.Abp.AuditLogging;

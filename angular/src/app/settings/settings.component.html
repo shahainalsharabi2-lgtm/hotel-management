@@ -552,7 +552,7 @@
       </div>
 
       <!-- USERS TAB -->
-      <div class="tab-content" *ngIf="activeTab === 'users'">
+      <div class="tab-content" *ngIf="activeTab === 'users' && auth.canManageUsers()">
         <div class="content-header">
           <h2><i class="fas fa-user-cog" style="color:var(--app-primary-mid);margin-left:10px"></i>{{ uiTranslations.screenText('settings', 'usersTitle') }}</h2>
           <p>{{ uiTranslations.screenText('settings', 'usersSubtitle') }}</p>
@@ -604,6 +604,17 @@
                   <input type="password" [(ngModel)]="newAppUser.password" autocomplete="new-password" />
                 </div>
               </div>
+              <div class="field-group">
+                <label>{{ uiTranslations.screenText('settings', 'usersFieldRole') }}</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-user-shield"></i>
+                  <select [(ngModel)]="newAppUser.role">
+                    <option *ngFor="let opt of userRoleOptions" [ngValue]="opt.value">
+                      {{ uiTranslations.screenText('settings', opt.labelKey) }}
+                    </option>
+                  </select>
+                </div>
+              </div>
               <button type="button" class="action-btn" (click)="addAppUser()">
                 <i class="fas fa-plus"></i> {{ uiTranslations.screenText('settings', 'usersAddBtn') }}
               </button>
@@ -622,6 +633,7 @@
                     <th>{{ uiTranslations.screenText('settings', 'usersColEmail') }}</th>
                     <th>{{ uiTranslations.screenText('settings', 'usersColPhone') }}</th>
                     <th>{{ uiTranslations.screenText('settings', 'usersColPassword') }}</th>
+                    <th>{{ uiTranslations.screenText('settings', 'usersColRole') }}</th>
                     <th>{{ uiTranslations.screenText('settings', 'usersColActions') }}</th>
                   </tr>
                 </thead>
@@ -633,6 +645,7 @@
                     <td dir="ltr">{{ u.email }}</td>
                     <td dir="ltr">{{ u.phoneNumber }}</td>
                     <td dir="ltr">{{ u.password }}</td>
+                    <td>{{ userRoleLabel(u.role) }}</td>
                     <td class="table-actions">
                       <button type="button" class="btn-icon-edit" (click)="editAppUser(u)" [title]="uiTranslations.screenText('settings', 'editBtn')">
                         <i class="fas fa-pen"></i>
@@ -643,7 +656,7 @@
                     </td>
                   </tr>
                   <tr *ngIf="appUsers.length === 0">
-                    <td colspan="7" class="empty-state">{{ uiTranslations.screenText('settings', 'usersEmpty') }}</td>
+                    <td colspan="8" class="empty-state">{{ uiTranslations.screenText('settings', 'usersEmpty') }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -696,6 +709,17 @@
                 <div class="input-wrapper input-wrapper--password">
                   <i class="fas fa-key"></i>
                   <input type="password" [(ngModel)]="editingAppUser.password" autocomplete="new-password" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label>{{ uiTranslations.screenText('settings', 'usersFieldRole') }}</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-user-shield"></i>
+                  <select [(ngModel)]="editingAppUser.role">
+                    <option *ngFor="let opt of userRoleOptions" [ngValue]="opt.value">
+                      {{ uiTranslations.screenText('settings', opt.labelKey) }}
+                    </option>
+                  </select>
                 </div>
               </div>
               <button type="button" class="action-btn" (click)="saveAppUserEdit()">

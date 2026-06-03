@@ -15,6 +15,7 @@ import { UiTranslationsService } from './services/ui-translations.service';
 import { SystemNotificationsService } from './services/system-notifications.service';
 import { HotelBrandingStoreService } from './services/hotel-branding-store.service';
 import { HotelSystemSettingsLoader } from './services/hotel-system-settings.loader';
+import { HotelAuthService } from './services/hotel-auth.service';
 import type { UiExtraLocaleCode } from './utils/ui-translation.constants';
 import { AccountLocaleEditorComponent } from './shared/account-locale-editor/account-locale-editor.component';
 import { AppTopBarComponent } from './shared/app-top-bar/app-top-bar.component';
@@ -459,6 +460,7 @@ interface AppSearchEntry {
                 </div>
               </div>
               <div
+                *ngIf="auth.canManageUsers()"
                 class="sidebar-nav-subgroup"
                 [class.sidebar-nav-subgroup--open]="userMgmtNavOpen"
                 [class.sidebar-nav-subgroup--active]="userMgmtSectionActive">
@@ -708,6 +710,7 @@ interface AppSearchEntry {
                 <i *ngIf="!isSvgNavIcon(item.icon)" class="fas sidebar-nav-flyout__icon-fa" [ngClass]="item.icon" aria-hidden="true"></i>
                 <span>{{ ui.screenText('settings', item.labelKey) }}</span>
               </a>
+              <ng-container *ngIf="auth.canManageUsers()">
               <p class="sidebar-nav-flyout__section sidebar-nav-flyout__section--divider">{{ ui.screenText('settings', 'tabUserManagement') }}</p>
               <a
                 *ngFor="let item of settingsUserMgmtItems"
@@ -729,6 +732,7 @@ interface AppSearchEntry {
                 <i *ngIf="!isSvgNavIcon(item.icon)" class="fas sidebar-nav-flyout__icon-fa" [ngClass]="item.icon" aria-hidden="true"></i>
                 <span>{{ ui.screenText('settings', item.labelKey) }}</span>
               </a>
+              </ng-container>
             </ng-container>
             <ng-container *ngSwitchCase="'reports'">
               <a
@@ -2904,6 +2908,7 @@ export class AppComponent implements OnInit {
   readonly notifications = inject(SystemNotificationsService);
   private readonly hotelBranding = inject(HotelBrandingStoreService);
   private readonly hotelSystemSettings = inject(HotelSystemSettingsLoader);
+  readonly auth = inject(HotelAuthService);
 
   readonly localeOptions: ReadonlyArray<{
     code: AppUiLocale;

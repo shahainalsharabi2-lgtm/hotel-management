@@ -36,6 +36,12 @@ import {
   HotelAppUserDto,
   HotelAppUserService,
 } from '../services/hotel-app-user.service';
+import { HotelAuthService } from '../services/hotel-auth.service';
+import {
+  HOTEL_USER_ROLE,
+  HOTEL_USER_ROLE_OPTIONS,
+  normalizeHotelUserRole,
+} from '../utils/hotel-user-role';
 import type { UiExtraLocaleCode } from '../utils/ui-translation.constants';
 import type { UiLocaleFilePayload } from '../utils/ui-translations-locale.util';
 
@@ -167,6 +173,8 @@ export class SettingsComponent implements OnInit {
   private readonly hotelSystemSettings = inject(HotelSystemSettingsLoader);
   private readonly paymentMethodService = inject(PaymentMethodService);
   private readonly hotelAppUserService = inject(HotelAppUserService);
+  readonly auth = inject(HotelAuthService);
+  readonly userRoleOptions = HOTEL_USER_ROLE_OPTIONS;
 
   private readonly settingsTabKeys = new Set([
     'general',
@@ -436,7 +444,16 @@ export class SettingsComponent implements OnInit {
     this.loadPaymentMethods();
     this.loadIdentityTypes();
     this.loadBookings();
-    this.loadAppUsers();
+    if (this.auth.canManageUsers()) {
+      this.loadAppUsers();
+    }
+  }
+
+  userRoleLabel(role: string | null | undefined): string {
+    const key = HOTEL_USER_ROLE_OPTIONS.find(
+      (o) => o.value === normalizeHotelUserRole(role),
+    )?.labelKey;
+    return key ? this.uiTranslations.screenText('settings', key) : '';
   }
 
   private emptyAppUserForm(): CreateUpdateHotelAppUserDto {
@@ -447,6 +464,7 @@ export class SettingsComponent implements OnInit {
       email: '',
       phoneNumber: '',
       password: '',
+      role: HOTEL_USER_ROLE.Regular,
     };
   }
 
@@ -559,17 +577,27 @@ export class SettingsComponent implements OnInit {
       email: (raw.email ?? '').trim(),
       phoneNumber: (raw.phoneNumber ?? '').trim(),
       password: (raw.password ?? '').trim(),
+      role: normalizeHotelUserRole(raw.role),
     };
   }
 
   private applyTabFromRoute(): void {
     const tab = (this.route.snapshot.queryParamMap.get('tab') || '').trim();
+    if (tab === 'users' && !this.auth.canManageUsers()) {
+      this.activeTab = 'general';
+      void this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { tab: 'general' },
+        replaceUrl: true,
+      });
+      return;
+    }
     if (tab && this.settingsTabKeys.has(tab)) {
       this.activeTab = tab as typeof this.activeTab;
       if (this.activeTab === 'uiTranslations') {
         this.openUiTranslationsEditor();
       }
-      if (this.activeTab === 'users') {
+      if (this.activeTab === 'users' && this.auth.canManageUsers()) {
         this.loadAppUsers();
       }
       return;
@@ -654,8 +682,11 @@ export class SettingsComponent implements OnInit {
   }
 
   setActiveTab(tab: typeof this.activeTab): void {
+    if (tab === 'users' && !this.auth.canManageUsers()) {
+      tab = 'general';
+    }
     this.activeTab = tab;
-    if (tab === 'users') {
+    if (tab === 'users' && this.auth.canManageUsers()) {
       this.loadAppUsers();
     }
     void this.router.navigate([], {

@@ -25,4 +25,8 @@ public class CreateUpdateHotelAppUserDto
     [Required]
     [StringLength(128)]
     public string Password { get; set; } = string.Empty;
+
+    [Required]
+    [StringLength(32)]
+    public string Role { get; set; } = HotelUserRoles.Default;
 }
