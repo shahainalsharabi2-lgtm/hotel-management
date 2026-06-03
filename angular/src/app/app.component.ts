@@ -455,9 +455,7 @@ interface AppSearchEntry {
                   [attr.aria-expanded]="userMgmtNavOpen"
                   [attr.title]="ui.screenText('settings', 'tabUserManagement')"
                   [attr.aria-label]="ui.screenText('settings', 'tabUserManagement')">
-                  <svg class="nav-icon-svg nav-icon-svg--hotel" viewBox="0 0 24 24" aria-hidden="true">
-                    <use href="#nav-icon-hotel" />
-                  </svg>
+                  <i class="fas fa-user-cog sidebar-nav-group__main-icon" aria-hidden="true"></i>
                   <span class="sidebar-nav-label">{{ ui.screenText('settings', 'tabUserManagement') }}</span>
                   <i
                     class="fas sidebar-nav-group__chevron"
@@ -2952,7 +2950,7 @@ export class AppComponent implements OnInit {
       path: '/settings',
       tab: 'users',
       labelKey: 'tabUsers',
-      icon: 'svg-hotel',
+      icon: 'fa-user-plus',
       linkActive: { exact: true, queryParams: 'exact' },
     },
   ];
