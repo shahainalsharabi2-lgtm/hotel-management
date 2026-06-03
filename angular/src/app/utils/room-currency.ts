@@ -22,12 +22,22 @@ export function roomCurrencyCode(room: Room | null | undefined, fallback?: Hotel
   return fallback?.code() ?? 'YER';
 }
 
-/** يثبّت عملة الغرفة عند الإنشاء — حسب لغة الواجهة أو إعداد العملة */
+/** يثبّت عملة الغرفة عند الحفظ */
 export function withRoomCurrencyForSave(
   room: Room,
   currency: HotelCurrencyService,
   uiLocale?: string,
 ): Room {
+  const savedCode = room.currencyCode?.trim();
+  const savedSymbol = room.currencySymbol?.trim();
+  if (savedCode && savedSymbol) {
+    return {
+      ...room,
+      currencyCode: savedCode,
+      currencySymbol: savedSymbol,
+    };
+  }
+
   if (room.id > 0) {
     return room;
   }

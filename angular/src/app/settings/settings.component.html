@@ -399,14 +399,32 @@
                 <option *ngFor="let t of roomTypeOptions" [value]="t"></option>
               </datalist>
             </div>
-            <div class="field-group">
+            <div class="field-group layout-currency-field">
               <label>{{ uiTranslations.screenText('settings', 'roomPrice') }}</label>
               <div class="input-wrapper input-wrapper--price">
                 <i class="fas fa-money-bill-wave" aria-hidden="true"></i>
                 <input type="number" [(ngModel)]="layoutPanelRoomPrice" min="0" step="1" />
-                <span class="input-currency-suffix" dir="ltr" [attr.title]="layoutPanelCurrencySymbol()">{{
-                  layoutPanelCurrencySymbol()
-                }}</span>
+                <button
+                  type="button"
+                  class="input-currency-suffix input-currency-suffix--btn"
+                  dir="ltr"
+                  [attr.title]="layoutPanelCurrencyCode"
+                  [disabled]="layoutPanelCurrencySaving"
+                  (click)="toggleLayoutCurrencyPicker($event)">
+                  <i class="fas fa-spinner fa-spin" *ngIf="layoutPanelCurrencySaving"></i>
+                  <span *ngIf="!layoutPanelCurrencySaving">{{ layoutPanelCurrencySymbol }}</span>
+                </button>
+              </div>
+              <div class="layout-currency-picker" *ngIf="layoutCurrencyPickerOpen">
+                <button
+                  type="button"
+                  class="layout-currency-option"
+                  *ngFor="let opt of currencyPresets"
+                  [class.layout-currency-option--active]="layoutPanelCurrencyCode === opt.code"
+                  (click)="selectLayoutPanelCurrency(opt)">
+                  <span dir="ltr">{{ opt.symbol }}</span>
+                  <span class="layout-currency-option-code" dir="ltr">{{ opt.code }}</span>
+                </button>
               </div>
             </div>
             <div class="field-group layout-status-field">

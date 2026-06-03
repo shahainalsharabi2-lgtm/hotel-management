@@ -21,6 +21,7 @@ import { HotelCurrencyService } from '../services/hotel-currency.service';
 import {
   HOTEL_CURRENCY_CUSTOM_ID,
   HOTEL_CURRENCY_PRESETS,
+  type HotelCurrencyPreset,
   type HotelCurrencyPresetId,
 } from '../utils/hotel-currency.presets';
 import { roomCurrencySymbol as displayRoomCurrencySymbol } from '../utils/room-currency';
@@ -128,6 +129,10 @@ export class SettingsComponent implements OnInit {
   layoutPanelRoomType = 'غرفة عادية';
   layoutPanelRoomPrice = 0;
   layoutPanelRoomStatus: Room['status'] = 'available';
+  layoutPanelCurrencyCode = 'YER';
+  layoutPanelCurrencySymbol = 'YR';
+  layoutCurrencyPickerOpen = false;
+  layoutPanelCurrencySaving = false;
 
   readonly roomTypeOptions = ['غرفة عادية', 'غرفة مزدوجة', 'جناح ملكي'] as const;
 
@@ -194,14 +199,27 @@ export class SettingsComponent implements OnInit {
       this.currencyCustomSymbol = this.hotelCurrency.symbol();
       this.currencyCustomCode = this.hotelCurrency.code();
     }
-    this.hotelCurrency.saveToHotelSettings();
+    this.persistHotelCurrency();
     this.cdr.markForCheck();
   }
 
   applyCustomCurrencyFields(): void {
     this.hotelCurrency.setCustom(this.currencyCustomSymbol, this.currencyCustomCode);
-    this.hotelCurrency.saveToHotelSettings();
+    this.persistHotelCurrency();
     this.cdr.markForCheck();
+  }
+
+  private persistHotelCurrency(): void {
+    this.hotelSystemSettings.save().subscribe({
+      next: () => {
+        window.dispatchEvent(new Event('hotelSettingsUpdated'));
+        window.dispatchEvent(new Event('hotelCurrencyUpdated'));
+      },
+      error: (err) => {
+        console.error('persistHotelCurrency', err);
+        this.uiMsg.error('تعذّر حفظ العملة');
+      },
+    });
   }
 
   currencyPreviewAmount(): string {
@@ -228,14 +246,73 @@ export class SettingsComponent implements OnInit {
     return displayRoomCurrencySymbol(room, this.hotelCurrency);
   }
 
-  layoutPanelCurrencySymbol(): string {
-    if (!this.layoutPanelIsNew && this.layoutPanelRoomId) {
-      const existing = this.rooms.find((r) => r.id === this.layoutPanelRoomId);
-      if (existing) {
-        return displayRoomCurrencySymbol(existing, this.hotelCurrency);
-      }
+  toggleLayoutCurrencyPicker(event: Event): void {
+    event.stopPropagation();
+    this.layoutCurrencyPickerOpen = !this.layoutCurrencyPickerOpen;
+  }
+
+  selectLayoutPanelCurrency(preset: HotelCurrencyPreset): void {
+    if (
+      this.layoutPanelCurrencyCode === preset.code &&
+      this.layoutPanelCurrencySymbol === preset.symbol
+    ) {
+      this.layoutCurrencyPickerOpen = false;
+      return;
     }
-    return this.hotelCurrency.symbol();
+
+    this.layoutPanelCurrencyCode = preset.code;
+    this.layoutPanelCurrencySymbol = preset.symbol;
+    this.layoutCurrencyPickerOpen = false;
+
+    if (!this.layoutPanelIsNew && this.layoutPanelRoomId) {
+      this.autoSaveLayoutPanelCurrency();
+    }
+    this.cdr.markForCheck();
+  }
+
+  private autoSaveLayoutPanelCurrency(): void {
+    if (!this.layoutPanelRoomId || this.layoutPanelIsNew) {
+      return;
+    }
+
+    const existing = this.rooms.find((r) => r.id === this.layoutPanelRoomId);
+    if (!existing) {
+      return;
+    }
+
+    this.layoutPanelCurrencySaving = true;
+    const updated: Room = {
+      ...existing,
+      currencyCode: this.layoutPanelCurrencyCode,
+      currencySymbol: this.layoutPanelCurrencySymbol,
+    };
+
+    this.roomService.updateRoom(this.layoutPanelRoomId, updated).subscribe({
+      next: () => {
+        const i = this.rooms.findIndex((r) => r.id === this.layoutPanelRoomId);
+        if (i !== -1) {
+          this.rooms[i] = updated;
+        }
+        this.layoutPanelCurrencySaving = false;
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.layoutPanelCurrencySaving = false;
+        this.alertRoomSaveError('تحديث عملة', err);
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  private syncLayoutPanelCurrencyFromRoom(room: Room | null): void {
+    if (room?.currencyCode?.trim() && room.currencySymbol?.trim()) {
+      this.layoutPanelCurrencyCode = room.currencyCode.trim();
+      this.layoutPanelCurrencySymbol = room.currencySymbol.trim();
+      return;
+    }
+
+    this.layoutPanelCurrencyCode = this.hotelCurrency.code();
+    this.layoutPanelCurrencySymbol = this.hotelCurrency.symbol();
   }
 
   loadBookings(): void {
@@ -965,6 +1042,8 @@ export class SettingsComponent implements OnInit {
     this.layoutPanelRoomType = room.type;
     this.layoutPanelRoomPrice = room.price;
     this.layoutPanelRoomStatus = room.status;
+    this.syncLayoutPanelCurrencyFromRoom(room);
+    this.layoutCurrencyPickerOpen = false;
     this.layoutPanelOpen = true;
   }
 
@@ -976,12 +1055,15 @@ export class SettingsComponent implements OnInit {
     this.layoutPanelRoomType = this.roomTypeOptions[0];
     this.layoutPanelRoomPrice = 0;
     this.layoutPanelRoomStatus = 'available';
+    this.syncLayoutPanelCurrencyFromRoom(null);
+    this.layoutCurrencyPickerOpen = false;
     this.layoutPanelOpen = true;
   }
 
   closeLayoutPanel(): void {
     this.layoutPanelOpen = false;
     this.layoutPanelRoomId = null;
+    this.layoutCurrencyPickerOpen = false;
   }
 
   saveLayoutPanelRoom(): void {
@@ -1015,6 +1097,8 @@ export class SettingsComponent implements OnInit {
         floor: this.layoutPanelFloorLevel,
         price: this.layoutPanelRoomPrice,
         status: this.layoutPanelRoomStatus,
+        currencyCode: this.layoutPanelCurrencyCode,
+        currencySymbol: this.layoutPanelCurrencySymbol,
       };
       this.roomService.addRoom(room).subscribe({
         next: (created) => {
@@ -1039,6 +1123,8 @@ export class SettingsComponent implements OnInit {
       floor: this.layoutPanelFloorLevel,
       price: this.layoutPanelRoomPrice,
       status: this.layoutPanelRoomStatus,
+      currencyCode: this.layoutPanelCurrencyCode,
+      currencySymbol: this.layoutPanelCurrencySymbol,
     };
     this.roomService.updateRoom(this.layoutPanelRoomId, updated).subscribe({
       next: () => {
