@@ -148,6 +148,7 @@ export class RoomService {
       type: room.type || 'غرفة عادية',
       status: room.status || 'available',
       maintenanceReason: room.maintenanceReason?.toString().trim() || null,
+      roomView: room.roomView?.toString().trim() || null,
       price: Number(room.price) || 0,
       floor: Number(room.floor) || 1,
     };

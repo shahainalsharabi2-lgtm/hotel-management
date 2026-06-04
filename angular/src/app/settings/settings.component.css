@@ -3,6 +3,13 @@
   margin-top: 0.25rem;
 }
 
+.field-hint {
+  margin: 6px 0 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--app-text-muted);
+}
+
 .ui-tr-autosave-hint {
   display: inline-flex;
   align-items: center;

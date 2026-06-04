@@ -6,6 +6,8 @@ public class Room : FullAuditedEntity<int>
 {
     public string RoomNumber { get; set; }
     public string Type { get; set; }
+    /// <summary>إطلالة الغرفة من «المدخلات» (room-views).</summary>
+    public string? RoomView { get; set; }
     public string Status { get; set; } // available, occupied, maintenance, dirty
     /// <summary>سبب الصيانة (اختياري) من «الترميزات العامة».</summary>
     public string? MaintenanceReason { get; set; }

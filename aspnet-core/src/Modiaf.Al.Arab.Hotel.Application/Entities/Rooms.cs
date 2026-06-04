@@ -20,6 +20,7 @@ public class RoomAppService(IRepository<Room, int> repository)
             Id = entity.Id,
             RoomNumber = entity.RoomNumber,
             Type = entity.Type,
+            RoomView = entity.RoomView,
             Status = entity.Status,
             MaintenanceReason = entity.MaintenanceReason,
             Price = entity.Price,
@@ -40,6 +41,7 @@ public class RoomAppService(IRepository<Room, int> repository)
         room.MaintenanceReason = string.IsNullOrWhiteSpace(createInput.MaintenanceReason)
             ? null
             : createInput.MaintenanceReason.Trim();
+        room.RoomView = string.IsNullOrWhiteSpace(createInput.RoomView) ? null : createInput.RoomView.Trim();
         ApplyCurrency(createInput, room);
         return room;
     }
@@ -52,6 +54,7 @@ public class RoomAppService(IRepository<Room, int> repository)
         entity.MaintenanceReason = string.IsNullOrWhiteSpace(updateInput.MaintenanceReason)
             ? null
             : updateInput.MaintenanceReason.Trim();
+        entity.RoomView = string.IsNullOrWhiteSpace(updateInput.RoomView) ? null : updateInput.RoomView.Trim();
         entity.Price = updateInput.Price;
         entity.Floor = updateInput.Floor;
         ApplyCurrency(updateInput, entity);

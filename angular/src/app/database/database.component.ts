@@ -220,6 +220,7 @@ export class DatabaseComponent implements OnInit {
       currencyCode: (raw.currencyCode ?? raw['CurrencyCode']) as string | undefined,
       currencySymbol: (raw.currencySymbol ?? raw['CurrencySymbol']) as string | undefined,
       maintenanceReason: (raw.maintenanceReason ?? raw['MaintenanceReason']) as string | null | undefined,
+      roomView: (raw.roomView ?? raw['RoomView']) as string | null | undefined,
       status: this.normalizeRoomStatus(statusRaw == null ? '' : String(statusRaw)),
     };
   }

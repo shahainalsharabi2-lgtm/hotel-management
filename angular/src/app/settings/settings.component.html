@@ -308,6 +308,10 @@
                   <span class="hotel-room-status status-pill" [ngClass]="room.status">{{ roomStatusLabel(room.status) }}</span>
                 </header>
                 <p class="hotel-room-type">{{ uiTranslations.roomTypeLabel(room.type) }}</p>
+                <p class="hotel-room-view" *ngIf="(room.roomView || '').trim()">
+                  <i class="fas fa-image" aria-hidden="true"></i>
+                  {{ room.roomView }}
+                </p>
                 <p class="hotel-room-price">{{ room.price | number }} {{ roomPriceSymbol(room) }}</p>
                 <div class="hotel-room-quick" (click)="$event.stopPropagation()">
                   <span class="hotel-room-quick-label">{{ uiTranslations.screenText('settings', 'quickStatus') }}</span>
@@ -363,11 +367,38 @@
               </select>
             </div>
             <div class="field-group">
-              <label>{{ uiTranslations.screenText('settings', 'roomType') }}</label>
-              <input type="text" [(ngModel)]="layoutPanelRoomType" list="layout-room-types" />
-              <datalist id="layout-room-types">
-                <option *ngFor="let t of roomTypeOptions" [value]="t"></option>
-              </datalist>
+              <label>{{ uiTranslations.screenText('settings', 'roomCategory') }}</label>
+              <select
+                class="premium-input field-box__control"
+                [(ngModel)]="layoutPanelRoomType"
+                [disabled]="layoutRoomCodeOptionsLoading">
+                <option value="" disabled>
+                  {{ uiTranslations.screenText('settings', 'roomCategoryPlaceholder') }}
+                </option>
+                <option *ngFor="let name of layoutRoomCategorySelectOptions" [value]="name">
+                  {{ name }}
+                </option>
+              </select>
+              <p class="field-hint" *ngIf="!layoutRoomCodeOptionsLoading && !roomClassOptions.length">
+                {{ uiTranslations.screenText('settings', 'roomCategoryEmptyHint') }}
+              </p>
+            </div>
+            <div class="field-group">
+              <label>{{ uiTranslations.screenText('settings', 'roomView') }}</label>
+              <select
+                class="premium-input field-box__control"
+                [(ngModel)]="layoutPanelRoomView"
+                [disabled]="layoutRoomCodeOptionsLoading">
+                <option value="">
+                  {{ uiTranslations.screenText('settings', 'roomViewPlaceholder') }}
+                </option>
+                <option *ngFor="let name of layoutRoomViewSelectOptions" [value]="name">
+                  {{ name }}
+                </option>
+              </select>
+              <p class="field-hint" *ngIf="!layoutRoomCodeOptionsLoading && !roomViewOptions.length">
+                {{ uiTranslations.screenText('settings', 'roomViewEmptyHint') }}
+              </p>
             </div>
             <div class="field-group layout-currency-field">
               <label>{{ uiTranslations.screenText('settings', 'roomPrice') }}</label>

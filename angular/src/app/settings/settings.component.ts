@@ -3,6 +3,8 @@ import { ChangeDetectorRef, Component, DestroyRef, inject, OnInit } from '@angul
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { forkJoin } from 'rxjs';
+import { finalize } from 'rxjs/operators';
 import { fromEvent } from 'rxjs';
 import { Floor } from '../models/floor.model';
 import { Room } from '../models/room.model';
@@ -29,6 +31,10 @@ import { formatLocalePickerLabel } from '../utils/locale-picker-label';
 import { bindUiTranslationRefresh } from '../utils/ui-screen-i18n.helper';
 import { UiMessageService } from '../services/ui-message.service';
 import { GeneralCodesComponent } from '../general-codes/general-codes.component';
+import {
+  GeneralCodesService,
+  type GeneralCodeItem,
+} from '../general-codes/general-codes.service';
 import { HotelSystemSettingsLoader } from '../services/hotel-system-settings.loader';
 import { PaymentMethodService, PaymentMethodDto } from '../services/payment-method.service';
 import {
@@ -140,7 +146,8 @@ export class SettingsComponent implements OnInit {
   layoutPanelRoomId: number | null = null;
   layoutPanelFloorLevel = 1;
   layoutPanelRoomNumber = '';
-  layoutPanelRoomType = 'غرفة عادية';
+  layoutPanelRoomType = '';
+  layoutPanelRoomView = '';
   layoutPanelRoomPrice = 0;
   layoutPanelRoomStatus: Room['status'] = 'available';
   layoutPanelCurrencyCode = 'YER';
@@ -148,7 +155,10 @@ export class SettingsComponent implements OnInit {
   layoutCurrencyPickerOpen = false;
   layoutPanelCurrencySaving = false;
 
-  readonly roomTypeOptions = ['غرفة عادية', 'غرفة مزدوجة', 'جناح ملكي'] as const;
+  /** فئات الغرف من المدخلات (room-classes) */
+  roomClassOptions: GeneralCodeItem[] = [];
+  roomViewOptions: GeneralCodeItem[] = [];
+  layoutRoomCodeOptionsLoading = false;
 
   layoutStatusFilter: Room['status'] | 'all' = 'all';
 
@@ -173,6 +183,7 @@ export class SettingsComponent implements OnInit {
   private readonly hotelSystemSettings = inject(HotelSystemSettingsLoader);
   private readonly paymentMethodService = inject(PaymentMethodService);
   private readonly hotelAppUserService = inject(HotelAppUserService);
+  private readonly generalCodesService = inject(GeneralCodesService);
   readonly auth = inject(HotelAuthService);
   readonly userRoleOptions = HOTEL_USER_ROLE_OPTIONS;
 
@@ -263,6 +274,82 @@ export class SettingsComponent implements OnInit {
 
   roomPriceSymbol(room: Room): string {
     return displayRoomCurrencySymbol(room, this.hotelCurrency);
+  }
+
+  /** خيارات القائمة: فئات الغرف من قاعدة البيانات + القيمة الحالية إن كانت قديماً */
+  get layoutRoomCategorySelectOptions(): string[] {
+    const names = this.roomClassOptions.map((x) => String(x.name ?? '').trim()).filter(Boolean);
+    const current = this.layoutPanelRoomType.trim();
+    if (current && !names.includes(current)) {
+      return [current, ...names];
+    }
+    return names;
+  }
+
+  get layoutRoomViewSelectOptions(): string[] {
+    const names = this.roomViewOptions.map((x) => String(x.name ?? '').trim()).filter(Boolean);
+    const current = this.layoutPanelRoomView.trim();
+    if (current && !names.includes(current)) {
+      return [current, ...names];
+    }
+    return names;
+  }
+
+  loadLayoutRoomCodeOptions(): void {
+    if (this.layoutRoomCodeOptionsLoading) {
+      return;
+    }
+    this.layoutRoomCodeOptionsLoading = true;
+    forkJoin({
+      classes: this.generalCodesService.getList('room-classes'),
+      views: this.generalCodesService.getList('room-views'),
+    })
+      .pipe(
+        finalize(() => {
+          this.layoutRoomCodeOptionsLoading = false;
+          this.cdr.markForCheck();
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: ({ classes, views }) => {
+          this.roomClassOptions = this.sortGeneralCodeItems(classes);
+          this.roomViewOptions = this.sortGeneralCodeItems(views);
+          this.ensureLayoutPanelRoomCategoryDefault();
+        },
+        error: () => {
+          this.roomClassOptions = [];
+          this.roomViewOptions = [];
+        },
+      });
+  }
+
+  private sortGeneralCodeItems(items: GeneralCodeItem[]): GeneralCodeItem[] {
+    return [...items].sort((a, b) => {
+      const ao = Number(a.displayOrder ?? 0);
+      const bo = Number(b.displayOrder ?? 0);
+      if (ao !== bo) {
+        return ao - bo;
+      }
+      return String(a.name ?? '').localeCompare(String(b.name ?? ''), 'ar');
+    });
+  }
+
+  private ensureLayoutPanelRoomCategoryDefault(): void {
+    if (!this.layoutPanelOpen || !this.layoutPanelIsNew) {
+      return;
+    }
+    const current = this.layoutPanelRoomType.trim();
+    const names = this.roomClassOptions.map((x) => String(x.name ?? '').trim()).filter(Boolean);
+    if (current && names.includes(current)) {
+      return;
+    }
+    this.layoutPanelRoomType = names[0] ?? '';
+  }
+
+  private defaultNewRoomCategory(): string {
+    const names = this.roomClassOptions.map((x) => String(x.name ?? '').trim()).filter(Boolean);
+    return names[0] ?? '';
   }
 
   toggleLayoutCurrencyPicker(event: Event): void {
@@ -446,6 +533,7 @@ export class SettingsComponent implements OnInit {
     this.loadHotelInfo();
     this.loadFloors();
     this.loadRooms();
+    this.loadLayoutRoomCodeOptions();
     this.loadPaymentMethods();
     this.loadIdentityTypes();
     this.loadBookings();
@@ -1065,8 +1153,11 @@ export class SettingsComponent implements OnInit {
   }
 
   private addRoomConfirmed(): void {
-    if (!this.newRoomNumber || !this.newRoomType || !this.newRoomFloor || this.newRoomPrice <= 0) {
-      this.uiMsg.show('يرجى إدخال رقم الغرفة والنوع والطابق والسعر بشكل صحيح.');
+    if (!this.newRoomNumber || !this.newRoomType.trim() || !this.newRoomFloor || this.newRoomPrice <= 0) {
+      this.uiMsg.show(
+        this.uiTranslations.screenText('settings', 'roomCategoryRequired') ||
+          'يرجى إدخال رقم الغرفة وفئة الغرفة والطابق والسعر بشكل صحيح.',
+      );
       return;
     }
 
@@ -1217,11 +1308,13 @@ export class SettingsComponent implements OnInit {
     this.layoutPanelFloorLevel = room.floor;
     this.layoutPanelRoomNumber = room.roomNumber;
     this.layoutPanelRoomType = room.type;
+    this.layoutPanelRoomView = room.roomView ?? '';
     this.layoutPanelRoomPrice = room.price;
     this.layoutPanelRoomStatus = room.status;
     this.syncLayoutPanelCurrencyFromRoom(room);
     this.layoutCurrencyPickerOpen = false;
     this.layoutPanelOpen = true;
+    this.loadLayoutRoomCodeOptions();
   }
 
   openLayoutNewRoomPanel(floor: Floor): void {
@@ -1229,7 +1322,9 @@ export class SettingsComponent implements OnInit {
     this.layoutPanelRoomId = null;
     this.layoutPanelFloorLevel = floor.level;
     this.layoutPanelRoomNumber = '';
-    this.layoutPanelRoomType = this.roomTypeOptions[0];
+    this.layoutPanelRoomType = this.defaultNewRoomCategory();
+    this.layoutPanelRoomView = '';
+    this.loadLayoutRoomCodeOptions();
     this.layoutPanelRoomPrice = 0;
     this.layoutPanelRoomStatus = 'available';
     this.syncLayoutPanelCurrencyFromRoom(null);
@@ -1246,7 +1341,7 @@ export class SettingsComponent implements OnInit {
   saveLayoutPanelRoom(): void {
     const num = this.layoutPanelRoomNumber.trim();
     if (!num || !this.layoutPanelRoomType.trim() || this.layoutPanelRoomPrice <= 0) {
-      this.uiMsg.show('أدخل رقم الغرفة والنوع والسعر.');
+      this.uiMsg.show(this.uiTranslations.screenText('settings', 'roomCategoryRequired'));
       return;
     }
 
@@ -1271,6 +1366,7 @@ export class SettingsComponent implements OnInit {
         id: 0,
         roomNumber: num,
         type: this.layoutPanelRoomType.trim(),
+        roomView: this.layoutPanelRoomView.trim() || null,
         floor: this.layoutPanelFloorLevel,
         price: this.layoutPanelRoomPrice,
         status: this.layoutPanelRoomStatus,
@@ -1297,6 +1393,7 @@ export class SettingsComponent implements OnInit {
       id: this.layoutPanelRoomId,
       roomNumber: num,
       type: this.layoutPanelRoomType.trim(),
+      roomView: this.layoutPanelRoomView.trim() || null,
       floor: this.layoutPanelFloorLevel,
       price: this.layoutPanelRoomPrice,
       status: this.layoutPanelRoomStatus,
