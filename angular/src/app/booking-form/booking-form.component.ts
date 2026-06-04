@@ -9,6 +9,10 @@ import { BookingService } from '../services/booking.service';
 import { GuestRegistryService } from '../services/guest-registry.service';
 import { RoomService } from '../services/room.service';
 import { IdentityTypeService } from '../services/identity-type.service';
+import {
+  GeneralCodesService,
+  type GeneralCodeItem,
+} from '../general-codes/general-codes.service';
 import { Booking } from '../models/booking.model';
 import { Room } from '../models/room.model';
 import { IdentityType } from '../models/identity-type.model';
@@ -51,6 +55,7 @@ import {
   isBookingKindId,
 } from '../utils/booking-meta.options';
 import {
+  buildGuestRegistryFromCheckIn,
   emptyGuestProfile,
   GUEST_GENDER_OPTIONS,
   guestProfileToBookingNameParts,
@@ -141,6 +146,13 @@ export class BookingFormComponent implements OnInit {
   private guestProfileRegistryId: number | null = null;
   readonly guestGenderOptions = GUEST_GENDER_OPTIONS;
 
+  /** قوائم المدخلات (ترميزات عامة) — صفحة التسكين */
+  purposeOfStayOptions: GeneralCodeItem[] = [];
+  relationshipTypeOptions: GeneralCodeItem[] = [];
+  priceCodeOptions: GeneralCodeItem[] = [];
+  guestCodingOptionsLoading = false;
+  private guestCodingPersistBusy = false;
+
   stars = Array.from({ length: 50 }, () => ({
     top: Math.random() * 100,
     left: Math.random() * 100,
@@ -153,6 +165,7 @@ export class BookingFormComponent implements OnInit {
     private roomService: RoomService,
     private identityService: IdentityTypeService,
     private guestRegistryService: GuestRegistryService,
+    private generalCodesService: GeneralCodesService,
     private router: Router,
     private route: ActivatedRoute
   ) {
@@ -187,6 +200,9 @@ export class BookingFormComponent implements OnInit {
       booking_Source: ['direct', [Validators.required]],
       booking_Kind: ['confirmed' as BookingKindId, [Validators.required]],
       guest_Full_Name: [''],
+      purpose_Of_Stay: [''],
+      relationship_Type: [''],
+      price_Code: [''],
     });
     this.guestProfileForm = this.fb.group({
       first_Name: ['', [Validators.required]],
@@ -270,9 +286,140 @@ export class BookingFormComponent implements OnInit {
     }
     if (mode === 'checkIn') {
       this.refreshBookingsCache();
+      this.loadGuestCodingOptions();
     }
     this.syncBookingKindFromModes();
     this.cdr.markForCheck();
+  }
+
+  /** قوائم أغراض الإقامة / العلاقة / رمز السعر — تظهر في التسكين فقط */
+  get showGuestCodingFields(): boolean {
+    return this.checkInMode || this.walkInCheckInMode;
+  }
+
+  private loadGuestCodingOptions(): void {
+    if (this.guestCodingOptionsLoading) {
+      return;
+    }
+    this.guestCodingOptionsLoading = true;
+    forkJoin({
+      purposes: this.generalCodesService.getList('purposes-of-stay'),
+      relationships: this.generalCodesService.getList('relationship-types'),
+      priceCodes: this.generalCodesService.getList('preference-type'),
+    })
+      .pipe(
+        finalize(() => {
+          this.guestCodingOptionsLoading = false;
+          this.cdr.markForCheck();
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: ({ purposes, relationships, priceCodes }) => {
+          this.purposeOfStayOptions = this.sortGeneralCodeOptions(purposes);
+          this.relationshipTypeOptions = this.sortGeneralCodeOptions(relationships);
+          this.priceCodeOptions = this.sortGeneralCodeOptions(priceCodes);
+        },
+        error: () => {
+          this.purposeOfStayOptions = [];
+          this.relationshipTypeOptions = [];
+          this.priceCodeOptions = [];
+        },
+      });
+  }
+
+  private sortGeneralCodeOptions(items: GeneralCodeItem[]): GeneralCodeItem[] {
+    return [...items].sort((a, b) => {
+      const ao = Number(a.displayOrder ?? 0);
+      const bo = Number(b.displayOrder ?? 0);
+      if (ao !== bo) {
+        return ao - bo;
+      }
+      return String(a.name ?? '').localeCompare(String(b.name ?? ''), 'ar');
+    });
+  }
+
+  onGuestCodingFieldChange(): void {
+    if (!this.showGuestCodingFields) {
+      return;
+    }
+    this.persistGuestRegistryCodingFields(false);
+  }
+
+  private persistGuestRegistryCodingFields(showSuccessToast: boolean): void {
+    if (!this.showGuestCodingFields || this.guestCodingPersistBusy) {
+      return;
+    }
+    const payload = buildGuestRegistryFromCheckIn(
+      this.bookingForm.getRawValue() as Record<string, unknown>,
+      this.guestProfileSnapshot,
+      this.guestProfileRegistryId,
+    );
+    if (!payload) {
+      return;
+    }
+    const hasCoding = !!(
+      payload.purpose_Of_Stay?.trim() ||
+      payload.relationship_Type?.trim() ||
+      payload.price_Code?.trim()
+    );
+    if (!hasCoding) {
+      return;
+    }
+
+    this.guestCodingPersistBusy = true;
+    this.guestRegistryService
+      .saveProfile(payload)
+      .pipe(
+        finalize(() => {
+          this.guestCodingPersistBusy = false;
+          this.cdr.markForCheck();
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (saved) => {
+          this.guestProfileRegistryId = saved.id ?? this.guestProfileRegistryId;
+          this.guestProfileSnapshot = guestRegistryToProfile(saved);
+          if (showSuccessToast) {
+            this.uiMsg.success(this.ui.screenText('booking', 'guestCodingSaved'));
+          }
+        },
+        error: () => {
+          /* لا نعيق التسكين — الحفظ يُعاد عند إتمام التسكين */
+        },
+      });
+  }
+
+  private loadGuestCodingFromRegistry(idNumber: string): void {
+    const idn = idNumber.trim();
+    if (!idn) {
+      return;
+    }
+    this.guestRegistryService
+      .getGuests()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (guests) => {
+          const match = guests.find((g) => (g.id_Number ?? '').trim() === idn);
+          if (!match) {
+            return;
+          }
+          this.guestProfileRegistryId = match.id ?? this.guestProfileRegistryId;
+          if (match.id) {
+            this.guestProfileSnapshot = guestRegistryToProfile(match);
+          }
+          this.bookingForm.patchValue(
+            {
+              purpose_Of_Stay: match.purpose_Of_Stay ?? '',
+              relationship_Type: match.relationship_Type ?? '',
+              price_Code: match.price_Code ?? '',
+            },
+            { emitEvent: false },
+          );
+          this.cdr.markForCheck();
+        },
+      });
   }
 
   private resetBookingModes(): void {
@@ -329,6 +476,7 @@ export class BookingFormComponent implements OnInit {
     );
     this.syncBookingKindFromModes();
     this.loadKnownGuestsForPicker();
+    this.loadGuestCodingOptions();
   }
 
   private enterWalkInCheckInMode(): void {
@@ -358,6 +506,7 @@ export class BookingFormComponent implements OnInit {
       { emitEvent: false },
     );
     this.loadKnownGuestsForPicker();
+    this.loadGuestCodingOptions();
     this.syncBookingKindFromModes();
   }
 
@@ -424,6 +573,7 @@ export class BookingFormComponent implements OnInit {
     }
     this.syncRoomSelectionAfterPrefill();
     this.loadKnownGuestsForPicker();
+    this.loadGuestCodingOptions();
     this.syncBookingKindFromModes();
   }
 
@@ -549,6 +699,12 @@ export class BookingFormComponent implements OnInit {
       id_Issuing_Country: String(raw.id_Issuing_Country ?? '').trim(),
       id_Number: String(raw.id_Number ?? '').trim(),
     };
+    const bookingRaw = this.bookingForm.getRawValue() as Record<string, unknown>;
+    profile.purpose_Of_Stay = String(bookingRaw['purpose_Of_Stay'] ?? profile.purpose_Of_Stay ?? '').trim();
+    profile.relationship_Type = String(
+      bookingRaw['relationship_Type'] ?? profile.relationship_Type ?? '',
+    ).trim();
+    profile.price_Code = String(bookingRaw['price_Code'] ?? profile.price_Code ?? '').trim();
     this.guestProfileSaving = true;
     this.guestRegistryService
       .saveProfile(guestProfileToRegistry(profile, this.guestProfileRegistryId))
@@ -673,6 +829,9 @@ export class BookingFormComponent implements OnInit {
         phone_Number: profile.phone_Number,
         id_Type: profile.id_Type,
         id_Number: profile.id_Number,
+        purpose_Of_Stay: profile.purpose_Of_Stay ?? '',
+        relationship_Type: profile.relationship_Type ?? '',
+        price_Code: profile.price_Code ?? '',
       },
       { emitEvent: false },
     );
@@ -1468,6 +1627,9 @@ export class BookingFormComponent implements OnInit {
     if (guestIdType || guestIdNumber) {
       this.applyGuestIdentityFields(guestIdType, guestIdNumber);
     }
+    if (this.showGuestCodingFields && guestIdNumber) {
+      this.loadGuestCodingFromRegistry(guestIdNumber);
+    }
   }
 
   /** قائمة نوع الحجز — حجز مسبق فقط */
@@ -1875,6 +2037,9 @@ export class BookingFormComponent implements OnInit {
           });
         }
 
+        if (this.showGuestCodingFields) {
+          this.persistGuestRegistryCodingFields(true);
+        }
         this.success = true;
         this.loading = false;
         this.bookingForm.reset({
@@ -1887,6 +2052,9 @@ export class BookingFormComponent implements OnInit {
           booking_Confirmed: true,
           booking_Source: 'direct',
           guest_Full_Name: '',
+          purpose_Of_Stay: '',
+          relationship_Type: '',
+          price_Code: '',
         });
         this.setCurrentDateTime();
         this.selectedRoom = undefined;
@@ -1931,7 +2099,7 @@ export class BookingFormComponent implements OnInit {
       id: this.existingBookingId!,
       status:
         this.extendStayMode
-          ? this.savedBookingStatus || 'active'
+          ? 'active'
           : this.checkInMode
             ? 'active'
             : this.savedBookingStatus || 'active',
@@ -1986,19 +2154,19 @@ export class BookingFormComponent implements OnInit {
                 ? this.ui.screenText('booking', 'transferRoomSuccess')
                 : this.ui.screenText('booking', 'editBookingSuccess'),
         );
+        if (this.showGuestCodingFields) {
+          this.persistGuestRegistryCodingFields(true);
+        }
         this.loading = false;
         this.submitted = false;
-        void this.router.navigate(
-          this.transferRoomMode || this.checkInMode ? ['/front-desk'] : ['/bookings'],
-          {
-            queryParams:
-              this.checkInMode
-                ? { pmsTab: 'staying' }
-                : this.transferRoomMode
-                  ? { pmsTab: 'staying' }
-                  : { view: 'records' },
-          }
-        );
+        const returnToFrontDesk =
+          this.extendStayMode || this.transferRoomMode || this.checkInMode;
+        void this.router.navigate(returnToFrontDesk ? ['/front-desk'] : ['/bookings'], {
+          queryParams:
+            this.extendStayMode || this.checkInMode || this.transferRoomMode
+              ? { pmsTab: 'staying' }
+              : { view: 'records' },
+        });
       },
       error: (err) => {
         console.error('existingBookingUpdate', err);

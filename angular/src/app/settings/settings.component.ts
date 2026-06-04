@@ -196,6 +196,7 @@ export class SettingsComponent implements OnInit {
   uiTranslationsForm: UiLocaleFilePayload | null = null;
   uiTranslationsReferenceAr: UiLocaleFilePayload | null = null;
   uiTranslationsOpenScreens = new Set<string>();
+  private uiTranslationsAutoSaveTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private floorService: FloorService,
@@ -433,11 +434,15 @@ export class SettingsComponent implements OnInit {
     fromEvent(window, 'hotelUiLocaleChanged')
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
-        // يعتمد تبويب "ترجمة واجهة النظام" على لغة الواجهة المختارة من الشريط العلوي
         if (this.activeTab === 'uiTranslations') {
           this.openUiTranslationsEditor();
         }
       });
+    this.destroyRef.onDestroy(() => {
+      if (this.uiTranslationsAutoSaveTimer) {
+        clearTimeout(this.uiTranslationsAutoSaveTimer);
+      }
+    });
     this.loadHotelInfo();
     this.loadFloors();
     this.loadRooms();
@@ -727,7 +732,7 @@ export class SettingsComponent implements OnInit {
     this.openUiTranslationsEditor();
   }
 
-  saveUiTranslationsForm(): void {
+  saveUiTranslationsForm(options?: { silent?: boolean }): void {
     if (this.uiTranslationsSaving) {
       return;
     }
@@ -736,7 +741,9 @@ export class SettingsComponent implements OnInit {
     }
     this.uiTranslationsSaving = true;
     this.uiTranslationsError = '';
-    this.uiTranslations.saveLocaleFileForm(this.uiTranslationsLocale, this.uiTranslationsForm).subscribe({
+    const locale = this.uiTranslations.displayLocale();
+    this.uiTranslationsLocale = locale;
+    this.uiTranslations.saveLocaleFileForm(locale, this.uiTranslationsForm).subscribe({
       next: (ok) => {
         this.uiTranslationsSaving = false;
         if (!ok) {
@@ -744,7 +751,10 @@ export class SettingsComponent implements OnInit {
           this.cdr.markForCheck();
           return;
         }
-        this.uiMsg.show(this.uiTranslations.screenText('settings', 'uiTranslationsSaveOk'));
+        this.uiTranslationsForm = this.uiTranslations.loadLocaleFileForForm(locale);
+        if (!options?.silent) {
+          this.uiMsg.show(this.uiTranslations.screenText('settings', 'uiTranslationsSaveOk'));
+        }
         this.cdr.markForCheck();
       },
       error: (err) => {
@@ -754,6 +764,26 @@ export class SettingsComponent implements OnInit {
         this.cdr.markForCheck();
       },
     });
+  }
+
+  onUiTranslationInputBlur(event: FocusEvent): void {
+    if (!(event.target instanceof HTMLInputElement) || !event.target.classList.contains('ui-tr-input')) {
+      return;
+    }
+    this.scheduleUiTranslationsAutoSave();
+  }
+
+  private scheduleUiTranslationsAutoSave(): void {
+    if (this.activeTab !== 'uiTranslations' || !this.uiTranslationsForm) {
+      return;
+    }
+    if (this.uiTranslationsAutoSaveTimer) {
+      clearTimeout(this.uiTranslationsAutoSaveTimer);
+    }
+    this.uiTranslationsAutoSaveTimer = setTimeout(() => {
+      this.uiTranslationsAutoSaveTimer = null;
+      this.saveUiTranslationsForm({ silent: true });
+    }, 450);
   }
 
   uiTranslationsSidebarKeys(): string[] {

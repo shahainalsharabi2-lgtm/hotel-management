@@ -16,6 +16,9 @@ public class GuestRegistryDto : EntityDto<int>
     public string Id_Type { get; set; }
     public string Id_Issuing_Country { get; set; }
     public string Id_Number { get; set; }
+    public string Purpose_Of_Stay { get; set; }
+    public string Relationship_Type { get; set; }
+    public string Price_Code { get; set; }
     public DateTime? LastModificationTime { get; set; }
 }
 
@@ -33,4 +36,7 @@ public class CreateUpdateGuestRegistryDto
     public string Id_Type { get; set; }
     public string Id_Issuing_Country { get; set; }
     public string Id_Number { get; set; }
+    public string Purpose_Of_Stay { get; set; }
+    public string Relationship_Type { get; set; }
+    public string Price_Code { get; set; }
 }

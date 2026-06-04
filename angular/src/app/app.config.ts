@@ -5,11 +5,12 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 
 import { appRoutes } from './app.routes';
 import { apiTimeoutInterceptor } from './interceptors/api-timeout.interceptor';
+import { loadingInterceptor } from './interceptors/loading.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(appRoutes),
-    provideHttpClient(withInterceptors([apiTimeoutInterceptor]), withNoXsrfProtection()),
+    provideHttpClient(withInterceptors([loadingInterceptor, apiTimeoutInterceptor]), withNoXsrfProtection()),
     provideAnimations(),
   ],
 };

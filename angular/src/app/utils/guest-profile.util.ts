@@ -1,4 +1,5 @@
 import { GuestRegistry } from '../models/guest-registry.model';
+import { splitGuestFullName } from './booking-display.util';
 
 /** بيانات النزيل التفصيلية */
 export interface GuestProfileDetails {
@@ -14,6 +15,9 @@ export interface GuestProfileDetails {
   id_Type: string;
   id_Issuing_Country: string;
   id_Number: string;
+  purpose_Of_Stay?: string;
+  relationship_Type?: string;
+  price_Code?: string;
 }
 
 export const GUEST_PROFILE_MARKER = '[[guest-profile:v1]]';
@@ -36,6 +40,9 @@ export function emptyGuestProfile(): GuestProfileDetails {
     id_Type: '',
     id_Issuing_Country: '',
     id_Number: '',
+    purpose_Of_Stay: '',
+    relationship_Type: '',
+    price_Code: '',
   };
 }
 
@@ -53,6 +60,9 @@ export function guestRegistryToProfile(g: GuestRegistry): GuestProfileDetails {
     id_Type: g.id_Type ?? '',
     id_Issuing_Country: g.id_Issuing_Country ?? '',
     id_Number: g.id_Number ?? '',
+    purpose_Of_Stay: g.purpose_Of_Stay ?? '',
+    relationship_Type: g.relationship_Type ?? '',
+    price_Code: g.price_Code ?? '',
   };
 }
 
@@ -73,6 +83,9 @@ export function guestProfileToRegistry(
     id_Type: p.id_Type,
     id_Issuing_Country: p.id_Issuing_Country,
     id_Number: p.id_Number,
+    purpose_Of_Stay: p.purpose_Of_Stay ?? '',
+    relationship_Type: p.relationship_Type ?? '',
+    price_Code: p.price_Code ?? '',
   };
 }
 
@@ -123,6 +136,58 @@ export function parseGuestProfileFromNotes(notes: string): GuestProfileDetails |
   } catch {
     return null;
   }
+}
+
+export function guestCodingFromFormValue(
+  raw: Record<string, unknown>,
+): Pick<GuestProfileDetails, 'purpose_Of_Stay' | 'relationship_Type' | 'price_Code'> {
+  return {
+    purpose_Of_Stay: String(raw['purpose_Of_Stay'] ?? '').trim(),
+    relationship_Type: String(raw['relationship_Type'] ?? '').trim(),
+    price_Code: String(raw['price_Code'] ?? '').trim(),
+  };
+}
+
+export function buildGuestRegistryFromCheckIn(
+  bookingRaw: Record<string, unknown>,
+  snapshot: GuestProfileDetails | null,
+  registryId: number | null | undefined,
+): GuestRegistry | null {
+  const idNumber = String(bookingRaw['id_Number'] ?? snapshot?.id_Number ?? '').trim();
+  const regId = registryId ?? snapshot?.registry_Id ?? undefined;
+  if (!idNumber && !(regId != null && regId > 0)) {
+    return null;
+  }
+
+  const coding = guestCodingFromFormValue(bookingRaw);
+  if (snapshot) {
+    return guestProfileToRegistry({ ...snapshot, ...coding }, regId);
+  }
+
+  const full = String(bookingRaw['guest_Full_Name'] ?? '').trim();
+  let first_Name = String(bookingRaw['first_Name'] ?? '').trim();
+  let last_Name = String(bookingRaw['last_Name'] ?? '').trim();
+  if (full && !first_Name && !last_Name) {
+    const split = splitGuestFullName(full);
+    first_Name = split.first;
+    last_Name = split.last;
+  }
+
+  return {
+    id: regId,
+    first_Name,
+    middle_Name: '',
+    last_Name,
+    phone_Number: String(bookingRaw['phone_Number'] ?? '').trim(),
+    gender: '',
+    nationality: '',
+    country: '',
+    birth_Date: '',
+    id_Type: String(bookingRaw['id_Type'] ?? '').trim(),
+    id_Issuing_Country: '',
+    id_Number: idNumber,
+    ...coding,
+  };
 }
 
 export function mergeGuestNotesWithProfile(

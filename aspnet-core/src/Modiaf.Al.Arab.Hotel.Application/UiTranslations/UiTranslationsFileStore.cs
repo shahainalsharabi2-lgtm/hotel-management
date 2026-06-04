@@ -39,9 +39,9 @@ public class UiTranslationsFileStore(IOptions<UiTranslationsOptions> options)
                 sidebarNav[locale] = localeFile.SidebarNav;
             }
 
-            if (!string.IsNullOrWhiteSpace(localeFile.BrandSubtitle))
+            if (localeFile.BrandSubtitle is not null)
             {
-                brandSubtitle[locale] = localeFile.BrandSubtitle!;
+                brandSubtitle[locale] = localeFile.BrandSubtitle;
             }
 
             if (localeFile.Chrome is { Count: > 0 })

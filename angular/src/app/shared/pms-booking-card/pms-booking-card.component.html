@@ -5,7 +5,7 @@
   [class.pms-card--uniform]="uniformCardSize"
   [class.pms-card--arriving]="isArrivingMenu">
   <header class="pms-card-head" [class.pms-card-head--menu-left]="usesActionsMenu">
-    <div class="pms-card-menu-wrap" *ngIf="usesActionsMenu && !isDepartingAction">
+    <div class="pms-card-menu-wrap" *ngIf="usesActionsMenu">
       <button
         type="button"
         class="pms-card-menu"
@@ -21,6 +21,20 @@
         class="pms-actions-menu"
         role="menu"
         (click)="$event.stopPropagation()">
+        <ng-container *ngIf="isDepartingMenu">
+          <button type="button" class="pms-actions-menu-item" role="menuitem" (click)="onMenuAction('extend')">
+            <span>{{ ui.screenText('bookings', 'pmsMenuExtendStay') }}</span>
+            <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+          </button>
+          <button type="button" class="pms-actions-menu-item" role="menuitem" (click)="onMenuAction('depart')">
+            <span>{{ ui.screenText('bookings', 'departBtn') }}</span>
+            <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+          </button>
+          <button type="button" class="pms-actions-menu-item" role="menuitem" (click)="onMenuAction('print')">
+            <span>{{ ui.screenText('bookings', 'pmsMenuPrintMemo') }}</span>
+            <i class="fas fa-print" aria-hidden="true"></i>
+          </button>
+        </ng-container>
         <ng-container *ngIf="isArrivingMenu">
           <button type="button" class="pms-actions-menu-item" role="menuitem" (click)="onMenuAction('checkIn')">
             <span>{{ ui.screenText('bookings', 'checkInBtn') }}</span>
@@ -177,9 +191,9 @@
 
   <footer
     class="pms-card-actions"
-    [class.pms-card-actions--departing]="isDepartingAction"
+    [class.pms-card-actions--departing]="isDepartingAction && !isDepartingMenu"
     [class.pms-card-actions--arriving]="isArrivingMenu"
-    *ngIf="isDepartingAction || isArrivingMenu || ((!hideFooterActions || showRenew) && !usesActionsMenu)">
+    *ngIf="(isDepartingAction && !isDepartingMenu) || isArrivingMenu || ((!hideFooterActions || showRenew) && !usesActionsMenu)">
     <button
       type="button"
       class="pms-btn-checkin-primary"
@@ -192,7 +206,7 @@
     <button
       type="button"
       class="pms-btn-print"
-      *ngIf="!isArrivingMenu && (isDepartingAction || !hideFooterActions)"
+      *ngIf="!isArrivingMenu && ((isDepartingAction && !isDepartingMenu) || !hideFooterActions)"
       (click)="printBookingCard()">
       <i class="fas fa-print"></i> {{ ui.screenText('bookings', 'pmsPrint') }}
     </button>
@@ -208,7 +222,7 @@
     <button
       type="button"
       class="pms-btn-view-details pms-btn-view-details--footer pms-btn-depart--footer"
-      *ngIf="isDepartingAction"
+      *ngIf="isDepartingAction && !isDepartingMenu"
       (click)="departGuest.emit(booking)"
       [attr.aria-label]="ui.screenText('bookings', 'departBtn')">
       <i class="fas fa-sign-out-alt" aria-hidden="true"></i>

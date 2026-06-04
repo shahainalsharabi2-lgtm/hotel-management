@@ -262,7 +262,7 @@ export class BookingListComponent implements OnInit {
   }
 
   /** قائمة ⋮ للقادمون/سجلات الحجز | المقيمون = قائمة إقامة */
-  pmsCardPrimaryAction(): 'details' | 'checkIn' | 'stayingMenu' | 'arrivingMenu' | 'departing' {
+  pmsCardPrimaryAction(): 'details' | 'checkIn' | 'stayingMenu' | 'arrivingMenu' | 'departing' | 'departingMenu' {
     if (this.isBookingsRecordsHub() || this.pmsTab === 'arriving') {
       return 'arrivingMenu';
     }
@@ -270,14 +270,14 @@ export class BookingListComponent implements OnInit {
       return 'stayingMenu';
     }
     if (this.pmsTab === 'departing' && this.isFrontDeskRoute()) {
-      return 'departing';
+      return 'departingMenu';
     }
     return 'details';
   }
 
   pmsCardHideFooter(): boolean {
     const action = this.pmsCardPrimaryAction();
-    return action === 'stayingMenu' || action === 'arrivingMenu';
+    return action === 'stayingMenu' || action === 'arrivingMenu' || action === 'departingMenu';
   }
 
   /** شريط الحالات: المكاتب الأمامية (٣ تبويبات) أو سجلات الحجز الكاملة — مخفي في hub السجلات */

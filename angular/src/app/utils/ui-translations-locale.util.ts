@@ -15,19 +15,19 @@ export function extractLocaleFile(
 ): UiLocaleFilePayload {
   const file: UiLocaleFilePayload = {};
   const nav = payload.sidebarNav?.[locale];
-  if (nav && Object.keys(nav).length > 0) {
+  if (nav !== undefined) {
     file.sidebarNav = { ...nav };
   }
   const sub = payload.brandSubtitle?.[locale];
-  if (sub?.trim()) {
+  if (sub !== undefined) {
     file.brandSubtitle = sub;
   }
   const chrome = payload.chrome?.[locale];
-  if (chrome && Object.keys(chrome).length > 0) {
+  if (chrome !== undefined) {
     file.chrome = { ...chrome };
   }
   const screens = payload.screenCopy?.[locale];
-  if (screens && Object.keys(screens).length > 0) {
+  if (screens !== undefined) {
     file.screenCopy = JSON.parse(JSON.stringify(screens)) as Record<
       string,
       Record<string, string>
@@ -56,16 +56,16 @@ export function mergeLocaleFileIntoPayload(
     next.screenCopy = {};
   }
 
-  if (file.sidebarNav) {
+  if (file.sidebarNav !== undefined) {
     next.sidebarNav[locale] = file.sidebarNav;
   }
   if (file.brandSubtitle !== undefined) {
     next.brandSubtitle[locale] = file.brandSubtitle;
   }
-  if (file.chrome) {
+  if (file.chrome !== undefined) {
     next.chrome[locale] = file.chrome;
   }
-  if (file.screenCopy) {
+  if (file.screenCopy !== undefined) {
     next.screenCopy[locale] = file.screenCopy;
   }
 

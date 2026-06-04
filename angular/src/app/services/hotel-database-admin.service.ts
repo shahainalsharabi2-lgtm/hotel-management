@@ -24,10 +24,10 @@ export class HotelDatabaseAdminService {
   }
 
   createBackup(): Observable<HotelDatabaseBackupResult> {
-    return this.http.post<HotelDatabaseBackupResult>(`${this.baseUrl}/create-backup`, {});
+    return this.http.post<HotelDatabaseBackupResult>(`${this.baseUrl}/backup`, {});
   }
 
   updateDatabase(): Observable<HotelDatabaseOperationResult> {
-    return this.http.post<HotelDatabaseOperationResult>(`${this.baseUrl}/update-database`, {});
+    return this.http.put<HotelDatabaseOperationResult>(`${this.baseUrl}/database`, {});
   }
 }

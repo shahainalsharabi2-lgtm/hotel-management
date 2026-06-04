@@ -20,11 +20,13 @@
         <div class="login-field__input-wrap">
           <i class="fas fa-user login-field__icon" aria-hidden="true"></i>
           <input
+            class="login-field__input"
             type="text"
             name="username"
             [(ngModel)]="userName"
             autocomplete="username"
-            dir="ltr"
+            dir="rtl"
+            lang="ar"
             [placeholder]="ui.screenText('login', 'userNamePh')"
             [disabled]="loading" />
         </div>
@@ -35,11 +37,13 @@
         <div class="login-field__input-wrap login-field__input-wrap--password">
           <i class="fas fa-lock login-field__icon" aria-hidden="true"></i>
           <input
+            class="login-field__input"
             [type]="showPassword ? 'text' : 'password'"
             name="password"
             [(ngModel)]="password"
             autocomplete="current-password"
-            dir="ltr"
+            dir="rtl"
+            lang="ar"
             [placeholder]="ui.screenText('login', 'passwordPh')"
             [disabled]="loading" />
           <button
@@ -64,9 +68,5 @@
         <span>{{ loading ? ui.screenText('login', 'submitting') : ui.screenText('login', 'submitBtn') }}</span>
       </button>
     </form>
-
-    <footer class="login-card__footer">
-      <span>{{ ui.screenText('login', 'footerHint') }}</span>
-    </footer>
   </div>
 </div>

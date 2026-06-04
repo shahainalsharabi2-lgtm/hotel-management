@@ -16,7 +16,9 @@ using Modiaf.Al.Arab.Hotel.Rooms;
 using Modiaf.Al.Arab.Hotel.RoomTypes;
 using Modiaf.Al.Arab.Hotel.UiTranslations;
 using Volo.Abp.Application.Services;
+using Volo.Abp.Data;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.Identity;
 
 namespace Modiaf.Al.Arab.Hotel.DatabaseAdmin;
 
@@ -33,7 +35,8 @@ public class HotelDatabaseAdminAppService(
     IRepository<UiTranslationsStore, Guid> uiTranslationsRepository,
     IRepository<HotelSettingsDocument, Guid> hotelSettingsRepository,
     IRepository<HotelAppUser, int> hotelAppUserRepository,
-    HotelDbMigrationService migrationService)
+    IEnumerable<IHotelDbSchemaMigrator> dbSchemaMigrators,
+    IDataSeeder dataSeeder)
     : ApplicationService, IHotelDatabaseAdminAppService
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -87,7 +90,15 @@ public class HotelDatabaseAdminAppService(
     {
         try
         {
-            await migrationService.MigrateAsync();
+            foreach (var migrator in dbSchemaMigrators)
+            {
+                await migrator.MigrateAsync();
+            }
+
+            await dataSeeder.SeedAsync(new DataSeedContext()
+                .WithProperty(IdentityDataSeedContributor.AdminEmailPropertyName, IdentityDataSeedContributor.AdminEmailDefaultValue)
+                .WithProperty(IdentityDataSeedContributor.AdminPasswordPropertyName, IdentityDataSeedContributor.AdminPasswordDefaultValue));
+
             return new HotelDatabaseOperationResultDto
             {
                 Success = true,
@@ -96,10 +107,15 @@ public class HotelDatabaseAdminAppService(
         }
         catch (Exception ex)
         {
+            var detail = ex.InnerException?.Message;
+            var message = string.IsNullOrWhiteSpace(detail)
+                ? ex.Message
+                : $"{ex.Message} ({detail})";
+
             return new HotelDatabaseOperationResultDto
             {
                 Success = false,
-                Message = $"تعذّر تحديث قاعدة البيانات: {ex.Message}",
+                Message = $"تعذّر تحديث قاعدة البيانات: {message}",
             };
         }
     }

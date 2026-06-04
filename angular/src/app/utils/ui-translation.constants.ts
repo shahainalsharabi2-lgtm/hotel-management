@@ -79,6 +79,11 @@ export const UI_CHROME_KEYS: readonly { key: string; arabic: string }[] = [
   { key: 'messageConfirm', arabic: 'نعم' },
   { key: 'messageCancel', arabic: 'إلغاء' },
   { key: 'messageClose', arabic: 'إغلاق' },
+  { key: 'loadingDataHint', arabic: 'جاري تحميل البيانات…' },
+  { key: 'loadingSlowHint', arabic: 'يستغرق التحميل وقتاً أطول — قد يكون الخادم في حالة إعداد' },
+  { key: 'loadingRefreshBtn', arabic: 'تحديث الصفحة' },
+  { key: 'loadingRefreshTitle', arabic: 'إعادة تحميل الصفحة' },
+  { key: 'loadingRefreshAria', arabic: 'إعادة تحميل الصفحة لتحديث البيانات' },
 ];
 
 /** احتياطي عربي فقط للقائمة الجانبية عند غياب JSON */

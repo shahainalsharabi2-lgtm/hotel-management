@@ -16,6 +16,9 @@ public class GuestRegistry : FullAuditedEntity<int>
     public string Id_Type { get; set; }
     public string Id_Issuing_Country { get; set; }
     public string Id_Number { get; set; }
+    public string Purpose_Of_Stay { get; set; }
+    public string Relationship_Type { get; set; }
+    public string Price_Code { get; set; }
 
     public GuestRegistry()
     {

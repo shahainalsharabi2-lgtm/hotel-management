@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { HotelAuthService } from '../services/hotel-auth.service';
 import { HotelBrandingStoreService } from '../services/hotel-branding-store.service';
@@ -58,6 +59,23 @@ export class LoginComponent implements OnInit {
     this.showPassword = !this.showPassword;
   }
 
+  private resolveLoginError(err: unknown): string {
+    if (err instanceof HttpErrorResponse) {
+      if (err.status === 0) {
+        return this.ui.screenText('login', 'errorNetwork');
+      }
+      const body = err.error as { message?: string; error?: { message?: string } } | null;
+      const serverMsg = body?.error?.message?.trim() || body?.message?.trim();
+      if (serverMsg) {
+        return serverMsg;
+      }
+      if (err.status >= 500) {
+        return this.ui.screenText('login', 'errorServer');
+      }
+    }
+    return this.ui.screenText('login', 'errorNetwork');
+  }
+
   submit(): void {
     if (this.loading) {
       return;
@@ -81,9 +99,9 @@ export class LoginComponent implements OnInit {
           result.message?.trim() || this.ui.screenText('login', 'errorInvalid');
         this.cdr.markForCheck();
       },
-      error: () => {
+      error: (err: unknown) => {
         this.loading = false;
-        this.errorMessage = this.ui.screenText('login', 'errorNetwork');
+        this.errorMessage = this.resolveLoginError(err);
         this.cdr.markForCheck();
       },
     });

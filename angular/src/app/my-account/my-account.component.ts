@@ -15,7 +15,7 @@ import { HOTEL_USER_ROLE_OPTIONS, normalizeHotelUserRole } from '../utils/hotel-
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './my-account.component.html',
-  styleUrls: ['./my-account.component.css', '../settings/settings-base.css'],
+  styleUrls: ['./my-account.component.css'],
 })
 export class MyAccountComponent implements OnInit {
   readonly ui = inject(UiTranslationsService);
@@ -62,6 +62,9 @@ export class MyAccountComponent implements OnInit {
     if (!this.profile?.id || this.saving) {
       return;
     }
+    const lockedRole = normalizeHotelUserRole(
+      this.auth.currentUser()?.role ?? this.profile.role,
+    );
     const input = {
       firstName: (this.profile.firstName ?? '').trim(),
       lastName: (this.profile.lastName ?? '').trim(),
@@ -69,7 +72,7 @@ export class MyAccountComponent implements OnInit {
       email: (this.profile.email ?? '').trim(),
       phoneNumber: (this.profile.phoneNumber ?? '').trim(),
       password: (this.profile.password ?? '').trim(),
-      role: normalizeHotelUserRole(this.profile.role),
+      role: lockedRole,
     };
     if (!input.firstName || !input.lastName || !input.userName) {
       this.uiMsg.show(this.ui.screenText('myAccount', 'requiredFields'));

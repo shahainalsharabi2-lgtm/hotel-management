@@ -122,13 +122,20 @@
 }
 
 .login-field__input-wrap {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 0;
+  direction: rtl;
   border-radius: 14px;
   border: 1px solid var(--app-border);
   background: var(--app-bg-soft);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  overflow: hidden;
+}
+
+.login-field__input-wrap--password {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  position: relative;
 }
 
 .login-field__input-wrap:focus-within {
@@ -136,7 +143,12 @@
   box-shadow: 0 0 0 3px rgba(66, 165, 245, 0.2);
 }
 
+.login-field__input-wrap input:focus {
+  outline: none;
+}
+
 .login-field__icon {
+  grid-column: 1;
   flex-shrink: 0;
   width: 2.75rem;
   text-align: center;
@@ -144,37 +156,42 @@
   opacity: 0.85;
 }
 
+.login-field__input-wrap input.login-field__input,
 .login-field__input-wrap input {
-  flex: 1;
+  grid-column: 2;
   min-width: 0;
+  width: 100%;
   border: none;
   background: transparent;
-  padding: 0.85rem 0.75rem;
+  padding: 0.85rem 0.65rem;
   font-family: inherit;
   font-size: 1rem;
   color: var(--app-text);
+  direction: rtl;
+  text-align: right;
+  unicode-bidi: plaintext;
 }
 
-.login-field__input-wrap input:focus {
-  outline: none;
+.login-field__input-wrap input::placeholder {
+  direction: rtl;
+  text-align: right;
+  color: rgba(84, 110, 122, 0.75);
 }
 
 .login-field__input-wrap--password input {
-  padding-inline-end: 2.5rem;
+  padding-inline-start: 0.65rem;
+  padding-inline-end: 0.45rem;
 }
 
 .login-field__toggle {
-  position: absolute;
-  left: 0.5rem;
+  grid-column: 3;
+  position: static;
+  justify-self: center;
   border: none;
   background: transparent;
   color: var(--app-text-muted);
   cursor: pointer;
-  padding: 0.35rem;
-}
-
-.login-field__input-wrap--password {
-  position: relative;
+  padding: 0.35rem 0.55rem;
 }
 
 .login-form__error {

@@ -11,6 +11,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HotelAuthService } from '../../services/hotel-auth.service';
+import { HttpErrorResponse } from '@angular/common/http';
 import { HotelDatabaseAdminService } from '../../services/hotel-database-admin.service';
 import { Router } from '@angular/router';
 import { UiTranslationsService } from '../../services/ui-translations.service';
@@ -85,9 +86,9 @@ export class DbSettingsPanelComponent {
         }
         this.cdr.markForCheck();
       },
-      error: () => {
+      error: (err) => {
         this.backupLoading = false;
-        this.statusMessage = this.ui.chromeLabel('dbOpFailed');
+        this.statusMessage = this.resolveOpError(err);
         this.statusError = true;
         this.cdr.markForCheck();
       },
@@ -108,9 +109,9 @@ export class DbSettingsPanelComponent {
         this.statusError = !result.success;
         this.cdr.markForCheck();
       },
-      error: () => {
+      error: (err) => {
         this.updateLoading = false;
-        this.statusMessage = this.ui.chromeLabel('dbOpFailed');
+        this.statusMessage = this.resolveOpError(err);
         this.statusError = true;
         this.cdr.markForCheck();
       },
@@ -126,6 +127,34 @@ export class DbSettingsPanelComponent {
     this.auth.logout();
     this.requestClose();
     void this.router.navigate(['/login']);
+  }
+
+  private resolveOpError(err: unknown): string {
+    if (err instanceof HttpErrorResponse) {
+      const body = err.error as { message?: string; error?: { message?: string } } | string | null;
+      if (typeof body === 'string' && body.trim()) {
+        if (body.trimStart().startsWith('<')) {
+          return 'الخادم أعاد صفحة HTML بدل JSON. جرّب إعادة تحميل الصفحة أو انتظر اكتمال إقلاع الخادم.';
+        }
+        return body;
+      }
+      if (body && typeof body === 'object') {
+        const msg = body.message ?? body.error?.message;
+        if (msg) {
+          return msg;
+        }
+      }
+      if (err.status === 404) {
+        return 'المسار غير موجود على الخادم. تأكد من نشر آخر إصدار للـ API.';
+      }
+      if (err.status === 405) {
+        return 'طريقة الطلب غير مدعومة على الخادم. حدّث الواجهة من الموقع.';
+      }
+    }
+    if (err instanceof SyntaxError || (err instanceof Error && err.message.includes('JSON'))) {
+      return 'استجابة غير صالحة من الخادم. جرّب مرة أخرى بعد دقيقة.';
+    }
+    return this.ui.chromeLabel('dbOpFailed');
   }
 
   private downloadJson(fileName: string, json: string): void {

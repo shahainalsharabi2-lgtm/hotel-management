@@ -38,8 +38,8 @@ export class PmsBookingCardComponent {
   @Input() hideFooterActions = false;
   /** بطاقة بحجم ثابت (واجهة بطاقات الحجز) */
   @Input() uniformCardSize = false;
-  /** القادمون: تسكين | المقيمون: قائمة إجراءات | غير ذلك: عرض التفاصيل */
-  @Input() primaryAction: 'details' | 'checkIn' | 'stayingMenu' | 'arrivingMenu' | 'departing' = 'details';
+  /** القادمون: تسكين | المقيمون/المغادرون: قائمة إجراءات | غير ذلك: عرض التفاصيل */
+  @Input() primaryAction: 'details' | 'checkIn' | 'stayingMenu' | 'arrivingMenu' | 'departing' | 'departingMenu' = 'details';
 
   @Output() viewDetails = new EventEmitter<Booking>();
   @Output() checkIn = new EventEmitter<Booking>();
@@ -75,7 +75,11 @@ export class PmsBookingCardComponent {
   }
 
   get isDepartingAction(): boolean {
-    return this.primaryAction === 'departing';
+    return this.primaryAction === 'departing' || this.primaryAction === 'departingMenu';
+  }
+
+  get isDepartingMenu(): boolean {
+    return this.primaryAction === 'departingMenu';
   }
 
   get isArrivingMenu(): boolean {
@@ -83,7 +87,7 @@ export class PmsBookingCardComponent {
   }
 
   get usesActionsMenu(): boolean {
-    return this.isStayingMenu || this.isArrivingMenu;
+    return this.isStayingMenu || this.isArrivingMenu || this.isDepartingMenu;
   }
 
   get canPayFromAccount(): boolean {

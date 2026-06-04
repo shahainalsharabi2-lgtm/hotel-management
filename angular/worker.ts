@@ -20,12 +20,27 @@ export default {
       const target = new URL(url.pathname + url.search, API_ORIGIN);
       const headers = new Headers(request.headers);
       headers.set('Host', new URL(API_ORIGIN).host);
-      return fetch(target.toString(), {
+      const response = await fetch(target.toString(), {
         method: request.method,
         headers,
         body: request.method !== 'GET' && request.method !== 'HEAD' ? request.body : undefined,
-        redirect: 'manual',
+        redirect: 'follow',
       });
+
+      const contentType = response.headers.get('content-type') ?? '';
+      if (contentType.includes('text/html') && url.pathname.startsWith('/api/')) {
+        return new Response(
+          JSON.stringify({
+            error: {
+              message:
+                'استجابة غير متوقعة من الخادم (صفحة HTML). تأكد من نشر آخر إصدار للـ API على Render.',
+            },
+          }),
+          { status: 502, headers: { 'content-type': 'application/json; charset=utf-8' } },
+        );
+      }
+
+      return response;
     }
 
     return env.ASSETS.fetch(request);

@@ -6,6 +6,7 @@ import { finalize } from 'rxjs/operators';
 import { UiTranslationsService } from '../../services/ui-translations.service';
 import { bindUiTranslationRefresh } from '../../utils/ui-screen-i18n.helper';
 import type { GeneralCodeCategoryId } from '../general-codes.constants';
+import { generalCodeShowsForeignName, generalCodeShowsDescription } from '../general-codes.constants';
 import {
   CreateUpdateGeneralCodeItem,
   GeneralCodeItem,
@@ -43,6 +44,14 @@ export class GeneralCodePanelComponent implements OnInit {
     description: ['', Validators.maxLength(1024)],
     displayOrder: [0, [Validators.required, Validators.min(0)]],
   });
+
+  get showForeignName(): boolean {
+    return generalCodeShowsForeignName(this.category);
+  }
+
+  get showDescription(): boolean {
+    return generalCodeShowsDescription(this.category);
+  }
 
   ngOnInit(): void {
     bindUiTranslationRefresh(this.cdr, this.destroyRef);
@@ -107,7 +116,13 @@ export class GeneralCodePanelComponent implements OnInit {
       return;
     }
 
-    const payload = this.form.getRawValue() as CreateUpdateGeneralCodeItem;
+    const raw = this.form.getRawValue();
+    const payload: CreateUpdateGeneralCodeItem = {
+      name: raw.name ?? '',
+      description: this.resolveDescription(raw.description ?? ''),
+      displayOrder: raw.displayOrder ?? 0,
+      fName: this.resolveForeignName(raw.fName ?? ''),
+    };
     this.saving = true;
     const req$ = this.editingId
       ? this.api.update(this.editingId, payload)
@@ -177,5 +192,25 @@ export class GeneralCodePanelComponent implements OnInit {
       return 1;
     }
     return Math.max(...this.items.map((x) => x.displayOrder)) + 1;
+  }
+
+  private resolveForeignName(formValue: string): string {
+    if (this.showForeignName) {
+      return formValue;
+    }
+    if (this.editingId) {
+      return this.items.find((x) => x.id === this.editingId)?.fName ?? '';
+    }
+    return '';
+  }
+
+  private resolveDescription(formValue: string): string {
+    if (this.showDescription) {
+      return formValue;
+    }
+    if (this.editingId) {
+      return this.items.find((x) => x.id === this.editingId)?.description ?? '';
+    }
+    return '';
   }
 }

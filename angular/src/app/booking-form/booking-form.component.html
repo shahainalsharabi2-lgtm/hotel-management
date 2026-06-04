@@ -364,6 +364,39 @@
               </div>
             </div>
 
+            <ng-container *ngIf="showGuestCodingFields">
+              <div class="form-group">
+                <label>{{ ui.screenText('booking', 'purposeOfStayLabel') }}</label>
+                <select
+                  formControlName="purpose_Of_Stay"
+                  class="premium-input field-box__control"
+                  (change)="onGuestCodingFieldChange()">
+                  <option value="">{{ ui.screenText('booking', 'guestCodingSelectPlaceholder') }}</option>
+                  <option *ngFor="let item of purposeOfStayOptions" [value]="item.name">{{ item.name }}</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>{{ ui.screenText('booking', 'relationshipTypeLabel') }}</label>
+                <select
+                  formControlName="relationship_Type"
+                  class="premium-input field-box__control"
+                  (change)="onGuestCodingFieldChange()">
+                  <option value="">{{ ui.screenText('booking', 'guestCodingSelectPlaceholder') }}</option>
+                  <option *ngFor="let item of relationshipTypeOptions" [value]="item.name">{{ item.name }}</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>{{ ui.screenText('booking', 'priceCodeLabel') }}</label>
+                <select
+                  formControlName="price_Code"
+                  class="premium-input field-box__control"
+                  (change)="onGuestCodingFieldChange()">
+                  <option value="">{{ ui.screenText('booking', 'guestCodingSelectPlaceholder') }}</option>
+                  <option *ngFor="let item of priceCodeOptions" [value]="item.name">{{ item.name }}</option>
+                </select>
+              </div>
+            </ng-container>
+
             </ng-container>
 
             <div class="form-group full-width" *ngIf="reservationMode">

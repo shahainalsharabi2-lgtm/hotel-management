@@ -378,16 +378,13 @@
         id="bookings-pms-main-panel"
         class="rooms-dev-advanced-core"
         tabindex="-1">
-        <header class="rooms-dev-page-head">
+        <header class="rooms-dev-page-head" *ngIf="!isFrontDeskRoute()">
           <div>
             <h1 class="rooms-dev-title">{{ pmsPageTitle }}</h1>
-            <p class="rooms-dev-sub" *ngIf="isFrontDeskRoute() && pmsTab !== 'arriving'">
-              {{ ui.screenText('bookings', 'frontDeskPageSubtitle') }}
-            </p>
             <p class="rooms-dev-sub rooms-dev-sub--metrics" *ngIf="bookingRateLine">
               {{ bookingRateLine }}
             </p>
-            <p class="rooms-dev-sub rooms-dev-sub--tab-only" *ngIf="!isBookingsRecordsHub() && !isFrontDeskRoute()">
+            <p class="rooms-dev-sub rooms-dev-sub--tab-only" *ngIf="!isBookingsRecordsHub()">
               {{ pmsTabLabel }}
             </p>
           </div>

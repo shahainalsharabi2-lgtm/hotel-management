@@ -226,7 +226,7 @@ export class UiTranslationsService {
     return this.resolveLocalized(
       locale,
       () => arabicResolved,
-      () => this.payload().sidebarNav?.[locale]?.[routeKey]?.trim(),
+      () => this.payload().sidebarNav?.[locale]?.[routeKey],
       routeKey,
     );
   }
@@ -243,7 +243,7 @@ export class UiTranslationsService {
     return this.resolveLocalized(
       locale,
       () => arabicResolved,
-      () => this.payload().brandSubtitle?.[locale]?.trim(),
+      () => this.payload().brandSubtitle?.[locale],
       fallbackAr,
     );
   }
@@ -255,7 +255,7 @@ export class UiTranslationsService {
     return this.resolveLocalized(
       locale,
       () => arabicResolved,
-      () => this.payload().chrome?.[locale]?.[key]?.trim(),
+      () => this.payload().chrome?.[locale]?.[key],
       key,
     );
   }
@@ -279,7 +279,7 @@ export class UiTranslationsService {
     return this.resolveLocalized(
       locale,
       () => arabicResolved,
-      () => this.payload().screenCopy?.[locale]?.[screenId]?.[msgKey]?.trim(),
+      () => this.payload().screenCopy?.[locale]?.[screenId]?.[msgKey],
       msgKey,
     );
   }
@@ -291,10 +291,13 @@ export class UiTranslationsService {
     lastResort: string,
   ): string {
     const ar = arabic()?.trim();
-    const localized = fromPayload()?.trim();
     if (locale === 'ar') {
       return ar || lastResort;
     }
-    return localized || ar || lastResort;
+    const raw = fromPayload();
+    if (raw !== undefined) {
+      return raw.trim();
+    }
+    return ar || lastResort;
   }
 }

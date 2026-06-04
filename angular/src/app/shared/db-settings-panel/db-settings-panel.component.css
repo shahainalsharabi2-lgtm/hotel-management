@@ -150,21 +150,15 @@
 
 .db-panel__action-text {
   display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
+  align-items: center;
   min-width: 0;
   flex: 1;
 }
 
 .db-panel__action-label {
-  font-size: 0.82rem;
+  font-size: 0.84rem;
   font-weight: 800;
   color: #263238;
-}
-
-.db-panel__action-hint {
-  font-size: 0.68rem;
-  color: #78909c;
   line-height: 1.35;
 }
 

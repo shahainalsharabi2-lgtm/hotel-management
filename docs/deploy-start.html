@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <title>نشر الفندق — 3 نقرات فقط</title>
+  <style>
+    body { font-family:Segoe UI,Tahoma,sans-serif; max-width:720px; margin:2rem auto; padding:0 1rem; line-height:1.7; background:#0f1419; color:#e7ecf1; }
+    h1 { color:#7dd3fc; font-size:1.5rem; }
+    .step { background:#1a2332; border-radius:12px; padding:1rem 1.25rem; margin:1rem 0; border-right:4px solid #38bdf8; }
+    .step b { color:#fbbf24; }
+    a.btn { display:inline-block; margin:.5rem 0; padding:.75rem 1.25rem; background:#2563eb; color:#fff; text-decoration:none; border-radius:8px; font-weight:bold; }
+    a.btn:hover { background:#1d4ed8; }
+    .warn { color:#fca5a5; }
+    .ok { color:#86efac; }
+    code { background:#334155; padding:.15rem .4rem; border-radius:4px; }
+  </style>
+</head>
+<body>
+  <h1>نشر مشروع الفندق — اتبع الأرقام فقط</h1>
+  <p class="warn">اضغط الأزرار الزرقاء بالترتيب.</p>
+
+  <div class="step">
+    <p><b>الخطوة 1 — Render</b></p>
+    <p>افتح الرابط → في أعلى الصفحة اضغط أيقونة/زر <b>GitHub</b> (ليس البريد ولا Create Account)</p>
+    <p>إن ظهرت صفحة «Create an account» بالبريد فقط → افتح الرابط أدناه من جديد.</p>
+    <a class="btn" href="https://dashboard.render.com/register" target="_blank">1) صفحة التسجيل — اضغط GitHub</a>
+  </div>
+
+  <div class="step">
+    <p><b>الخطوة 2 — قاعدة البيانات Neon</b></p>
+    <p>New Project → انسخ Connection string</p>
+    <a class="btn" href="https://console.neon.tech/" target="_blank">2) فتح Neon</a>
+  </div>
+
+  <div class="step">
+    <p><b>الخطوة 3 — Blueprint في Render</b></p>
+    <p>New + → Blueprint → hotel-management → الصق سلسلة Neon</p>
+    <a class="btn" href="https://dashboard.render.com/blueprints" target="_blank">3) Blueprints</a>
+  </div>
+
+  <div class="step">
+    <p><b>الخطوة 4 — على جهازك</b></p>
+    <pre style="background:#0f172a;padding:1rem;overflow:auto">cd aspnet-core\src\Modiaf.Al.Arab.Hotel.DbMigrator
+dotnet run -c Release</pre>
+  </div>
+
+  <div class="step">
+    <p><b>الخطوة 5 — Cloudflare Pages</b></p>
+    <a class="btn" href="https://dash.cloudflare.com/" target="_blank">5) Cloudflare</a>
+  </div>
+
+  <p class="ok">بعد كل خطوة اكتب للمساعد: انتهيت من 1 أو 2 أو 3</p>
+</body>
+</html>

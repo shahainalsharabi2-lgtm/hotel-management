@@ -70,6 +70,9 @@ public class GuestRegistryAppService(IRepository<GuestRegistry, int> repository)
             Id_Type = entity.Id_Type,
             Id_Issuing_Country = entity.Id_Issuing_Country,
             Id_Number = entity.Id_Number,
+            Purpose_Of_Stay = entity.Purpose_Of_Stay,
+            Relationship_Type = entity.Relationship_Type,
+            Price_Code = entity.Price_Code,
             LastModificationTime = entity.LastModificationTime,
         };
     }
@@ -99,6 +102,9 @@ public class GuestRegistryAppService(IRepository<GuestRegistry, int> repository)
         entity.Id_Type = Normalize(input.Id_Type);
         entity.Id_Issuing_Country = Normalize(input.Id_Issuing_Country);
         entity.Id_Number = Normalize(input.Id_Number);
+        entity.Purpose_Of_Stay = Normalize(input.Purpose_Of_Stay);
+        entity.Relationship_Type = Normalize(input.Relationship_Type);
+        entity.Price_Code = Normalize(input.Price_Code);
     }
 
     private static string Normalize(string value) => (value ?? string.Empty).Trim();

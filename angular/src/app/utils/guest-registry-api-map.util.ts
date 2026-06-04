@@ -27,6 +27,9 @@ export function mapGuestRegistryFromApi(raw: Record<string, unknown> | GuestRegi
     id_Type: pickStr(r, 'id_Type', 'Id_Type'),
     id_Issuing_Country: pickStr(r, 'id_Issuing_Country', 'Id_Issuing_Country'),
     id_Number: pickStr(r, 'id_Number', 'Id_Number'),
+    purpose_Of_Stay: pickOptionalStr(r, 'purpose_Of_Stay', 'Purpose_Of_Stay'),
+    relationship_Type: pickOptionalStr(r, 'relationship_Type', 'Relationship_Type'),
+    price_Code: pickOptionalStr(r, 'price_Code', 'Price_Code'),
     lastModificationTime: lm == null ? undefined : String(lm),
   };
 }
@@ -48,5 +51,8 @@ export function guestRegistryToSavePayload(
     id_Type: profile.id_Type?.trim() ?? '',
     id_Issuing_Country: profile.id_Issuing_Country?.trim() ?? '',
     id_Number: profile.id_Number?.trim() ?? '',
+    purpose_Of_Stay: profile.purpose_Of_Stay?.trim() ?? '',
+    relationship_Type: profile.relationship_Type?.trim() ?? '',
+    price_Code: profile.price_Code?.trim() ?? '',
   };
 }

@@ -142,6 +142,9 @@ public class HotelDbContext(DbContextOptions<HotelDbContext> options) :
             b.Property(x => x.Id_Type).HasMaxLength(64);
             b.Property(x => x.Id_Issuing_Country).HasMaxLength(128);
             b.Property(x => x.Id_Number).HasMaxLength(64);
+            b.Property(x => x.Purpose_Of_Stay).HasMaxLength(256);
+            b.Property(x => x.Relationship_Type).HasMaxLength(256);
+            b.Property(x => x.Price_Code).HasMaxLength(256);
             b.HasIndex(x => x.Id_Number);
         });
 

@@ -20,6 +20,7 @@ import type { UiExtraLocaleCode } from './utils/ui-translation.constants';
 import { AccountLocaleEditorComponent } from './shared/account-locale-editor/account-locale-editor.component';
 import { AppTopBarComponent } from './shared/app-top-bar/app-top-bar.component';
 import { UiMessagesComponent } from './shared/ui-messages/ui-messages.component';
+import { AppLoadingOverlayComponent } from './shared/app-loading-overlay/app-loading-overlay.component';
 import { CHECKIN_BOOKING_STORAGE_KEY } from './booking-form/booking-form.component';
 
 type AppUiLocale = UiExtraLocaleCode | 'ar';
@@ -141,6 +142,10 @@ interface AppSearchEntry {
             <symbol id="nav-icon-language" viewBox="0 0 24 24" fill="none">
               <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.75" />
               <path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M3 12h18M12 3c2.5 2.8 4 6 4 9s-1.5 6.2-4 9M12 3c-2.5 2.8-4 6-4 9s1.5 6.2 4 9" />
+            </symbol>
+            <symbol id="nav-icon-inputs" viewBox="0 0 24 24" fill="none">
+              <rect x="4" y="5" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.75" />
+              <path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M8 9h8M8 12.5h5.5M8 16h6" />
             </symbol>
             <symbol id="nav-icon-invoice" viewBox="0 0 24 24" fill="none">
               <path stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M8 4h8l3 3v13H8V4zm2 7h8m-8 4h8m-8 4h5" />
@@ -771,6 +776,7 @@ interface AppSearchEntry {
           (notificationsOpen)="openNotificationsFromTopBar()" />
 
         <main class="app-content" [class.app-content--login]="!showMainChrome">
+          <app-loading-overlay *ngIf="showMainChrome" />
           <router-outlet />
           <app-ui-messages *ngIf="showMainChrome" />
         </main>
@@ -2774,6 +2780,7 @@ interface AppSearchEntry {
       min-width: 0;
       min-height: 0;
       background: var(--app-bg);
+      position: relative;
     }
 
     @media (max-width: 900px) {
@@ -2898,6 +2905,7 @@ interface AppSearchEntry {
     AccountLocaleEditorComponent,
     AppTopBarComponent,
     UiMessagesComponent,
+    AppLoadingOverlayComponent,
   ],
 })
 export class AppComponent implements OnInit {
@@ -2966,7 +2974,7 @@ export class AppComponent implements OnInit {
   /** إدارة الفندق — معلومات، غرف، دفع، هوية، نزلاء، عملة */
   hotelMgmtNavOpen = false;
 
-  /** تهيئة النظام — ترميزات عامة */
+  /** تهيئة النظام — المدخلات */
   systemSetupNavOpen = false;
 
   /** إدارة المستخدمين */
@@ -2983,7 +2991,7 @@ export class AppComponent implements OnInit {
       path: '/settings',
       tab: 'translations',
       labelKey: 'tabGeneralCodings',
-      icon: 'svg-language',
+      icon: 'svg-inputs',
       linkActive: { exact: true, queryParams: 'exact' },
     },
     {

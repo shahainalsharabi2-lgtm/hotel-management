@@ -11,5 +11,8 @@ export interface GuestRegistry {
   id_Type: string;
   id_Issuing_Country: string;
   id_Number: string;
+  purpose_Of_Stay?: string;
+  relationship_Type?: string;
+  price_Code?: string;
   lastModificationTime?: string;
 }

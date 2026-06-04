@@ -38,18 +38,22 @@
                 {{ ui.screenText('generalCodes', 'colName') }}
               </span>
             </th>
-            <th>
-              <span class="gc-col-label">
-                <i class="fas fa-globe gc-col-label__icon" aria-hidden="true"></i>
-                {{ ui.screenText('generalCodes', 'colFName') }}
-              </span>
-            </th>
-            <th>
-              <span class="gc-col-label">
-                <i class="fas fa-align-right gc-col-label__icon" aria-hidden="true"></i>
-                {{ ui.screenText('generalCodes', 'colDescription') }}
-              </span>
-            </th>
+            @if (showForeignName) {
+              <th>
+                <span class="gc-col-label">
+                  <i class="fas fa-globe gc-col-label__icon" aria-hidden="true"></i>
+                  {{ ui.screenText('generalCodes', 'colFName') }}
+                </span>
+              </th>
+            }
+            @if (showDescription) {
+              <th>
+                <span class="gc-col-label">
+                  <i class="fas fa-align-right gc-col-label__icon" aria-hidden="true"></i>
+                  {{ ui.screenText('generalCodes', 'colDescription') }}
+                </span>
+              </th>
+            }
             <th class="gc-table__center">
               <span class="gc-col-label gc-col-label--center">
                 <i class="fas fa-sort-numeric-down gc-col-label__icon" aria-hidden="true"></i>
@@ -63,8 +67,12 @@
           @for (item of items; track item.id) {
             <tr>
               <td>{{ item.name }}</td>
-              <td>{{ item.fName || '—' }}</td>
-              <td>{{ item.description || '—' }}</td>
+              @if (showForeignName) {
+                <td>{{ item.fName || '—' }}</td>
+              }
+              @if (showDescription) {
+                <td>{{ item.description || '—' }}</td>
+              }
               <td class="gc-table__center">{{ item.displayOrder }}</td>
               <td class="gc-table__actions">
                 <button type="button" class="gc-icon-btn" (click)="openEdit(item)" [attr.title]="ui.screenText('generalCodes', 'editTitle')">
@@ -106,24 +114,28 @@
             <input type="text" class="gc-input" formControlName="name" />
           </div>
         </div>
-        <div class="gc-field">
-          <label class="gc-field__label">
-            <i class="fas fa-globe gc-field__icon" aria-hidden="true"></i>
-            {{ ui.screenText('generalCodes', 'colFName') }}
-          </label>
-          <div class="gc-input-wrap">
-            <input type="text" class="gc-input" formControlName="fName" />
+        @if (showForeignName) {
+          <div class="gc-field">
+            <label class="gc-field__label">
+              <i class="fas fa-globe gc-field__icon" aria-hidden="true"></i>
+              {{ ui.screenText('generalCodes', 'colFName') }}
+            </label>
+            <div class="gc-input-wrap">
+              <input type="text" class="gc-input" formControlName="fName" />
+            </div>
           </div>
-        </div>
-        <div class="gc-field">
-          <label class="gc-field__label">
-            <i class="fas fa-align-right gc-field__icon" aria-hidden="true"></i>
-            {{ ui.screenText('generalCodes', 'colDescription') }}
-          </label>
-          <div class="gc-input-wrap gc-input-wrap--textarea">
-            <textarea rows="3" class="gc-input gc-input--textarea" formControlName="description"></textarea>
+        }
+        @if (showDescription) {
+          <div class="gc-field">
+            <label class="gc-field__label">
+              <i class="fas fa-align-right gc-field__icon" aria-hidden="true"></i>
+              {{ ui.screenText('generalCodes', 'colDescription') }}
+            </label>
+            <div class="gc-input-wrap gc-input-wrap--textarea">
+              <textarea rows="3" class="gc-input gc-input--textarea" formControlName="description"></textarea>
+            </div>
           </div>
-        </div>
+        }
         <div class="gc-field">
           <label class="gc-field__label">
             <i class="fas fa-sort-numeric-down gc-field__icon" aria-hidden="true"></i>

@@ -110,7 +110,7 @@
   <!-- â•گâ•گ SETTINGS MAIN â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ -->
   <div class="settings-main">
     <div class="settings-content">
-      <header class="settings-toolbar">
+      <header class="settings-toolbar" *ngIf="activeTab !== 'uiTranslations'">
         <button type="button" class="btn-save-settings primary" (click)="saveSettings()">
           <i class="fas fa-save" aria-hidden="true"></i>
           {{ uiTranslations.screenText('settings', 'saveChanges') }}
@@ -1053,15 +1053,7 @@
       </div>
 
       <div class="tab-content" *ngIf="activeTab === 'uiTranslations'">
-        <div class="content-header">
-          <h2>
-            <i class="fas fa-language" style="color:var(--app-primary-mid);margin-left:10px"></i>
-            {{ uiTranslations.screenText('settings', 'uiTranslationsTitle') }}
-          </h2>
-          <p>{{ uiTranslations.screenText('settings', 'uiTranslationsSubtitle') }}</p>
-        </div>
-
-        <div class="settings-frame full-width">
+        <div class="settings-frame full-width ui-tr-editor">
           <div class="form-grid compact">
             <div class="field-group">
               <label>{{ uiTranslations.screenText('settings', 'uiTranslationsSearchLabel') }}</label>
@@ -1078,15 +1070,15 @@
 
             <div class="field-group">
               <label>{{ uiTranslations.screenText('settings', 'uiTranslationsActions') }}</label>
-              <div class="frame-footer" style="justify-content:flex-start;gap:10px;margin:0;">
+              <div class="frame-footer ui-tr-toolbar" style="justify-content:flex-start;gap:10px;margin:0;">
                 <button type="button" class="action-btn secondary" (click)="reloadUiTranslationsFromBackend()">
                   <i class="fas fa-rotate"></i>
                   {{ uiTranslations.screenText('settings', 'uiTranslationsReload') }}
                 </button>
-                <button type="button" class="action-btn" (click)="saveUiTranslationsForm()" [disabled]="uiTranslationsSaving">
-                  <i class="fas fa-save"></i>
-                  {{ uiTranslationsSaving ? uiTranslations.screenText('settings', 'uiTranslationsSaving') : uiTranslations.screenText('settings', 'uiTranslationsSave') }}
-                </button>
+                <span class="ui-tr-autosave-hint" *ngIf="uiTranslationsSaving">
+                  <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
+                  {{ uiTranslations.screenText('settings', 'uiTranslationsSaving') }}
+                </span>
               </div>
             </div>
           </div>
@@ -1101,6 +1093,7 @@
           </div>
 
           <ng-container *ngIf="!uiTranslationsLoading && uiTranslationsForm && uiTranslationsReferenceAr">
+            <div class="ui-tr-fields" (focusout)="onUiTranslationInputBlur($event)">
             <div class="ui-tr-section">
               <h3 class="ui-tr-section__title">{{ uiTranslations.screenText('settings', 'uiTranslationsBrandSubtitle') }}</h3>
               <div class="ui-tr-row" *ngIf="uiTranslationsMatchesText('brandSubtitle', uiTranslationsReferenceAr.brandSubtitle, uiTranslationsForm.brandSubtitle)">
@@ -1110,7 +1103,6 @@
                 </div>
               </div>
             </div>
-
             <div class="ui-tr-section">
               <h3 class="ui-tr-section__title">{{ uiTranslations.screenText('settings', 'uiTranslationsSidebarNav') }}</h3>
               <div class="ui-tr-table">
@@ -1168,6 +1160,7 @@
                   </div>
                 </div>
               </div>
+            </div>
             </div>
           </ng-container>
         </div>

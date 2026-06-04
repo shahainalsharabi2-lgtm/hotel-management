@@ -1,75 +1,136 @@
 <div class="settings-container my-account-page">
   <div class="glass-card my-account-card">
-    <div class="content-header">
-      <h2>
-        <i class="fas fa-id-card-clip" style="color: var(--app-primary-mid); margin-left: 10px"></i>
-        {{ ui.screenText('myAccount', 'pageTitle') }}
-      </h2>
-      <p>{{ ui.screenText('myAccount', 'pageSubtitle') }}</p>
-    </div>
+    <header class="my-account-header">
+      <div class="my-account-header__brand">
+        <div class="my-account-header__icon" aria-hidden="true">
+          <i class="fas fa-id-card-clip"></i>
+        </div>
+        <div class="my-account-header__text">
+          <h2>{{ ui.screenText('myAccount', 'pageTitle') }}</h2>
+          <p>{{ ui.screenText('myAccount', 'pageSubtitle') }}</p>
+        </div>
+      </div>
+    </header>
 
     <p class="my-account-loading" *ngIf="loading">{{ ui.screenText('myAccount', 'loading') }}</p>
 
-    <div class="settings-frame full-width" *ngIf="!loading && profile">
-      <div class="form-grid">
-        <div class="field-group">
-          <label>{{ ui.screenText('myAccount', 'fieldFirstName') }}</label>
-          <div class="input-wrapper">
-            <i class="fas fa-user"></i>
-            <input type="text" [(ngModel)]="profile.firstName" />
+    <form class="my-account-form" *ngIf="!loading && profile" (ngSubmit)="save()">
+      <section class="my-account-section">
+        <h3 class="my-account-section__title">
+          <i class="fas fa-user"></i>
+          {{ ui.screenText('myAccount', 'sectionPersonal') }}
+        </h3>
+        <div class="my-account-grid">
+          <div class="my-account-field">
+            <label>{{ ui.screenText('myAccount', 'fieldFirstName') }}</label>
+            <div class="my-account-input">
+              <i class="fas fa-user"></i>
+              <input type="text" [(ngModel)]="profile.firstName" name="firstName" />
+            </div>
+          </div>
+          <div class="my-account-field">
+            <label>{{ ui.screenText('myAccount', 'fieldLastName') }}</label>
+            <div class="my-account-input">
+              <i class="fas fa-user"></i>
+              <input type="text" [(ngModel)]="profile.lastName" name="lastName" />
+            </div>
           </div>
         </div>
-        <div class="field-group">
-          <label>{{ ui.screenText('myAccount', 'fieldLastName') }}</label>
-          <div class="input-wrapper">
-            <i class="fas fa-user"></i>
-            <input type="text" [(ngModel)]="profile.lastName" />
+      </section>
+
+      <section class="my-account-section">
+        <h3 class="my-account-section__title">
+          <i class="fas fa-shield-halved"></i>
+          {{ ui.screenText('myAccount', 'sectionAccount') }}
+        </h3>
+        <div class="my-account-grid">
+          <div class="my-account-field">
+            <label>{{ ui.screenText('myAccount', 'fieldUserName') }}</label>
+            <div class="my-account-input">
+              <i class="fas fa-at"></i>
+              <input
+                type="text"
+                [(ngModel)]="profile.userName"
+                name="userName"
+                dir="ltr"
+                autocomplete="username" />
+            </div>
+          </div>
+          <div class="my-account-field">
+            <label>{{ ui.screenText('myAccount', 'fieldRole') }}</label>
+            <div
+              class="my-account-role"
+              aria-disabled="true"
+              [attr.title]="ui.screenText('myAccount', 'roleLockedHint')">
+              <i class="fas fa-user-shield" aria-hidden="true"></i>
+              <span class="my-account-role__text">{{ roleLabel(profile.role) }}</span>
+              <i class="fas fa-lock my-account-role__lock" aria-hidden="true"></i>
+            </div>
+            <span class="my-account-field-note">{{ ui.screenText('myAccount', 'roleLockedHint') }}</span>
           </div>
         </div>
-        <div class="field-group">
-          <label>{{ ui.screenText('myAccount', 'fieldUserName') }}</label>
-          <div class="input-wrapper">
-            <i class="fas fa-at"></i>
-            <input type="text" [(ngModel)]="profile.userName" dir="ltr" autocomplete="username" />
+      </section>
+
+      <section class="my-account-section">
+        <h3 class="my-account-section__title">
+          <i class="fas fa-address-book"></i>
+          {{ ui.screenText('myAccount', 'sectionContact') }}
+        </h3>
+        <div class="my-account-grid">
+          <div class="my-account-field">
+            <label>{{ ui.screenText('myAccount', 'fieldEmail') }}</label>
+            <div class="my-account-input">
+              <i class="fas fa-envelope"></i>
+              <input
+                type="email"
+                [(ngModel)]="profile.email"
+                name="email"
+                dir="ltr"
+                [attr.title]="profile.email" />
+            </div>
+          </div>
+          <div class="my-account-field">
+            <label>{{ ui.screenText('myAccount', 'fieldPhone') }}</label>
+            <div class="my-account-input">
+              <i class="fas fa-phone"></i>
+              <input
+                type="tel"
+                [(ngModel)]="profile.phoneNumber"
+                name="phone"
+                dir="ltr"
+                [attr.title]="profile.phoneNumber" />
+            </div>
           </div>
         </div>
-        <div class="field-group">
-          <label>{{ ui.screenText('myAccount', 'fieldEmail') }}</label>
-          <div class="input-wrapper">
-            <i class="fas fa-envelope"></i>
-            <input type="email" [(ngModel)]="profile.email" dir="ltr" />
+      </section>
+
+      <section class="my-account-section my-account-section--last">
+        <h3 class="my-account-section__title">
+          <i class="fas fa-key"></i>
+          {{ ui.screenText('myAccount', 'sectionSecurity') }}
+        </h3>
+        <div class="my-account-grid my-account-grid--single">
+          <div class="my-account-field">
+            <label>{{ ui.screenText('myAccount', 'fieldPassword') }}</label>
+            <div class="my-account-input">
+              <i class="fas fa-key"></i>
+              <input
+                type="password"
+                [(ngModel)]="profile.password"
+                name="password"
+                [placeholder]="ui.screenText('myAccount', 'passwordPh')"
+                autocomplete="new-password" />
+            </div>
           </div>
         </div>
-        <div class="field-group">
-          <label>{{ ui.screenText('myAccount', 'fieldPhone') }}</label>
-          <div class="input-wrapper">
-            <i class="fas fa-phone"></i>
-            <input type="tel" [(ngModel)]="profile.phoneNumber" dir="ltr" />
-          </div>
-        </div>
-        <div class="field-group">
-          <label>{{ ui.screenText('myAccount', 'fieldRole') }}</label>
-          <div class="input-wrapper">
-            <i class="fas fa-user-shield"></i>
-            <input type="text" [value]="roleLabel(profile.role)" readonly />
-          </div>
-        </div>
-        <div class="field-group">
-          <label>{{ ui.screenText('myAccount', 'fieldPassword') }}</label>
-          <div class="input-wrapper input-wrapper--password">
-            <i class="fas fa-key"></i>
-            <input
-              type="password"
-              [(ngModel)]="profile.password"
-              [placeholder]="ui.screenText('myAccount', 'passwordPh')"
-              autocomplete="new-password" />
-          </div>
-        </div>
-        <button type="button" class="action-btn" [disabled]="saving" (click)="save()">
+      </section>
+
+      <footer class="my-account-footer">
+        <button type="submit" class="my-account-save" [disabled]="saving">
           <i class="fas fa-save"></i>
-          {{ saving ? ui.screenText('myAccount', 'saving') : ui.screenText('myAccount', 'saveBtn') }}
+          <span>{{ saving ? ui.screenText('myAccount', 'saving') : ui.screenText('myAccount', 'saveBtn') }}</span>
         </button>
-      </div>
-    </div>
+      </footer>
+    </form>
   </div>
 </div>
