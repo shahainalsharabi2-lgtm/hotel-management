@@ -8,6 +8,12 @@ public class Room : FullAuditedEntity<int>
     public string Type { get; set; }
     /// <summary>إطلالة الغرفة من «المدخلات» (room-views).</summary>
     public string? RoomView { get; set; }
+    /// <summary>تصميم الغرفة من «المدخلات» (room-architecture).</summary>
+    public string? RoomArchitecture { get; set; }
+    /// <summary>موقع الغرفة من «المدخلات» (room-locations).</summary>
+    public string? RoomLocation { get; set; }
+    /// <summary>مميزات الغرفة (JSON array) من «المدخلات» (room-features).</summary>
+    public string? RoomFeatures { get; set; }
     public string Status { get; set; } // available, occupied, maintenance, dirty
     /// <summary>سبب الصيانة (اختياري) من «الترميزات العامة».</summary>
     public string? MaintenanceReason { get; set; }

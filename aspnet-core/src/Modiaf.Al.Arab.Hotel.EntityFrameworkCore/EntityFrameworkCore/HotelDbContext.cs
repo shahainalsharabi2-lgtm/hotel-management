@@ -109,6 +109,9 @@ public class HotelDbContext(DbContextOptions<HotelDbContext> options) :
             b.ConfigureByConvention();
             b.Property(x => x.RoomNumber).IsRequired().HasMaxLength(50);
             b.Property(x => x.RoomView).HasMaxLength(256);
+            b.Property(x => x.RoomArchitecture).HasMaxLength(256);
+            b.Property(x => x.RoomLocation).HasMaxLength(256);
+            b.Property(x => x.RoomFeatures).HasMaxLength(2048);
             b.Property(x => x.MaintenanceReason).HasMaxLength(256);
             b.Property(x => x.CurrencyCode).HasMaxLength(16).HasDefaultValue("YER");
             b.Property(x => x.CurrencySymbol).HasMaxLength(16).HasDefaultValue("YR");

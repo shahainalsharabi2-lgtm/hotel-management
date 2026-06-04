@@ -149,6 +149,9 @@ export class RoomService {
       status: room.status || 'available',
       maintenanceReason: room.maintenanceReason?.toString().trim() || null,
       roomView: room.roomView?.toString().trim() || null,
+      roomArchitecture: room.roomArchitecture?.toString().trim() || null,
+      roomLocation: room.roomLocation?.toString().trim() || null,
+      roomFeatures: room.roomFeatures?.toString().trim() || null,
       price: Number(room.price) || 0,
       floor: Number(room.floor) || 1,
     };

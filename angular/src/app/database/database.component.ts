@@ -221,6 +221,9 @@ export class DatabaseComponent implements OnInit {
       currencySymbol: (raw.currencySymbol ?? raw['CurrencySymbol']) as string | undefined,
       maintenanceReason: (raw.maintenanceReason ?? raw['MaintenanceReason']) as string | null | undefined,
       roomView: (raw.roomView ?? raw['RoomView']) as string | null | undefined,
+      roomArchitecture: (raw.roomArchitecture ?? raw['RoomArchitecture']) as string | null | undefined,
+      roomLocation: (raw.roomLocation ?? raw['RoomLocation']) as string | null | undefined,
+      roomFeatures: (raw.roomFeatures ?? raw['RoomFeatures']) as string | null | undefined,
       status: this.normalizeRoomStatus(statusRaw == null ? '' : String(statusRaw)),
     };
   }

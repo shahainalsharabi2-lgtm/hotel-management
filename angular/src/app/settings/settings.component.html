@@ -312,6 +312,9 @@
                   <i class="fas fa-image" aria-hidden="true"></i>
                   {{ room.roomView }}
                 </p>
+                <p class="hotel-room-meta" *ngIf="roomMetaLine(room)">
+                  {{ roomMetaLine(room) }}
+                </p>
                 <p class="hotel-room-price">{{ room.price | number }} {{ roomPriceSymbol(room) }}</p>
                 <div class="hotel-room-quick" (click)="$event.stopPropagation()">
                   <span class="hotel-room-quick-label">{{ uiTranslations.screenText('settings', 'quickStatus') }}</span>
@@ -398,6 +401,64 @@
               </select>
               <p class="field-hint" *ngIf="!layoutRoomCodeOptionsLoading && !roomViewOptions.length">
                 {{ uiTranslations.screenText('settings', 'roomViewEmptyHint') }}
+              </p>
+            </div>
+            <div class="field-group">
+              <label>{{ uiTranslations.screenText('settings', 'roomArchitecture') }}</label>
+              <select
+                class="premium-input field-box__control"
+                [(ngModel)]="layoutPanelRoomArchitecture"
+                [disabled]="layoutRoomCodeOptionsLoading">
+                <option value="">
+                  {{ uiTranslations.screenText('settings', 'roomArchitecturePlaceholder') }}
+                </option>
+                <option *ngFor="let name of layoutRoomArchitectureSelectOptions" [value]="name">
+                  {{ name }}
+                </option>
+              </select>
+              <p class="field-hint" *ngIf="!layoutRoomCodeOptionsLoading && !roomArchitectureOptions.length">
+                {{ uiTranslations.screenText('settings', 'roomArchitectureEmptyHint') }}
+              </p>
+            </div>
+            <div class="field-group">
+              <label>{{ uiTranslations.screenText('settings', 'roomLocation') }}</label>
+              <select
+                class="premium-input field-box__control"
+                [(ngModel)]="layoutPanelRoomLocation"
+                [disabled]="layoutRoomCodeOptionsLoading">
+                <option value="">
+                  {{ uiTranslations.screenText('settings', 'roomLocationPlaceholder') }}
+                </option>
+                <option *ngFor="let name of layoutRoomLocationSelectOptions" [value]="name">
+                  {{ name }}
+                </option>
+              </select>
+              <p class="field-hint" *ngIf="!layoutRoomCodeOptionsLoading && !roomLocationOptions.length">
+                {{ uiTranslations.screenText('settings', 'roomLocationEmptyHint') }}
+              </p>
+            </div>
+            <div class="field-group layout-room-features-field">
+              <label>{{ uiTranslations.screenText('settings', 'roomFeatures') }}</label>
+              <p class="field-hint layout-room-features-hint">
+                {{ uiTranslations.screenText('settings', 'roomFeaturesMultiHint') }}
+              </p>
+              <div class="layout-feature-chips" *ngIf="layoutRoomCodeOptionsLoading">
+                <span class="field-hint">{{ uiTranslations.screenText('settings', 'roomFeaturesLoading') }}</span>
+              </div>
+              <div class="layout-feature-chips" *ngIf="!layoutRoomCodeOptionsLoading && roomFeatureOptions.length">
+                <label
+                  *ngFor="let item of roomFeatureOptions"
+                  class="layout-feature-chip"
+                  [class.layout-feature-chip--on]="isLayoutFeatureSelected(item.name)">
+                  <input
+                    type="checkbox"
+                    [checked]="isLayoutFeatureSelected(item.name)"
+                    (change)="toggleLayoutFeature(item.name, $event)" />
+                  <span>{{ item.name }}</span>
+                </label>
+              </div>
+              <p class="field-hint" *ngIf="!layoutRoomCodeOptionsLoading && !roomFeatureOptions.length">
+                {{ uiTranslations.screenText('settings', 'roomFeaturesEmptyHint') }}
               </p>
             </div>
             <div class="field-group layout-currency-field">

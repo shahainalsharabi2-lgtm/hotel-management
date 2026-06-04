@@ -21,6 +21,9 @@ public class RoomAppService(IRepository<Room, int> repository)
             RoomNumber = entity.RoomNumber,
             Type = entity.Type,
             RoomView = entity.RoomView,
+            RoomArchitecture = entity.RoomArchitecture,
+            RoomLocation = entity.RoomLocation,
+            RoomFeatures = entity.RoomFeatures,
             Status = entity.Status,
             MaintenanceReason = entity.MaintenanceReason,
             Price = entity.Price,
@@ -42,6 +45,11 @@ public class RoomAppService(IRepository<Room, int> repository)
             ? null
             : createInput.MaintenanceReason.Trim();
         room.RoomView = string.IsNullOrWhiteSpace(createInput.RoomView) ? null : createInput.RoomView.Trim();
+        room.RoomArchitecture = string.IsNullOrWhiteSpace(createInput.RoomArchitecture)
+            ? null
+            : createInput.RoomArchitecture.Trim();
+        room.RoomLocation = string.IsNullOrWhiteSpace(createInput.RoomLocation) ? null : createInput.RoomLocation.Trim();
+        room.RoomFeatures = string.IsNullOrWhiteSpace(createInput.RoomFeatures) ? null : createInput.RoomFeatures.Trim();
         ApplyCurrency(createInput, room);
         return room;
     }
@@ -55,6 +63,13 @@ public class RoomAppService(IRepository<Room, int> repository)
             ? null
             : updateInput.MaintenanceReason.Trim();
         entity.RoomView = string.IsNullOrWhiteSpace(updateInput.RoomView) ? null : updateInput.RoomView.Trim();
+        entity.RoomArchitecture = string.IsNullOrWhiteSpace(updateInput.RoomArchitecture)
+            ? null
+            : updateInput.RoomArchitecture.Trim();
+        entity.RoomLocation = string.IsNullOrWhiteSpace(updateInput.RoomLocation)
+            ? null
+            : updateInput.RoomLocation.Trim();
+        entity.RoomFeatures = string.IsNullOrWhiteSpace(updateInput.RoomFeatures) ? null : updateInput.RoomFeatures.Trim();
         entity.Price = updateInput.Price;
         entity.Floor = updateInput.Floor;
         ApplyCurrency(updateInput, entity);

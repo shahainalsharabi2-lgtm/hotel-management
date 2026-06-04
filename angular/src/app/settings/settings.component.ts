@@ -27,6 +27,11 @@ import {
   type HotelCurrencyPresetId,
 } from '../utils/hotel-currency.presets';
 import { roomCurrencySymbol as displayRoomCurrencySymbol } from '../utils/room-currency';
+import {
+  parseRoomFeatures,
+  roomFeaturesSummary,
+  serializeRoomFeatures,
+} from '../utils/room-features.util';
 import { formatLocalePickerLabel } from '../utils/locale-picker-label';
 import { bindUiTranslationRefresh } from '../utils/ui-screen-i18n.helper';
 import { UiMessageService } from '../services/ui-message.service';
@@ -148,6 +153,9 @@ export class SettingsComponent implements OnInit {
   layoutPanelRoomNumber = '';
   layoutPanelRoomType = '';
   layoutPanelRoomView = '';
+  layoutPanelRoomArchitecture = '';
+  layoutPanelRoomLocation = '';
+  layoutPanelRoomFeatures: string[] = [];
   layoutPanelRoomPrice = 0;
   layoutPanelRoomStatus: Room['status'] = 'available';
   layoutPanelCurrencyCode = 'YER';
@@ -158,6 +166,9 @@ export class SettingsComponent implements OnInit {
   /** فئات الغرف من المدخلات (room-classes) */
   roomClassOptions: GeneralCodeItem[] = [];
   roomViewOptions: GeneralCodeItem[] = [];
+  roomArchitectureOptions: GeneralCodeItem[] = [];
+  roomFeatureOptions: GeneralCodeItem[] = [];
+  roomLocationOptions: GeneralCodeItem[] = [];
   layoutRoomCodeOptionsLoading = false;
 
   layoutStatusFilter: Room['status'] | 'all' = 'all';
@@ -278,21 +289,95 @@ export class SettingsComponent implements OnInit {
 
   /** خيارات القائمة: فئات الغرف من قاعدة البيانات + القيمة الحالية إن كانت قديماً */
   get layoutRoomCategorySelectOptions(): string[] {
-    const names = this.roomClassOptions.map((x) => String(x.name ?? '').trim()).filter(Boolean);
-    const current = this.layoutPanelRoomType.trim();
-    if (current && !names.includes(current)) {
-      return [current, ...names];
+    return this.codeNameSelectOptions(this.roomClassOptions, this.layoutPanelRoomType);
+  }
+
+  get layoutRoomViewSelectOptions(): string[] {
+    return this.codeNameSelectOptions(this.roomViewOptions, this.layoutPanelRoomView);
+  }
+
+  get layoutRoomArchitectureSelectOptions(): string[] {
+    return this.codeNameSelectOptions(this.roomArchitectureOptions, this.layoutPanelRoomArchitecture);
+  }
+
+  get layoutRoomLocationSelectOptions(): string[] {
+    return this.codeNameSelectOptions(this.roomLocationOptions, this.layoutPanelRoomLocation);
+  }
+
+  roomFeaturesList(room: Room): string[] {
+    return parseRoomFeatures(room.roomFeatures);
+  }
+
+  roomMetaLine(room: Room): string {
+    const parts: string[] = [];
+    const arch = (room.roomArchitecture ?? '').trim();
+    const loc = (room.roomLocation ?? '').trim();
+    const feats = roomFeaturesSummary(this.roomFeaturesList(room), 4);
+    if (arch) {
+      parts.push(arch);
+    }
+    if (loc) {
+      parts.push(loc);
+    }
+    if (feats) {
+      parts.push(feats);
+    }
+    return parts.join(' · ');
+  }
+
+  isLayoutFeatureSelected(name: string): boolean {
+    const n = name.trim();
+    return this.layoutPanelRoomFeatures.some((x) => x === n);
+  }
+
+  toggleLayoutFeature(name: string, event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    const n = name.trim();
+    if (!n) {
+      return;
+    }
+    if (checked) {
+      if (!this.layoutPanelRoomFeatures.includes(n)) {
+        this.layoutPanelRoomFeatures = [...this.layoutPanelRoomFeatures, n];
+      }
+      return;
+    }
+    this.layoutPanelRoomFeatures = this.layoutPanelRoomFeatures.filter((x) => x !== n);
+  }
+
+  private codeNameSelectOptions(options: GeneralCodeItem[], current: string): string[] {
+    const names = options.map((x) => String(x.name ?? '').trim()).filter(Boolean);
+    const value = current.trim();
+    if (value && !names.includes(value)) {
+      return [value, ...names];
     }
     return names;
   }
 
-  get layoutRoomViewSelectOptions(): string[] {
-    const names = this.roomViewOptions.map((x) => String(x.name ?? '').trim()).filter(Boolean);
-    const current = this.layoutPanelRoomView.trim();
-    if (current && !names.includes(current)) {
-      return [current, ...names];
-    }
-    return names;
+  private layoutRoomCodingPayload(): Pick<
+    Room,
+    'roomView' | 'roomArchitecture' | 'roomLocation' | 'roomFeatures'
+  > {
+    return {
+      roomView: this.layoutPanelRoomView.trim() || null,
+      roomArchitecture: this.layoutPanelRoomArchitecture.trim() || null,
+      roomLocation: this.layoutPanelRoomLocation.trim() || null,
+      roomFeatures: serializeRoomFeatures(this.layoutPanelRoomFeatures),
+    };
+  }
+
+  private applyLayoutRoomCodingFromRoom(room: Room): void {
+    this.layoutPanelRoomView = room.roomView ?? '';
+    this.layoutPanelRoomArchitecture = room.roomArchitecture ?? '';
+    this.layoutPanelRoomLocation = room.roomLocation ?? '';
+    this.layoutPanelRoomFeatures = parseRoomFeatures(room.roomFeatures);
+  }
+
+  private resetLayoutRoomCodingForNew(): void {
+    this.layoutPanelRoomView = '';
+    this.layoutPanelRoomArchitecture = '';
+    this.layoutPanelRoomLocation = '';
+    this.layoutPanelRoomFeatures = [];
   }
 
   loadLayoutRoomCodeOptions(): void {
@@ -303,6 +388,9 @@ export class SettingsComponent implements OnInit {
     forkJoin({
       classes: this.generalCodesService.getList('room-classes'),
       views: this.generalCodesService.getList('room-views'),
+      architecture: this.generalCodesService.getList('room-architecture'),
+      features: this.generalCodesService.getList('room-features'),
+      locations: this.generalCodesService.getList('room-locations'),
     })
       .pipe(
         finalize(() => {
@@ -312,14 +400,21 @@ export class SettingsComponent implements OnInit {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
-        next: ({ classes, views }) => {
+        next: ({ classes, views, architecture, features, locations }) => {
           this.roomClassOptions = this.sortGeneralCodeItems(classes);
           this.roomViewOptions = this.sortGeneralCodeItems(views);
+          this.roomArchitectureOptions = this.sortGeneralCodeItems(architecture);
+          this.roomFeatureOptions = this.sortGeneralCodeItems(features);
+          this.roomLocationOptions = this.sortGeneralCodeItems(locations);
           this.ensureLayoutPanelRoomCategoryDefault();
+          this.mergeLayoutPanelFeaturesWithCatalog();
         },
         error: () => {
           this.roomClassOptions = [];
           this.roomViewOptions = [];
+          this.roomArchitectureOptions = [];
+          this.roomFeatureOptions = [];
+          this.roomLocationOptions = [];
         },
       });
   }
@@ -350,6 +445,20 @@ export class SettingsComponent implements OnInit {
   private defaultNewRoomCategory(): string {
     const names = this.roomClassOptions.map((x) => String(x.name ?? '').trim()).filter(Boolean);
     return names[0] ?? '';
+  }
+
+  /** إبقاء مميزات محفوظة سابقاً (حتى لو حُذفت من القائمة) */
+  private mergeLayoutPanelFeaturesWithCatalog(): void {
+    const seen = new Set<string>();
+    const merged: string[] = [];
+    for (const name of this.layoutPanelRoomFeatures) {
+      const n = name.trim();
+      if (n && !seen.has(n)) {
+        seen.add(n);
+        merged.push(n);
+      }
+    }
+    this.layoutPanelRoomFeatures = merged;
   }
 
   toggleLayoutCurrencyPicker(event: Event): void {
@@ -1308,7 +1417,7 @@ export class SettingsComponent implements OnInit {
     this.layoutPanelFloorLevel = room.floor;
     this.layoutPanelRoomNumber = room.roomNumber;
     this.layoutPanelRoomType = room.type;
-    this.layoutPanelRoomView = room.roomView ?? '';
+    this.applyLayoutRoomCodingFromRoom(room);
     this.layoutPanelRoomPrice = room.price;
     this.layoutPanelRoomStatus = room.status;
     this.syncLayoutPanelCurrencyFromRoom(room);
@@ -1323,7 +1432,7 @@ export class SettingsComponent implements OnInit {
     this.layoutPanelFloorLevel = floor.level;
     this.layoutPanelRoomNumber = '';
     this.layoutPanelRoomType = this.defaultNewRoomCategory();
-    this.layoutPanelRoomView = '';
+    this.resetLayoutRoomCodingForNew();
     this.loadLayoutRoomCodeOptions();
     this.layoutPanelRoomPrice = 0;
     this.layoutPanelRoomStatus = 'available';
@@ -1366,7 +1475,7 @@ export class SettingsComponent implements OnInit {
         id: 0,
         roomNumber: num,
         type: this.layoutPanelRoomType.trim(),
-        roomView: this.layoutPanelRoomView.trim() || null,
+        ...this.layoutRoomCodingPayload(),
         floor: this.layoutPanelFloorLevel,
         price: this.layoutPanelRoomPrice,
         status: this.layoutPanelRoomStatus,
@@ -1393,7 +1502,7 @@ export class SettingsComponent implements OnInit {
       id: this.layoutPanelRoomId,
       roomNumber: num,
       type: this.layoutPanelRoomType.trim(),
-      roomView: this.layoutPanelRoomView.trim() || null,
+      ...this.layoutRoomCodingPayload(),
       floor: this.layoutPanelFloorLevel,
       price: this.layoutPanelRoomPrice,
       status: this.layoutPanelRoomStatus,
