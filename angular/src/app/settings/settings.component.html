@@ -108,9 +108,13 @@
   </div>
 
   <!-- â•گâ•گ SETTINGS MAIN â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ -->
-  <div class="settings-main">
+  <div class="settings-main" [class.settings-readonly]="!settingsEditable">
     <div class="settings-content">
-      <header class="settings-toolbar" *ngIf="activeTab !== 'uiTranslations'">
+      <div class="settings-permission-banner" *ngIf="!settingsEditable" role="status">
+        <i class="fas fa-lock" aria-hidden="true"></i>
+        {{ uiTranslations.screenText('settings', 'settingsReadOnlyBanner') }}
+      </div>
+      <header class="settings-toolbar" *ngIf="settingsEditable && activeTab !== 'uiTranslations' && activeTab !== 'layout' && activeTab !== 'arabicLocale'">
         <button type="button" class="btn-save-settings primary" (click)="saveSettings()">
           <i class="fas fa-save" aria-hidden="true"></i>
           {{ uiTranslations.screenText('settings', 'saveChanges') }}
@@ -210,39 +214,84 @@
         </div>
       </div>
       <div class="tab-content hotel-layout-tab" *ngIf="activeTab === 'layout'">
-        <div class="content-header">
+        <div class="content-header layout-content-header">
           <h2><i class="fas fa-door-open" style="color:var(--app-primary-mid);margin-left:10px"></i>{{ uiTranslations.screenText('settings', 'layoutTitle') }}</h2>
-          <p>{{ uiTranslations.screenText('settings', 'layoutSubtitle') }}</p>
         </div>
 
-        <div class="layout-hero">
-          <div class="layout-hero-stat">
-            <span class="layout-hero-val">{{ rooms.length }}</span>
-            <span class="layout-hero-lbl">{{ uiTranslations.screenText('settings', 'totalRooms') }}</span>
-          </div>
-          <div class="layout-hero-stat" *ngFor="let st of layoutStatusOptions">
-            <span class="layout-hero-val" [ngClass]="'tone-' + st.tone">{{ layoutStatusCount(st.value) }}</span>
-            <span class="layout-hero-lbl">{{ uiTranslations.screenText('settings', st.labelKey) }}</span>
-          </div>
-        </div>
-
-        <div class="layout-toolbar layout-glass">
-          <div class="layout-toolbar-add">
-            <span class="layout-toolbar-kicker">{{ uiTranslations.screenText('settings', 'addFloor') }}</span>
-            <div class="form-grid compact layout-toolbar-row">
+        <div class="layout-quick-accordion layout-glass">
+          <button
+            type="button"
+            class="layout-quick-accordion-head"
+            (click)="layoutQuickCreateExpanded = !layoutQuickCreateExpanded"
+            [attr.aria-expanded]="layoutQuickCreateExpanded">
+            <span class="layout-quick-accordion-title">
+              <i class="fas fa-layer-group" aria-hidden="true"></i>
+              {{ uiTranslations.screenText('settings', 'layoutQuickBarTitle') }}
+            </span>
+            <i
+              class="fas layout-quick-accordion-chevron"
+              [class.fa-chevron-up]="layoutQuickCreateExpanded"
+              [class.fa-chevron-down]="!layoutQuickCreateExpanded"
+              aria-hidden="true"></i>
+          </button>
+          <div class="layout-quick-accordion-body" *ngIf="layoutQuickCreateExpanded">
+            <div class="layout-quick-create-grid">
               <div class="field-group compact-field">
-                <label>{{ uiTranslations.screenText('settings', 'floorLabel') }}</label>
-                <input type="number" [(ngModel)]="newFloorLevel" min="1" />
+                <label>{{ uiTranslations.screenText('settings', 'addFloor') }}</label>
+                <input
+                  type="text"
+                  class="layout-plain-input"
+                  inputmode="numeric"
+                  [ngModel]="newFloorLevel"
+                  (ngModelChange)="onLayoutQuickFloorLevelChange($event)" />
               </div>
               <div class="field-group compact-field">
-                <label>{{ uiTranslations.screenText('settings', 'capacityLabel') }}</label>
-                <input type="number" [(ngModel)]="newFloorRoomsCount" min="1" />
+                <label>{{ uiTranslations.screenText('settings', 'roomView') }}</label>
+                <select
+                  class="premium-input field-box__control"
+                  [(ngModel)]="layoutQuickRoomView"
+                  [disabled]="layoutRoomCodeOptionsLoading">
+                  <option *ngFor="let name of layoutQuickRoomViewSelectOptions" [value]="name">{{ name }}</option>
+                </select>
               </div>
-              <button type="button" class="action-btn layout-add-floor-btn" (click)="addFloor()">
-                <i class="fas fa-layer-group"></i>
-                {{ uiTranslations.screenText('settings', 'addFloor') }}
+              <div class="field-group compact-field">
+                <label>{{ uiTranslations.screenText('settings', 'layoutQuickRoomsLabel') }}</label>
+                <input
+                  type="text"
+                  class="layout-plain-input"
+                  inputmode="numeric"
+                  [(ngModel)]="layoutQuickRoomCountText" />
+              </div>
+              <div class="field-group compact-field">
+                <label>{{ uiTranslations.screenText('settings', 'layoutQuickFromLabel') }}</label>
+                <input
+                  type="text"
+                  class="layout-plain-input"
+                  inputmode="numeric"
+                  [(ngModel)]="layoutQuickFromText"
+                  (input)="onLayoutQuickFromInput()" />
+              </div>
+              <div class="field-group compact-field">
+                <label>{{ uiTranslations.screenText('settings', 'layoutQuickAmountLabel') }}</label>
+                <input
+                  type="text"
+                  class="layout-plain-input"
+                  inputmode="decimal"
+                  [(ngModel)]="layoutQuickPriceText" />
+              </div>
+              <button
+                type="button"
+                class="action-btn layout-quick-create-btn"
+                [disabled]="layoutQuickCreating || layoutRoomCodeOptionsLoading"
+                (click)="quickCreateLayoutRooms()">
+                <i class="fas fa-spinner fa-spin" *ngIf="layoutQuickCreating"></i>
+                <i class="fas fa-bolt" *ngIf="!layoutQuickCreating"></i>
+                {{ uiTranslations.screenText('settings', 'layoutQuickCreateBtn') }}
               </button>
             </div>
+            <p class="layout-quick-preview" *ngIf="layoutQuickNumberPreview">
+              {{ uiTranslations.screenText('settings', 'layoutQuickPreview') }} {{ layoutQuickNumberPreview }}
+            </p>
           </div>
         </div>
 
@@ -307,14 +356,34 @@
                   <span class="hotel-room-num">{{ room.roomNumber }}</span>
                   <span class="hotel-room-status status-pill" [ngClass]="room.status">{{ roomStatusLabel(room.status) }}</span>
                 </header>
-                <p class="hotel-room-type">{{ uiTranslations.roomTypeLabel(room.type) }}</p>
-                <p class="hotel-room-view" *ngIf="(room.roomView || '').trim()">
-                  <i class="fas fa-image" aria-hidden="true"></i>
-                  {{ room.roomView }}
-                </p>
-                <p class="hotel-room-meta" *ngIf="roomMetaLine(room)">
-                  {{ roomMetaLine(room) }}
-                </p>
+                <div class="hotel-room-card-body">
+                  <p class="hotel-room-line" [attr.title]="uiTranslations.roomTypeLabel(room.type)">
+                    <span class="hotel-room-line-lbl">{{ uiTranslations.screenText('settings', 'roomCategory') }}</span>
+                    <span class="hotel-room-line-val">{{ uiTranslations.roomTypeLabel(room.type) }}</span>
+                  </p>
+                  <p class="hotel-room-line" *ngIf="(room.roomView || '').trim()" [attr.title]="room.roomView">
+                    <span class="hotel-room-line-lbl">{{ uiTranslations.screenText('settings', 'roomView') }}</span>
+                    <span class="hotel-room-line-val">{{ room.roomView }}</span>
+                  </p>
+                  <p class="hotel-room-line" *ngIf="(room.roomArchitecture || '').trim()" [attr.title]="room.roomArchitecture">
+                    <span class="hotel-room-line-lbl">{{ uiTranslations.screenText('settings', 'roomArchitecture') }}</span>
+                    <span class="hotel-room-line-val">{{ room.roomArchitecture }}</span>
+                  </p>
+                  <p class="hotel-room-line" *ngIf="(room.roomLocation || '').trim()" [attr.title]="room.roomLocation">
+                    <span class="hotel-room-line-lbl">{{ uiTranslations.screenText('settings', 'roomLocation') }}</span>
+                    <span class="hotel-room-line-val">{{ room.roomLocation }}</span>
+                  </p>
+                  <button
+                    type="button"
+                    class="hotel-room-features-link"
+                    (click)="openRoomFeaturesModal(room, $event)">
+                    <i class="fas fa-star" aria-hidden="true"></i>
+                    {{ uiTranslations.screenText('settings', 'roomFeatures') }}
+                    <span class="hotel-room-features-count" *ngIf="roomFeaturesList(room).length">
+                      ({{ roomFeaturesList(room).length }})
+                    </span>
+                  </button>
+                </div>
                 <p class="hotel-room-price">{{ room.price | number }} {{ roomPriceSymbol(room) }}</p>
                 <div class="hotel-room-quick" (click)="$event.stopPropagation()">
                   <span class="hotel-room-quick-label">{{ uiTranslations.screenText('settings', 'quickStatus') }}</span>
@@ -346,6 +415,41 @@
           </section>
         </div>
 
+        <div class="layout-features-modal-backdrop" *ngIf="layoutFeaturesModalRoom" (click)="closeRoomFeaturesModal()"></div>
+        <div
+          class="layout-features-modal"
+          *ngIf="layoutFeaturesModalRoom"
+          role="dialog"
+          aria-modal="true"
+          (click)="$event.stopPropagation()">
+          <header class="layout-features-modal-head">
+            <h3>
+              <i class="fas fa-star" aria-hidden="true"></i>
+              {{ uiTranslations.screenText('settings', 'featuresModalTitle') }}
+              <span class="layout-features-modal-room" dir="ltr">{{ layoutFeaturesModalRoom.roomNumber }}</span>
+            </h3>
+            <button type="button" class="btn-icon-cancel" (click)="closeRoomFeaturesModal()">
+              <i class="fas fa-times"></i>
+            </button>
+          </header>
+          <div class="layout-features-modal-body">
+            <div class="layout-features-modal-chips" *ngIf="roomFeaturesList(layoutFeaturesModalRoom).length">
+              <span class="layout-features-modal-chip" *ngFor="let f of roomFeaturesList(layoutFeaturesModalRoom)">
+                {{ f }}
+              </span>
+            </div>
+            <p class="layout-features-modal-empty" *ngIf="!roomFeaturesList(layoutFeaturesModalRoom).length">
+              {{ uiTranslations.screenText('settings', 'featuresModalEmpty') }}
+            </p>
+          </div>
+          <footer class="layout-features-modal-foot">
+            <button type="button" class="action-btn" (click)="editRoomFromFeaturesModal()">
+              <i class="fas fa-pen"></i>
+              {{ uiTranslations.screenText('settings', 'featuresModalEdit') }}
+            </button>
+          </footer>
+        </div>
+
         <div class="layout-panel-backdrop" *ngIf="layoutPanelOpen" (click)="closeLayoutPanel()"></div>
         <aside class="layout-room-panel" *ngIf="layoutPanelOpen" (click)="$event.stopPropagation()">
           <header class="layout-room-panel-head">
@@ -375,9 +479,6 @@
                 class="premium-input field-box__control"
                 [(ngModel)]="layoutPanelRoomType"
                 [disabled]="layoutRoomCodeOptionsLoading">
-                <option value="" disabled>
-                  {{ uiTranslations.screenText('settings', 'roomCategoryPlaceholder') }}
-                </option>
                 <option *ngFor="let name of layoutRoomCategorySelectOptions" [value]="name">
                   {{ name }}
                 </option>
@@ -392,9 +493,6 @@
                 class="premium-input field-box__control"
                 [(ngModel)]="layoutPanelRoomView"
                 [disabled]="layoutRoomCodeOptionsLoading">
-                <option value="">
-                  {{ uiTranslations.screenText('settings', 'roomViewPlaceholder') }}
-                </option>
                 <option *ngFor="let name of layoutRoomViewSelectOptions" [value]="name">
                   {{ name }}
                 </option>
@@ -409,9 +507,6 @@
                 class="premium-input field-box__control"
                 [(ngModel)]="layoutPanelRoomArchitecture"
                 [disabled]="layoutRoomCodeOptionsLoading">
-                <option value="">
-                  {{ uiTranslations.screenText('settings', 'roomArchitecturePlaceholder') }}
-                </option>
                 <option *ngFor="let name of layoutRoomArchitectureSelectOptions" [value]="name">
                   {{ name }}
                 </option>
@@ -426,9 +521,6 @@
                 class="premium-input field-box__control"
                 [(ngModel)]="layoutPanelRoomLocation"
                 [disabled]="layoutRoomCodeOptionsLoading">
-                <option value="">
-                  {{ uiTranslations.screenText('settings', 'roomLocationPlaceholder') }}
-                </option>
                 <option *ngFor="let name of layoutRoomLocationSelectOptions" [value]="name">
                   {{ name }}
                 </option>
@@ -1022,6 +1114,7 @@
             {{ uiTranslations.screenText('settings', 'currencyTitle') }}
           </h2>
           <p>{{ uiTranslations.screenText('settings', 'currencySubtitle') }}</p>
+          <p class="hint">{{ uiTranslations.screenText('settings', 'currencyFromPrefCategoryHint') }}</p>
         </div>
 
         <div class="currency-preview-card">
@@ -1138,6 +1231,10 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <div class="tab-content" *ngIf="activeTab === 'arabicLocale'">
+        <app-arabic-locale-pick />
       </div>
 
       <div class="tab-content" *ngIf="activeTab === 'translations'">

@@ -694,6 +694,7 @@
       "devStatusRailTitle": "显示状态",
       "devTotalRatesAll": "全部客房费率合计",
       "devTotalRooms": "间",
+      "devTotalRoomsLine": "共 {n} 间客房",
       "editStatusBtn": "修改状态",
       "filterArrivingOnly": "仅显示已入住",
       "filterAvailableReady": "可用且就绪",

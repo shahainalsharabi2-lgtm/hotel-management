@@ -18,9 +18,10 @@ public static class GeneralCodesCategories
     public const string RoomClasses = "room-classes";
     public const string RoomMaintenanceReasons = "room-maintenance-reasons";
     public const string RoomMoveReasons = "room-move-reasons";
+    public const string HotelCurrency = "hotel-currency";
 
     public static readonly string[] All =
-    [
+[
         PurposesOfStay,
         Nationalities,
         RelationshipTypes,
@@ -37,5 +38,6 @@ public static class GeneralCodesCategories
         RoomClasses,
         RoomMaintenanceReasons,
         RoomMoveReasons,
+        HotelCurrency,
     ];
 }

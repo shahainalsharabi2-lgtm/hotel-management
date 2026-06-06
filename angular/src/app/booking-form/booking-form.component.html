@@ -4,31 +4,12 @@
       [style.animation-delay.s]="s.delay"></div>
   </div>
 
-  <div class="glass-card">
-    <header class="card-header">
-      <a [routerLink]="['/dashboard']" class="icon-circle-link">
-        <div class="icon-circle">
-          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
-            stroke="#1976d2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-            <polyline points="9 22 9 12 15 12 15 22"></polyline>
-          </svg>
-        </div>
-      </a>
-      <div class="header-text">
-        <h1>{{ bookingPageTitle }}</h1>
-        <p>{{ bookingPageSubtitle }}</p>
-      </div>
-      <a routerLink="/bookings" class="view-list-btn">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
-        </svg>
-        {{ ui.screenText('booking', 'viewBookingsLink') }}
-      </a>
-    </header>
-
-    <form [formGroup]="bookingForm" (ngSubmit)="onSubmit()" class="modern-form">
+  <div class="glass-card" [class.glass-card--walkin]="walkInCheckInMode">
+    <form
+      [formGroup]="bookingForm"
+      (ngSubmit)="onSubmit()"
+      class="modern-form"
+      [class.modern-form--walkin]="walkInCheckInMode">
 
       <div
         *ngIf="transferRoomMode"
@@ -58,20 +39,11 @@
         </p>
       </div>
 
-      <div *ngIf="reservationMode" class="transfer-room-banner reservation-banner" role="note">
-        <i class="fas fa-calendar-check" aria-hidden="true"></i>
-        <span>{{ ui.screenText('booking', 'reservationBanner') }}</span>
-      </div>
-
       <div *ngIf="extendStayMode && checkInBookingInvoice" class="transfer-room-banner extend-stay-banner" role="note">
         <i class="fas fa-calendar-alt" aria-hidden="true"></i>
         <span>{{ ui.screenText('booking', 'extendStayBanner') }}: {{ checkInBookingInvoice }}</span>
       </div>
 
-      <div *ngIf="walkInCheckInMode" class="transfer-room-banner check-in-banner" role="note">
-        <i class="fas fa-door-open" aria-hidden="true"></i>
-        <span>{{ ui.screenText('booking', 'walkInCheckInBanner') }}</span>
-      </div>
 
       <div *ngIf="checkInMode && !extendStayMode && !walkInCheckInMode && checkInBookingInvoice" class="transfer-room-banner check-in-banner" role="note">
         <i class="fas fa-door-open" aria-hidden="true"></i>
@@ -83,7 +55,97 @@
         <span>{{ ui.screenText('booking', 'editBookingBanner') }}: {{ editBookingInvoice }}</span>
       </div>
 
-      <div class="booking-toolbar" [class.booking-toolbar--with-kind]="showBookingKindPicker">
+      <div *ngIf="walkInCheckInMode" class="walkin-meta-board">
+        <div class="walkin-meta-row walkin-meta-row--head">
+          <div class="walkin-meta-cell walkin-meta-cell--invoice">
+            <span class="walkin-meta-label">{{ ui.screenText('booking', 'invoiceLabel') }}</span>
+            <span class="walkin-meta-value walkin-meta-value--accent">{{ bookingForm.get('invoice_Number')?.value }}</span>
+          </div>
+          <div class="walkin-meta-cell">
+            <span class="walkin-meta-label">{{ ui.screenText('booking', 'bookingDateLabel') }}</span>
+            <span class="walkin-meta-value">{{ bookingForm.get('booking_Date')?.value }}</span>
+          </div>
+          <div class="walkin-meta-cell">
+            <span class="walkin-meta-label">{{ ui.screenText('booking', 'bookingTimeLabel') }}</span>
+            <span class="walkin-meta-value">{{ bookingForm.get('booking_Time')?.value }}</span>
+          </div>
+          <div class="walkin-meta-cell">
+            <span class="walkin-meta-label">{{ ui.screenText('booking', 'walkInArrivalTimeLabel') }}</span>
+            <span class="walkin-meta-value">{{ walkInArrivalTime() }}</span>
+          </div>
+        </div>
+        <div class="walkin-meta-row">
+          <div class="walkin-meta-cell walkin-meta-cell--field">
+            <label class="walkin-meta-label" for="walkin-stay-days">{{ ui.screenText('booking', 'daysLabel') }}</label>
+            <input
+              id="walkin-stay-days"
+              type="number"
+              formControlName="stay_Days"
+              min="1"
+              class="walkin-meta-input" />
+          </div>
+          <div class="walkin-meta-cell">
+            <span class="walkin-meta-label">{{ ui.screenText('booking', 'walkInDepartureDateLabel') }}</span>
+            <span class="walkin-meta-value">{{ walkInCheckoutDate() }}</span>
+          </div>
+          <div class="walkin-meta-cell">
+            <span class="walkin-meta-label">{{ ui.screenText('booking', 'walkInDepartureTimeLabel') }}</span>
+            <span class="walkin-meta-value">{{ walkInCheckoutTime() }}</span>
+          </div>
+          <div class="walkin-meta-cell walkin-meta-cell--field">
+            <label class="walkin-meta-label" for="walkin-booking-source">{{ ui.screenText('booking', 'bookingSourceLabel') }}</label>
+            <select id="walkin-booking-source" formControlName="booking_Source" class="walkin-meta-select">
+              <option value="">{{ ui.screenText('booking', 'optionalField') }}</option>
+              <option *ngFor="let opt of bookingSourceOptions" [value]="opt.id">
+                {{ ui.screenText('booking', opt.labelKey) }}
+              </option>
+            </select>
+          </div>
+        </div>
+        <div class="walkin-meta-row walkin-meta-row--foot" *ngIf="showGuestCodingFields && guestCodingFieldsReady">
+          <div class="walkin-meta-cell">
+            <span class="walkin-meta-label">{{ ui.screenText('booking', 'walkInEmployeeLabel') }}</span>
+            <span class="walkin-meta-value">{{ walkInEmployeeName }}</span>
+          </div>
+          <div class="walkin-meta-cell walkin-meta-cell--field">
+            <label class="walkin-meta-label" for="walkin-price-code">{{ ui.screenText('booking', 'priceCodeLabel') }}</label>
+            <select
+              id="walkin-price-code"
+              formControlName="price_Code"
+              class="walkin-meta-select"
+              (change)="onGuestCodingFieldChange()">
+              <option *ngFor="let item of priceCodeOptions" [value]="item.name">
+                {{ item.name }}<ng-container *ngIf="priceCodeOptionPercent(item) > 0"> — {{ priceCodeOptionPercent(item) }}%</ng-container>
+              </option>
+            </select>
+          </div>
+          <div class="walkin-meta-cell walkin-meta-cell--field">
+            <label class="walkin-meta-label" for="walkin-relationship">{{ ui.screenText('booking', 'relationshipTypeLabel') }}</label>
+            <select
+              id="walkin-relationship"
+              formControlName="relationship_Type"
+              class="walkin-meta-select"
+              (change)="onGuestCodingFieldChange()">
+              <option *ngFor="let item of relationshipTypeOptions" [value]="item.name">{{ item.name }}</option>
+            </select>
+          </div>
+          <div class="walkin-meta-cell walkin-meta-cell--field">
+            <label class="walkin-meta-label" for="walkin-purpose">{{ ui.screenText('booking', 'purposeOfStayLabel') }}</label>
+            <select
+              id="walkin-purpose"
+              formControlName="purpose_Of_Stay"
+              class="walkin-meta-select"
+              (change)="onGuestCodingFieldChange()">
+              <option *ngFor="let item of purposeOfStayOptions" [value]="item.name">{{ item.name }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div
+        *ngIf="!walkInCheckInMode"
+        class="booking-toolbar"
+        [class.booking-toolbar--with-kind]="showBookingKindPicker">
         <div class="top-meta-bar">
           <div class="meta-item">
             <label>{{ ui.screenText('booking', 'invoiceLabel') }}</label>
@@ -157,9 +219,83 @@
         </div>
       </div>
 
-      <div class="form-panes-container">
+      <div class="form-panes-container" [class.walkin-layout]="walkInCheckInMode">
+        <aside *ngIf="walkInCheckInMode" class="walkin-sidebar">
+          <section class="walkin-room-preview" [class.walkin-room-preview--empty]="!selectedRoom">
+            <h3 class="walkin-panel-title">
+              <i class="fas fa-bed" aria-hidden="true"></i>
+              {{ ui.screenText('booking', 'walkInRoomPreviewTitle') }}
+            </h3>
+            <ng-container *ngIf="selectedRoom; else walkInNoRoom">
+              <dl class="walkin-detail-list">
+                <div class="walkin-detail-item">
+                  <dt>{{ ui.screenText('booking', 'roomCategoryLabel') }}</dt>
+                  <dd>{{ ui.roomTypeLabel(selectedRoom.type) }}</dd>
+                </div>
+                <div class="walkin-detail-item">
+                  <dt>{{ ui.screenText('booking', 'roomNumberLabel') }}</dt>
+                  <dd class="walkin-detail-item--strong">{{ selectedRoom.roomNumber }}</dd>
+                </div>
+                <div class="walkin-detail-item">
+                  <dt>{{ ui.screenText('booking', 'floorLabel') }}</dt>
+                  <dd>{{ selectedRoom.floor }}</dd>
+                </div>
+                <div class="walkin-detail-item">
+                  <dt>{{ ui.screenText('settings', 'roomArchitecture') }}</dt>
+                  <dd>{{ walkInRoomDetail(selectedRoom.roomArchitecture) }}</dd>
+                </div>
+                <div class="walkin-detail-item">
+                  <dt>{{ ui.screenText('settings', 'roomLocation') }}</dt>
+                  <dd>{{ walkInRoomDetail(selectedRoom.roomLocation) }}</dd>
+                </div>
+                <div class="walkin-detail-item">
+                  <dt>{{ ui.screenText('settings', 'roomView') }}</dt>
+                  <dd>{{ walkInRoomDetail(selectedRoom.roomView) }}</dd>
+                </div>
+                <div class="walkin-detail-item walkin-detail-item--wide">
+                  <dt>{{ ui.screenText('settings', 'roomFeatures') }}</dt>
+                  <dd>{{ walkInRoomFeaturesText() }}</dd>
+                </div>
+                <div class="walkin-detail-item">
+                  <dt>{{ ui.screenText('settings', 'roomStatus') }}</dt>
+                  <dd>
+                    <span class="walkin-status-pill">{{ walkInRoomStatusLabel(selectedRoom.status) }}</span>
+                  </dd>
+                </div>
+                <div class="walkin-detail-item">
+                  <dt>{{ ui.screenText('booking', 'walkInRoomPriceLabel') }}</dt>
+                  <dd class="walkin-detail-item--price">
+                    {{ selectedRoom.price | localeNumber:'money' }}
+                    <small>{{ priceCurrencySymbol() }}</small>
+                  </dd>
+                </div>
+                <div class="walkin-detail-item">
+                  <dt>{{ ui.screenText('booking', 'priceCodeLabel') }}</dt>
+                  <dd class="walkin-price-code-value">
+                    <span>{{ walkInRoomDetail(bookingForm.get('price_Code')?.value) }}</span>
+                    @if (selectedPriceCodePercentBadge()) {
+                      <span class="walkin-price-code-pct" dir="ltr">{{ selectedPriceCodePercentBadge() }}</span>
+                    }
+                  </dd>
+                </div>
+                <div class="walkin-detail-item">
+                  <dt>{{ ui.screenText('booking', 'relationshipTypeLabel') }}</dt>
+                  <dd>{{ walkInRoomDetail(bookingForm.get('relationship_Type')?.value) }}</dd>
+                </div>
+                <div class="walkin-detail-item">
+                  <dt>{{ ui.screenText('booking', 'bookingSourceLabel') }}</dt>
+                  <dd>{{ bookingSourceDisplay() }}</dd>
+                </div>
+              </dl>
+            </ng-container>
+            <ng-template #walkInNoRoom>
+              <p class="walkin-empty-hint">{{ ui.screenText('booking', 'walkInNoRoomHint') }}</p>
+            </ng-template>
+          </section>
+        </aside>
+
         <!-- Screen 1: Guest Data Pane -->
-        <div class="form-pane guest-pane">
+        <div class="form-pane guest-pane" [class.guest-pane--walkin]="walkInCheckInMode">
           <h2 class="pane-title">
             <i class="fas fa-user-tag"></i>
             {{ ui.screenText('booking', 'guestPaneTitle') }}
@@ -167,7 +303,7 @@
 
           <div class="pane-grid">
             <div
-              class="form-group full-width guest-name-picker-wrap"
+              class="form-group full-width guest-name-picker-wrap walkin-guest-name"
               *ngIf="walkInCheckInMode"
               (click)="$event.stopPropagation()">
               <label>{{ ui.screenText('booking', 'guestFullNameLabel') }}</label>
@@ -253,15 +389,6 @@
                   (focus)="onGuestNameFieldFocus()"
                   (input)="onGuestNameFieldInput()"
                   autocomplete="name" />
-                <button
-                  type="button"
-                  class="guest-profile-inline-btn"
-                  (click)="openGuestProfileModal($event)"
-                  [attr.aria-expanded]="guestProfileModalOpen"
-                  [attr.aria-label]="ui.screenText('booking', 'guestSaveInSystem')"
-                  [title]="ui.screenText('booking', 'guestSaveInSystem')">
-                  <i class="fas fa-user-plus" aria-hidden="true"></i>
-                </button>
               </div>
               <div
                 class="guest-picker-panel"
@@ -309,23 +436,40 @@
               </div>
             </ng-container>
             <ng-container *ngIf="!reservationMode">
-            <div class="form-group">
+            <div class="form-group" [class.walkin-id-type]="walkInCheckInMode">
               <label>{{ ui.screenText('booking', 'idTypeLabel') }}</label>
               <select formControlName="id_Type" class="premium-input field-box__control">
-                <option value="" disabled *ngIf="checkInMode">{{ ui.screenText('booking', 'idTypeLabel') }}</option>
                 <option *ngFor="let type of identityTypes" [value]="type.name">{{ type.name }}</option>
               </select>
             </div>
-            <div class="form-group" [class.has-error]="submitted && bookingForm.get('id_Number')?.invalid">
+            <div
+              class="form-group"
+              [class.walkin-id-inline]="walkInCheckInMode"
+              [class.has-error]="submitted && bookingForm.get('id_Number')?.invalid">
               <label>{{ ui.screenText('booking', 'idNumberPlaceholder') }}</label>
-              <input
-                type="text"
-                formControlName="id_Number"
-                [maxlength]="idNumberMaxLength"
-                class="premium-input"
-                inputmode="numeric"
-                autocomplete="off"
-                [class.input-error]="submitted && bookingForm.get('id_Number')?.invalid" />
+              <div class="phone-input-container" *ngIf="ui.displayLocale() === 'ar'; else plainIdNumberInput">
+                <div class="phone-prefix" [attr.aria-label]="phoneDisplay.dialCode">
+                  <img class="flag-icon-img" [src]="phoneDisplay.flagSrc" alt="" width="22" height="16" />
+                </div>
+                <input
+                  type="text"
+                  formControlName="id_Number"
+                  [maxlength]="idNumberMaxLength"
+                  class="premium-input phone-input"
+                  inputmode="numeric"
+                  autocomplete="off"
+                  [class.input-error]="submitted && bookingForm.get('id_Number')?.invalid" />
+              </div>
+              <ng-template #plainIdNumberInput>
+                <input
+                  type="text"
+                  formControlName="id_Number"
+                  [maxlength]="idNumberMaxLength"
+                  class="premium-input"
+                  inputmode="numeric"
+                  autocomplete="off"
+                  [class.input-error]="submitted && bookingForm.get('id_Number')?.invalid" />
+              </ng-template>
               <div class="field-error" *ngIf="submitted && bookingForm.get('id_Number')?.errors as errs">
                 <i class="fas fa-exclamation-circle"></i>
                 <span *ngIf="errs['required']">هذا الحقل مطلوب</span>
@@ -336,7 +480,7 @@
               </div>
             </div>
 
-            <div class="form-group full-width" *ngIf="!reservationMode">
+            <div class="form-group full-width" *ngIf="!reservationMode" [class.walkin-phone]="walkInCheckInMode">
               <label>{{ ui.screenText('booking', 'phoneLabel') }}</label>
               <div class="phone-input-container">
                 <div class="phone-prefix" [attr.aria-label]="phoneDisplay.dialCode">
@@ -364,14 +508,13 @@
               </div>
             </div>
 
-            <ng-container *ngIf="showGuestCodingFields">
+            <ng-container *ngIf="showGuestCodingFields && guestCodingFieldsReady && !walkInCheckInMode">
               <div class="form-group">
                 <label>{{ ui.screenText('booking', 'purposeOfStayLabel') }}</label>
                 <select
                   formControlName="purpose_Of_Stay"
                   class="premium-input field-box__control"
                   (change)="onGuestCodingFieldChange()">
-                  <option value="">{{ ui.screenText('booking', 'guestCodingSelectPlaceholder') }}</option>
                   <option *ngFor="let item of purposeOfStayOptions" [value]="item.name">{{ item.name }}</option>
                 </select>
               </div>
@@ -381,7 +524,6 @@
                   formControlName="relationship_Type"
                   class="premium-input field-box__control"
                   (change)="onGuestCodingFieldChange()">
-                  <option value="">{{ ui.screenText('booking', 'guestCodingSelectPlaceholder') }}</option>
                   <option *ngFor="let item of relationshipTypeOptions" [value]="item.name">{{ item.name }}</option>
                 </select>
               </div>
@@ -391,8 +533,9 @@
                   formControlName="price_Code"
                   class="premium-input field-box__control"
                   (change)="onGuestCodingFieldChange()">
-                  <option value="">{{ ui.screenText('booking', 'guestCodingSelectPlaceholder') }}</option>
-                  <option *ngFor="let item of priceCodeOptions" [value]="item.name">{{ item.name }}</option>
+                  <option *ngFor="let item of priceCodeOptions" [value]="item.name">
+                {{ item.name }}<ng-container *ngIf="priceCodeOptionPercent(item) > 0"> — {{ priceCodeOptionPercent(item) }}%</ng-container>
+              </option>
                 </select>
               </div>
             </ng-container>
@@ -423,7 +566,14 @@
 
             <div class="divider full-width" *ngIf="!reservationMode"></div>
 
-            <div class="numbers-modern-grid numbers-modern-grid--triple full-width" *ngIf="!reservationMode">
+            <div
+              class="numbers-modern-grid numbers-modern-grid--triple full-width"
+              [class.walkin-occupancy-grid]="walkInCheckInMode"
+              *ngIf="!reservationMode">
+              <div class="stat-input-card" *ngIf="walkInCheckInMode">
+                <label><i class="fas fa-users"></i> {{ ui.screenText('booking', 'peopleCountLabel') }}</label>
+                <input type="number" formControlName="people_Count" min="1" readonly tabindex="-1" />
+              </div>
               <div class="stat-input-card">
                 <label><i class="fas fa-user"></i> {{ ui.screenText('booking', 'adultsLabel') }}</label>
                 <input type="number" formControlName="adults_Count" min="1" />
@@ -432,7 +582,7 @@
                 <label><i class="fas fa-child"></i> {{ ui.screenText('booking', 'childrenLabel') }}</label>
                 <input type="number" formControlName="children_Count" min="0" />
               </div>
-              <div class="stat-input-card highlight">
+              <div class="stat-input-card highlight" *ngIf="!walkInCheckInMode">
                 <label><i class="fas fa-calendar-day"></i> {{ ui.screenText('booking', 'daysLabel') }}</label>
                 <input type="number" formControlName="stay_Days" min="1" />
               </div>
@@ -441,13 +591,16 @@
         </div>
 
         <!-- Screen 2: Order Data Pane -->
-        <div class="form-pane order-pane" [class.order-pane--transfer]="transferRoomMode">
+        <div
+          class="form-pane order-pane"
+          [class.order-pane--transfer]="transferRoomMode"
+          [class.order-pane--walkin]="walkInCheckInMode">
           <h2 class="pane-title">
             <i class="fas fa-shopping-cart"></i>
             {{ ui.screenText('booking', 'orderPaneTitle') }}
           </h2>
 
-          <div class="pane-grid">
+          <div class="pane-grid" [class.walkin-order-grid]="walkInCheckInMode">
             <div class="form-group full-width field-box-group" [class.form-group--transfer-target]="transferRoomMode">
               <label>{{
                 transferRoomMode
@@ -466,25 +619,27 @@
                 </select>
                 <button
                   type="button"
-                  class="field-box__action"
+                  class="field-box__action field-box__action--chart-search"
                   (click)="goPickRoomFromChart()"
                   [attr.aria-label]="ui.screenText('booking', 'pickRoomFromChartAria')"
                   [title]="ui.screenText('booking', 'pickRoomFromChartAria')">
-                  <i class="fas fa-th-large" aria-hidden="true"></i>
+                  <i class="fas fa-search" aria-hidden="true"></i>
                 </button>
               </div>
             </div>
 
-            <div class="form-group">
-              <label>نوع الغرفة</label>
-              <input type="text" formControlName="room_Type" readonly class="readonly-input" />
-            </div>
-            <div class="form-group">
-              <label>الطابق</label>
-              <input type="text" formControlName="floor" readonly class="readonly-input" />
-            </div>
+            <ng-container *ngIf="!walkInCheckInMode">
+              <div class="form-group">
+                <label>{{ ui.screenText('booking', roomTypeFieldLabelKey) }}</label>
+                <input type="text" formControlName="room_Type" readonly class="readonly-input" />
+              </div>
+              <div class="form-group">
+                <label>{{ ui.screenText('booking', 'floorLabel') }}</label>
+                <input type="text" formControlName="floor" readonly class="readonly-input" />
+              </div>
+            </ng-container>
 
-            <div class="finance-section full-width">
+            <div class="finance-section full-width" *ngIf="!walkInCheckInMode">
               <div class="finance-card total">
                 <label>سعر الغرفة الإجمالي</label>
                 <div class="price-display">
@@ -521,12 +676,55 @@
               </div>
             </div>
 
-            <div class="form-group full-width" *ngIf="showPaymentMethodField">
-              <label>طريقة الدفع</label>
+            <div
+              class="form-group full-width"
+              [class.walkin-payment-method]="walkInCheckInMode"
+              *ngIf="showPaymentMethodField">
+              <label>{{ ui.screenText('booking', 'paymentMethodLabel') }}</label>
               <select formControlName="payment_Method" class="premium-input field-box__control">
                 <option *ngFor="let method of paymentMethods" [value]="method">{{ method }}</option>
               </select>
             </div>
+
+            <section *ngIf="walkInCheckInMode" class="walkin-payment-board walkin-payment-board--inline full-width">
+              <h3 class="walkin-panel-title walkin-panel-title--payment">
+                <i class="fas fa-wallet" aria-hidden="true"></i>
+                {{ ui.screenText('booking', 'walkInPaymentTitle') }}
+              </h3>
+              <div class="walkin-payment-grid walkin-payment-grid--inline">
+                <div class="walkin-payment-card walkin-payment-card--required">
+                  <span class="walkin-payment-label">{{ ui.screenText('booking', 'walkInRequiredAmountLabel') }}</span>
+                  <span class="walkin-payment-amount">
+                    {{ bookingForm.get('total_Price')?.value | localeNumber:'money' }}
+                    <small>{{ priceCurrencySymbol() }}</small>
+                  </span>
+                  @if (priceCodeDiscountHintText()) {
+                    <span class="walkin-payment-discount" dir="ltr">{{ priceCodeDiscountHintText() }}</span>
+                  }
+                </div>
+                <div class="walkin-payment-card walkin-payment-card--paid">
+                  <label class="walkin-payment-label" for="walkin-paid-amount">{{ ui.screenText('booking', 'paidLabel') }}</label>
+                  <div class="walkin-paid-input-wrap">
+                    <input
+                      id="walkin-paid-amount"
+                      type="number"
+                      formControlName="payment_Amount"
+                      min="0"
+                      class="walkin-paid-input" />
+                    <span class="walkin-paid-currency">{{ priceCurrencySymbol() }}</span>
+                  </div>
+                </div>
+                <div
+                  class="walkin-payment-card walkin-payment-card--balance"
+                  [class.walkin-payment-card--debt]="(bookingForm.get('remaining_Amount')?.value || 0) > 0">
+                  <span class="walkin-payment-label">{{ ui.screenText('booking', 'remainingLabel') }}</span>
+                  <span class="walkin-payment-amount">
+                    {{ bookingForm.get('remaining_Amount')?.value | localeNumber:'money' }}
+                    <small>{{ priceCurrencySymbol() }}</small>
+                  </span>
+                </div>
+              </div>
+            </section>
           </div>
         </div>
       </div>
@@ -616,7 +814,6 @@
             <div class="form-group">
               <label>{{ ui.screenText('booking', 'guestProfileGender') }}</label>
               <select formControlName="gender" class="premium-input field-box__control">
-                <option value="" disabled>{{ ui.screenText('booking', 'guestProfileSelectPlaceholder') }}</option>
                 <option *ngFor="let g of guestGenderOptions" [value]="g.id">
                   {{ ui.screenText('booking', g.labelKey) }}
                 </option>
@@ -662,7 +859,6 @@
             <div class="form-group">
               <label>{{ ui.screenText('booking', 'idTypeLabel') }}</label>
               <select formControlName="id_Type" class="premium-input field-box__control">
-                <option value="" disabled>{{ ui.screenText('booking', 'guestProfileSelectPlaceholder') }}</option>
                 <option *ngFor="let type of identityTypes" [value]="type.name">{{ type.name }}</option>
               </select>
               <div class="field-error" *ngIf="guestProfileSubmitted && guestProfileForm.get('id_Type')?.invalid">

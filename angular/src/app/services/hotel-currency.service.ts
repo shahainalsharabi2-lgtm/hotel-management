@@ -4,6 +4,7 @@ import {
   DEFAULT_HOTEL_CURRENCY_ID,
   HOTEL_CURRENCY_CUSTOM_ID,
   HOTEL_CURRENCY_PRESETS,
+  mergeUiLocaleCurrencyPresets,
   type HotelCurrencyPreset,
   type HotelCurrencyPresetId,
   type HotelUiLocaleCode,
@@ -17,9 +18,21 @@ export type HotelCurrencyStorage = {
   currencyCode?: string;
 };
 
+function normalizeCurrencyKey(value: string | null | undefined): string {
+  return (value ?? '').trim().toUpperCase();
+}
+
 @Injectable({ providedIn: 'root' })
 export class HotelCurrencyService {
-  readonly presets: readonly HotelCurrencyPreset[] = HOTEL_CURRENCY_PRESETS;
+  private readonly managedPresets = signal<readonly HotelCurrencyPreset[] | null>(null);
+
+  readonly presets = computed(() => {
+    const managed = this.managedPresets();
+    if (!managed) {
+      return HOTEL_CURRENCY_PRESETS;
+    }
+    return mergeUiLocaleCurrencyPresets(managed);
+  });
 
   private readonly selectedId = signal<HotelCurrencyPresetId>(DEFAULT_HOTEL_CURRENCY_ID);
   private readonly customSymbol = signal('YR');
@@ -32,7 +45,7 @@ export class HotelCurrencyService {
       const s = this.customSymbol().trim();
       return s || 'YR';
     }
-    return this.presets.find((p) => p.id === this.selectedId())?.symbol ?? 'YR';
+    return this.resolvePreset(this.selectedId())?.symbol ?? 'YR';
   });
 
   readonly code = computed(() => {
@@ -40,20 +53,37 @@ export class HotelCurrencyService {
       const c = this.customCode().trim();
       return c || 'CUSTOM';
     }
-    return this.presets.find((p) => p.id === this.selectedId())?.code ?? 'YER';
+    return this.resolvePreset(this.selectedId())?.code ?? 'YER';
   });
 
   readonly activePreset = computed((): HotelCurrencyPreset | null => {
     if (this.selectedId() === HOTEL_CURRENCY_CUSTOM_ID) {
       return null;
     }
-    return this.presets.find((p) => p.id === this.selectedId()) ?? null;
+    return this.resolvePreset(this.selectedId()) ?? null;
   });
 
   readonly isCustom = computed(() => this.selectedId() === HOTEL_CURRENCY_CUSTOM_ID);
 
-  constructor() {
-    this.reloadFromStorage();
+  setManagedPresets(presets: readonly HotelCurrencyPreset[]): void {
+    this.managedPresets.set(presets);
+    const current = this.selectedId();
+    if (current === HOTEL_CURRENCY_CUSTOM_ID) {
+      return;
+    }
+    const key = normalizeCurrencyKey(current);
+    if (presets.some((p) => normalizeCurrencyKey(p.id) === key || normalizeCurrencyKey(p.code) === key)) {
+      return;
+    }
+    if (
+      HOTEL_CURRENCY_PRESETS.some(
+        (p) => normalizeCurrencyKey(p.id) === key || normalizeCurrencyKey(p.code) === key,
+      )
+    ) {
+      return;
+    }
+    const fallback = presets[0]?.id ?? DEFAULT_HOTEL_CURRENCY_ID;
+    this.selectedId.set(fallback);
   }
 
   reloadFromStorage(): void {
@@ -61,19 +91,19 @@ export class HotelCurrencyService {
   }
 
   applyFromStorage(data: HotelCurrencyStorage | null | undefined): void {
-    const id = (data?.currencyId ?? DEFAULT_HOTEL_CURRENCY_ID) as HotelCurrencyPresetId;
-    if (id === HOTEL_CURRENCY_CUSTOM_ID) {
+    const raw = (data?.currencyId ?? data?.currencyCode ?? DEFAULT_HOTEL_CURRENCY_ID).trim();
+    if (normalizeCurrencyKey(raw) === normalizeCurrencyKey(HOTEL_CURRENCY_CUSTOM_ID)) {
       this.selectedId.set(HOTEL_CURRENCY_CUSTOM_ID);
       this.customSymbol.set((data?.currencySymbol ?? 'YR').trim() || 'YR');
       this.customCode.set((data?.currencyCode ?? 'CUSTOM').trim() || 'CUSTOM');
       return;
     }
-    const preset = this.presets.find((p) => p.id === id);
+    const preset = this.findPreset(raw);
     if (preset) {
       this.selectedId.set(preset.id);
-    } else {
-      this.selectedId.set(DEFAULT_HOTEL_CURRENCY_ID);
+      return;
     }
+    this.selectedId.set(DEFAULT_HOTEL_CURRENCY_ID);
   }
 
   toStorageFields(): HotelCurrencyStorage {
@@ -92,7 +122,6 @@ export class HotelCurrencyService {
     };
   }
 
-  /** ربط العملة بلغة الواجهة (عربي → ريال سعودي، فرنسي → يورو، إندونيسي → روبية، …) */
   syncForUiLocale(locale: HotelUiLocaleCode | string, options?: { persist?: boolean }): void {
     const id = currencyIdForUiLocale(locale);
     this.selectedId.set(id);
@@ -103,7 +132,8 @@ export class HotelCurrencyService {
   }
 
   selectPreset(id: HotelCurrencyPresetId): void {
-    this.selectedId.set(id);
+    const preset = this.findPreset(id);
+    this.selectedId.set(preset?.id ?? id);
     this.notifyChange();
   }
 
@@ -127,6 +157,22 @@ export class HotelCurrencyService {
 
   saveToHotelSettings(): void {
     /* تُحفظ مع HotelSettingsService عند حفظ الإعدادات */
+  }
+
+  private findPreset(id: string): HotelCurrencyPreset | undefined {
+    return this.resolvePreset(id);
+  }
+
+  private resolvePreset(id: HotelCurrencyPresetId | string): HotelCurrencyPreset | undefined {
+    const key = normalizeCurrencyKey(id);
+    if (!key) {
+      return undefined;
+    }
+    const match = (list: readonly HotelCurrencyPreset[]) =>
+      list.find(
+        (p) => normalizeCurrencyKey(p.id) === key || normalizeCurrencyKey(p.code) === key,
+      );
+    return match(this.presets()) ?? match(HOTEL_CURRENCY_PRESETS);
   }
 
   private persistToHotelSettings(): void {

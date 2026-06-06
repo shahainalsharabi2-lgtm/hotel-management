@@ -67,98 +67,114 @@
         <span class="rooms-dev-rail-reopen-label">{{ ui.screenText('rooms', 'railStatesLabel') }}</span>
       </button>
       <div class="rooms-dev-advanced-core">
-        <header class="rooms-dev-page-head">
-          <div>
-            <h1 class="rooms-dev-title">{{ ui.screenText('rooms', 'pageTitle') }}</h1>
-            <p class="rooms-dev-sub">{{ ui.screenText('rooms', 'devTotalRooms') }} — {{ totalRooms }}</p>
-          </div>
-        </header>
+        <section class="rooms-smart-filter" [attr.aria-label]="ui.screenText('rooms', 'smartFilterAria')">
+          <div class="rooms-smart-filter__grid">
+            <label class="rooms-smart-filter__field" [class.rooms-smart-filter__field--active]="devRoomType">
+              <span class="rooms-smart-filter__label">
+                <i class="fas fa-layer-group" aria-hidden="true"></i>
+                {{ ui.screenText('settings', 'roomCategory') }}
+              </span>
+              <div class="rooms-smart-filter__control">
+                <select class="rooms-smart-filter__select" [(ngModel)]="devRoomType">
+                  <option value="">{{ ui.screenText('rooms', 'filterAll') }}</option>
+                  <option *ngFor="let rt of uniqueRoomTypes()" [value]="rt">{{ ui.roomTypeLabel(rt) }}</option>
+                </select>
+                <i class="fas fa-chevron-down rooms-smart-filter__chev" aria-hidden="true"></i>
+              </div>
+            </label>
 
-        <div
-          class="rooms-dev-controls-sticky"
-          [class.rooms-dev-controls-sticky--collapsed]="!filterToolbarOpen">
-          <button
-            type="button"
-            class="rooms-dev-controls-toggle"
-            (click)="toggleFilterToolbar()"
-            [attr.aria-expanded]="filterToolbarOpen"
-            aria-controls="rooms-dev-filter-panel"
-            id="rooms-dev-filter-toggle">
-            <span class="rooms-dev-controls-toggle-label">
-              <i class="fas fa-sliders-h" aria-hidden="true"></i>
-              {{ ui.screenText('rooms', 'devFilterLabel') }}
-            </span>
-            <span class="rooms-dev-controls-toggle-hint" *ngIf="!filterToolbarOpen">
-              {{ ui.screenText('rooms', 'devFilterToggleHint') }}
-            </span>
-            <i
-              class="fas rooms-dev-controls-toggle-chevron"
-              [class.fa-chevron-up]="filterToolbarOpen"
-              [class.fa-chevron-down]="!filterToolbarOpen"
-              aria-hidden="true"></i>
+            <label class="rooms-smart-filter__field" [class.rooms-smart-filter__field--active]="devFilterFeature">
+              <span class="rooms-smart-filter__label">
+                <i class="fas fa-star" aria-hidden="true"></i>
+                {{ ui.screenText('settings', 'roomFeatures') }}
+              </span>
+              <div class="rooms-smart-filter__control">
+                <select class="rooms-smart-filter__select" [(ngModel)]="devFilterFeature">
+                  <option value="">{{ ui.screenText('rooms', 'filterAll') }}</option>
+                  <option *ngFor="let feat of uniqueRoomFeatures()" [value]="feat">{{ feat }}</option>
+                </select>
+                <i class="fas fa-chevron-down rooms-smart-filter__chev" aria-hidden="true"></i>
+              </div>
+            </label>
+
+            <label class="rooms-smart-filter__field" [class.rooms-smart-filter__field--active]="devFilterFloor">
+              <span class="rooms-smart-filter__label">
+                <i class="fas fa-building" aria-hidden="true"></i>
+                {{ ui.screenText('rooms', 'floorLabel') }}
+              </span>
+              <div class="rooms-smart-filter__control">
+                <select class="rooms-smart-filter__select" [(ngModel)]="devFilterFloor">
+                  <option value="">{{ ui.screenText('rooms', 'filterAll') }}</option>
+                  <option *ngFor="let fl of uniqueFloors()" [value]="fl">{{ floorFilterLabel(fl) }}</option>
+                </select>
+                <i class="fas fa-chevron-down rooms-smart-filter__chev" aria-hidden="true"></i>
+              </div>
+            </label>
+
+            <label class="rooms-smart-filter__field" [class.rooms-smart-filter__field--active]="devFilterPrice">
+              <span class="rooms-smart-filter__label">
+                <i class="fas fa-tags" aria-hidden="true"></i>
+                {{ ui.screenText('rooms', 'filterPrice') }}
+              </span>
+              <div class="rooms-smart-filter__control">
+                <select class="rooms-smart-filter__select" [(ngModel)]="devFilterPrice">
+                  <option value="">{{ ui.screenText('rooms', 'filterAll') }}</option>
+                  <option *ngFor="let pr of uniqueRoomPrices()" [value]="pr">{{ formatFilterPrice(pr) }}</option>
+                </select>
+                <i class="fas fa-chevron-down rooms-smart-filter__chev" aria-hidden="true"></i>
+              </div>
+            </label>
+          </div>
+
+          <div class="rooms-smart-filter__actions">
+            <div class="rooms-smart-filter__search">
+              <i class="fas fa-search" aria-hidden="true"></i>
+              <input
+                type="search"
+                class="rooms-smart-filter__search-input"
+                [(ngModel)]="devSearch"
+                [placeholder]="ui.screenText('rooms', 'searchPlaceholder')" />
+            </div>
+            <div class="rooms-smart-filter__extras">
+              <label class="rooms-smart-filter__mini-field">
+                <span class="sr-only">{{ ui.screenText('rooms', 'srDataScope') }}</span>
+                <select class="rooms-smart-filter__mini-select" [(ngModel)]="devDataScope">
+                  <option value="all">{{ ui.screenText('rooms', 'dataScopeAll') }}</option>
+                  <option value="floor">{{ ui.screenText('rooms', 'dataScopeFloor') }}</option>
+                </select>
+              </label>
+              <label class="rooms-smart-filter__chip">
+                <input type="checkbox" [(ngModel)]="devArrivingOnly" />
+                <span>{{ ui.screenText('rooms', 'devArrivingShort') }}</span>
+              </label>
+              <label class="rooms-smart-filter__chip">
+                <input type="checkbox" [(ngModel)]="devPaymentDueOnly" />
+                <span>{{ ui.screenText('rooms', 'devPaymentDueShort') }}</span>
+              </label>
+            </div>
+            <button
+              type="button"
+              class="rooms-smart-filter__clear"
+              *ngIf="smartFilterActive"
+              (click)="clearSmartFilters()">
+              <i class="fas fa-times-circle" aria-hidden="true"></i>
+              {{ ui.screenText('rooms', 'filterClear') }}
+            </button>
+          </div>
+        </section>
+
+        <div class="rooms-dev-filter-banner rooms-dev-filter-banner--inline" *ngIf="devFilterBannerVisible" role="status" aria-live="polite">
+          <div class="rooms-dev-filter-banner__accent" aria-hidden="true"></div>
+          <div class="rooms-dev-filter-banner__icon" aria-hidden="true"><i class="fas fa-sliders-h"></i></div>
+          <div class="rooms-dev-filter-banner__body">
+            <span class="rooms-dev-filter-banner__title">{{ ui.screenText('rooms', 'devCurrentViewTitle') }}</span>
+            <ul class="rooms-dev-filter-banner__list">
+              <li *ngFor="let line of devFilterSummaryLines">{{ line }}</li>
+            </ul>
+          </div>
+          <button type="button" class="rooms-dev-filter-banner__clear" (click)="clearAdvancedFilters()">
+            {{ ui.screenText('rooms', 'clearFilters') }}
           </button>
-
-          <div
-            class="rooms-dev-controls-panel"
-            *ngIf="filterToolbarOpen"
-            id="rooms-dev-filter-panel"
-            role="region"
-            aria-labelledby="rooms-dev-filter-toggle">
-            <div class="rooms-dev-filter-banner" *ngIf="devFilterBannerVisible" role="status" aria-live="polite">
-              <div class="rooms-dev-filter-banner__accent" aria-hidden="true"></div>
-              <div class="rooms-dev-filter-banner__icon" aria-hidden="true"><i class="fas fa-sliders-h"></i></div>
-              <div class="rooms-dev-filter-banner__body">
-                <span class="rooms-dev-filter-banner__title">{{ ui.screenText('rooms', 'devCurrentViewTitle') }}</span>
-                <ul class="rooms-dev-filter-banner__list">
-                  <li *ngFor="let line of devFilterSummaryLines">{{ line }}</li>
-                </ul>
-              </div>
-              <button type="button" class="rooms-dev-filter-banner__clear" (click)="clearAdvancedFilters()">
-                {{ ui.screenText('rooms', 'clearFilters') }}
-              </button>
-            </div>
-
-            <div class="rooms-dev-toolbar">
-              <div class="rooms-dev-toolbar-start">
-                <label class="rooms-dev-field">
-                  <span class="sr-only">{{ ui.screenText('rooms', 'srDataScope') }}</span>
-                  <select class="rooms-dev-select" [(ngModel)]="devDataScope" (ngModelChange)="collapseFilterToolbar()">
-                    <option value="all">{{ ui.screenText('rooms', 'dataScopeAll') }}</option>
-                    <option value="floor">{{ ui.screenText('rooms', 'dataScopeFloor') }}</option>
-                  </select>
-                </label>
-                <label class="rooms-dev-field">
-                  <span class="sr-only">{{ ui.screenText('rooms', 'srRoomType') }}</span>
-                  <select class="rooms-dev-select" [(ngModel)]="devRoomType" (ngModelChange)="collapseFilterToolbar()">
-                    <option value="">{{ ui.screenText('rooms', 'allRoomTypes') }}</option>
-                    <option *ngFor="let rt of uniqueRoomTypes()" [value]="rt">{{ rt }}</option>
-                  </select>
-                </label>
-              </div>
-              <div class="rooms-dev-toolbar-mid">
-                <label class="rooms-dev-check">
-                  <input type="checkbox" [(ngModel)]="devArrivingOnly" (ngModelChange)="collapseFilterToolbar()" />
-                  <span>{{ ui.screenText('rooms', 'devArrivingShort') }}</span>
-                </label>
-                <label class="rooms-dev-check">
-                  <input type="checkbox" [(ngModel)]="devPaymentDueOnly" (ngModelChange)="collapseFilterToolbar()" />
-                  <span>{{ ui.screenText('rooms', 'devPaymentDueShort') }}</span>
-                </label>
-              </div>
-              <div class="rooms-dev-toolbar-end">
-                <div class="rooms-dev-search-wrap">
-                  <i class="fas fa-search" aria-hidden="true"></i>
-                  <input
-                    type="search"
-                    class="rooms-dev-search"
-                    [(ngModel)]="devSearch"
-                    (blur)="collapseFilterToolbar()"
-                    (keydown.enter)="collapseFilterToolbar()"
-                    [placeholder]="ui.screenText('rooms', 'searchPlaceholder')" />
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
         <div class="rooms-dev-main">

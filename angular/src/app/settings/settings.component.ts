@@ -3,8 +3,8 @@ import { ChangeDetectorRef, Component, DestroyRef, inject, OnInit } from '@angul
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { forkJoin } from 'rxjs';
-import { finalize } from 'rxjs/operators';
+import { forkJoin, from, of } from 'rxjs';
+import { catchError, concatMap, finalize, switchMap, toArray } from 'rxjs/operators';
 import { fromEvent } from 'rxjs';
 import { Floor } from '../models/floor.model';
 import { Room } from '../models/room.model';
@@ -20,9 +20,9 @@ import { UiTranslationsService } from '../services/ui-translations.service';
 import { bookingNotifyParams } from '../utils/booking-notify-params.util';
 import { HotelBrandingStoreService } from '../services/hotel-branding-store.service';
 import { HotelCurrencyService } from '../services/hotel-currency.service';
+import { PreferenceCategoryCurrencyService } from '../services/preference-category-currency.service';
 import {
   HOTEL_CURRENCY_CUSTOM_ID,
-  HOTEL_CURRENCY_PRESETS,
   type HotelCurrencyPreset,
   type HotelCurrencyPresetId,
 } from '../utils/hotel-currency.presets';
@@ -36,6 +36,7 @@ import { formatLocalePickerLabel } from '../utils/locale-picker-label';
 import { bindUiTranslationRefresh } from '../utils/ui-screen-i18n.helper';
 import { UiMessageService } from '../services/ui-message.service';
 import { GeneralCodesComponent } from '../general-codes/general-codes.component';
+import { ArabicLocalePickComponent } from './arabic-locale-pick/arabic-locale-pick.component';
 import {
   GeneralCodesService,
   type GeneralCodeItem,
@@ -61,7 +62,7 @@ import type { UiLocaleFilePayload } from '../utils/ui-translations-locale.util';
   templateUrl: './settings.component.html',
   styleUrls: ['./settings-base.css', './settings.component.css'],
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, GeneralCodesComponent],
+  imports: [CommonModule, FormsModule, RouterModule, GeneralCodesComponent, ArabicLocalePickComponent],
 })
 export class SettingsComponent implements OnInit {
   /** شعار/صورة الفندق كـ data URL للطباعة (بيضوي) — مشترك بين اللغات */
@@ -88,6 +89,7 @@ export class SettingsComponent implements OnInit {
     | 'identities'
     | 'guests'
     | 'currency'
+    | 'arabicLocale'
     | 'users'
     | 'translations'
     | 'uiTranslations' = 'general';
@@ -97,7 +99,9 @@ export class SettingsComponent implements OnInit {
   editingAppUser: HotelAppUserDto | null = null;
   newAppUser: CreateUpdateHotelAppUserDto = this.emptyAppUserForm();
 
-  readonly currencyPresets = HOTEL_CURRENCY_PRESETS;
+  get currencyPresets() {
+    return this.prefCategoryCurrency.currencies();
+  }
   readonly currencyCustomId = HOTEL_CURRENCY_CUSTOM_ID;
   currencyCustomSymbol = 'YR';
   currencyCustomCode = 'CUSTOM';
@@ -138,6 +142,16 @@ export class SettingsComponent implements OnInit {
 
   newFloorLevel = 1;
   newFloorRoomsCount = 1;
+
+  /** إنشاء سريع: طابق + سلسلة غرف */
+  layoutQuickCreateExpanded = true;
+  layoutQuickFromTouched = false;
+  layoutQuickFromText = '101';
+  layoutQuickRoomCountText = '5';
+  layoutQuickPriceText = '1';
+  layoutQuickRoomView = '';
+  layoutQuickCreating = false;
+  layoutFeaturesModalRoom: Room | null = null;
 
   newRoomNumber = '';
   newRoomType = '';
@@ -191,6 +205,7 @@ export class SettingsComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly uiMsg = inject(UiMessageService);
+  private readonly prefCategoryCurrency = inject(PreferenceCategoryCurrencyService);
   private readonly hotelSystemSettings = inject(HotelSystemSettingsLoader);
   private readonly paymentMethodService = inject(PaymentMethodService);
   private readonly hotelAppUserService = inject(HotelAppUserService);
@@ -198,12 +213,18 @@ export class SettingsComponent implements OnInit {
   readonly auth = inject(HotelAuthService);
   readonly userRoleOptions = HOTEL_USER_ROLE_OPTIONS;
 
+  /** إضافة / تعديل / حذف في الإعدادات — للمدير فقط */
+  get settingsEditable(): boolean {
+    return this.auth.canManageSettings();
+  }
+
   private readonly settingsTabKeys = new Set([
     'general',
     'layout',
     'payments',
     'identities',
     'guests',
+    'arabicLocale',
     'currency',
     'users',
     'translations',
@@ -255,10 +276,15 @@ export class SettingsComponent implements OnInit {
       next: () => {
         window.dispatchEvent(new Event('hotelSettingsUpdated'));
         window.dispatchEvent(new Event('hotelCurrencyUpdated'));
+        this.uiMsg.success(this.uiTranslations.chromeLabel('toastCurrencySaved'), {
+          title: this.uiTranslations.chromeLabel('toastSavedTitle'),
+        });
       },
       error: (err) => {
         console.error('persistHotelCurrency', err);
-        this.uiMsg.error('تعذّر حفظ العملة');
+        this.uiMsg.error('تعذّر حفظ العملة', {
+          title: this.uiTranslations.chromeLabel('toastSaveFailedTitle'),
+        });
       },
     });
   }
@@ -294,6 +320,10 @@ export class SettingsComponent implements OnInit {
 
   get layoutRoomViewSelectOptions(): string[] {
     return this.codeNameSelectOptions(this.roomViewOptions, this.layoutPanelRoomView);
+  }
+
+  get layoutQuickRoomViewSelectOptions(): string[] {
+    return this.codeNameSelectOptions(this.roomViewOptions, this.layoutQuickRoomView);
   }
 
   get layoutRoomArchitectureSelectOptions(): string[] {
@@ -406,7 +436,8 @@ export class SettingsComponent implements OnInit {
           this.roomArchitectureOptions = this.sortGeneralCodeItems(architecture);
           this.roomFeatureOptions = this.sortGeneralCodeItems(features);
           this.roomLocationOptions = this.sortGeneralCodeItems(locations);
-          this.ensureLayoutPanelRoomCategoryDefault();
+          this.ensureLayoutPanelRoomCodingDefaults();
+          this.ensureLayoutQuickViewDefault();
           this.mergeLayoutPanelFeaturesWithCatalog();
         },
         error: () => {
@@ -430,21 +461,238 @@ export class SettingsComponent implements OnInit {
     });
   }
 
-  private ensureLayoutPanelRoomCategoryDefault(): void {
-    if (!this.layoutPanelOpen || !this.layoutPanelIsNew) {
+  private ensureLayoutPanelRoomCodingDefaults(): void {
+    if (!this.layoutPanelOpen) {
       return;
     }
-    const current = this.layoutPanelRoomType.trim();
-    const names = this.roomClassOptions.map((x) => String(x.name ?? '').trim()).filter(Boolean);
-    if (current && names.includes(current)) {
-      return;
+    const pickFirstIfEmpty = (current: string, options: GeneralCodeItem[]): string => {
+      const value = current.trim();
+      const names = options.map((x) => String(x.name ?? '').trim()).filter(Boolean);
+      if (!names.length) {
+        return value;
+      }
+      if (value && names.includes(value)) {
+        return value;
+      }
+      if (this.layoutPanelIsNew || !value) {
+        return names[0];
+      }
+      return value;
+    };
+
+    this.layoutPanelRoomType = pickFirstIfEmpty(this.layoutPanelRoomType, this.roomClassOptions);
+    if (this.layoutPanelIsNew) {
+      this.layoutPanelRoomView = pickFirstIfEmpty(this.layoutPanelRoomView, this.roomViewOptions);
+      this.layoutPanelRoomArchitecture = pickFirstIfEmpty(
+        this.layoutPanelRoomArchitecture,
+        this.roomArchitectureOptions,
+      );
+      this.layoutPanelRoomLocation = pickFirstIfEmpty(
+        this.layoutPanelRoomLocation,
+        this.roomLocationOptions,
+      );
     }
-    this.layoutPanelRoomType = names[0] ?? '';
   }
 
   private defaultNewRoomCategory(): string {
     const names = this.roomClassOptions.map((x) => String(x.name ?? '').trim()).filter(Boolean);
     return names[0] ?? '';
+  }
+
+  private ensureLayoutQuickViewDefault(): void {
+    if (!this.layoutQuickRoomView.trim()) {
+      const names = this.roomViewOptions.map((x) => String(x.name ?? '').trim()).filter(Boolean);
+      this.layoutQuickRoomView = names[0] ?? '';
+    }
+    if (!this.layoutQuickFromTouched) {
+      this.layoutQuickFromText = String(this.suggestedRoomNumberFromFloor(this.newFloorLevel));
+    }
+  }
+
+  /** رقم أول غرفة تلقائياً: طابق 5 → 501 */
+  suggestedRoomNumberFromFloor(floor: number): number {
+    const level = Math.max(1, Math.floor(Number(floor) || 1));
+    return level * 100 + 1;
+  }
+
+  onLayoutQuickFloorLevelChange(raw: string | number): void {
+    this.newFloorLevel = Math.max(1, this.parseLayoutQuickInt(String(raw), 1));
+    if (!this.layoutQuickFromTouched) {
+      this.layoutQuickFromText = String(this.suggestedRoomNumberFromFloor(this.newFloorLevel));
+    }
+    this.cdr.markForCheck();
+  }
+
+  onLayoutQuickFromInput(): void {
+    this.layoutQuickFromTouched = true;
+  }
+
+  private parseLayoutQuickInt(raw: string, fallback = 0): number {
+    const n = parseInt(String(raw ?? '').replace(/\D/g, ''), 10);
+    return Number.isFinite(n) ? n : fallback;
+  }
+
+  /** معاينة أرقام الغرف: 101 - 102 - 103 … */
+  get layoutQuickNumberPreview(): string {
+    const from = this.parseLayoutQuickInt(this.layoutQuickFromText, 0);
+    const count = Math.max(1, Math.min(12, this.parseLayoutQuickInt(this.layoutQuickRoomCountText, 1)));
+    if (from <= 0) {
+      return '';
+    }
+    return Array.from({ length: count }, (_, i) => from + i).join(' - ');
+  }
+
+  openRoomFeaturesModal(room: Room, event: Event): void {
+    event.stopPropagation();
+    this.layoutFeaturesModalRoom = room;
+    this.cdr.markForCheck();
+  }
+
+  closeRoomFeaturesModal(): void {
+    this.layoutFeaturesModalRoom = null;
+    this.cdr.markForCheck();
+  }
+
+  editRoomFromFeaturesModal(): void {
+    const room = this.layoutFeaturesModalRoom;
+    if (!room) {
+      return;
+    }
+    this.closeRoomFeaturesModal();
+    this.openLayoutRoomPanel(room);
+  }
+
+  quickCreateLayoutRooms(): void {
+    this.requirePasswordConfirm(() => this.quickCreateLayoutRoomsConfirmed());
+  }
+
+  private quickCreateLayoutRoomsConfirmed(): void {
+    const floorLevel = Math.floor(Number(this.newFloorLevel) || 0);
+    const fromNum = this.parseLayoutQuickInt(this.layoutQuickFromText, 0);
+    const count = this.parseLayoutQuickInt(this.layoutQuickRoomCountText, 0);
+    const price = this.parseLayoutQuickInt(this.layoutQuickPriceText, 0);
+
+    if (floorLevel < 1) {
+      this.uiMsg.show(this.uiTranslations.screenText('settings', 'layoutQuickInvalidFloor'));
+      return;
+    }
+    if (!Number.isFinite(fromNum) || fromNum < 1) {
+      this.uiMsg.show(this.uiTranslations.screenText('settings', 'layoutQuickInvalidFrom'));
+      return;
+    }
+    if (count < 1 || count > 200) {
+      this.uiMsg.show(this.uiTranslations.screenText('settings', 'layoutQuickInvalidCount'));
+      return;
+    }
+    if (price <= 0) {
+      this.uiMsg.show(this.uiTranslations.screenText('settings', 'layoutQuickInvalidPrice'));
+      return;
+    }
+
+    const numbers = Array.from({ length: count }, (_, i) => String(fromNum + i));
+    const duplicates = numbers.filter((n) => this.rooms.some((r) => r.roomNumber === n));
+    if (duplicates.length) {
+      this.uiMsg.show(
+        this.uiTranslations
+          .screenText('settings', 'layoutQuickDuplicate')
+          .replace('{nums}', duplicates.slice(0, 5).join('، ')),
+      );
+      return;
+    }
+
+    const roomType = this.defaultNewRoomCategory() || 'غرفة';
+    const roomView = this.layoutQuickRoomView.trim() || null;
+    const currencyCode = this.hotelCurrency.code();
+    const currencySymbol = this.hotelCurrency.symbol();
+
+    this.layoutQuickCreating = true;
+    this.cdr.markForCheck();
+
+    this.ensureLayoutFloor$(floorLevel, count)
+      .pipe(
+        switchMap(() =>
+          from(numbers).pipe(
+            concatMap((roomNumber) =>
+              this.roomService.addRoom(
+                {
+                  id: 0,
+                  roomNumber,
+                  type: roomType,
+                  roomView,
+                  roomArchitecture: null,
+                  roomLocation: null,
+                  roomFeatures: null,
+                  floor: floorLevel,
+                  price,
+                  status: 'available',
+                  currencyCode,
+                  currencySymbol,
+                },
+                false,
+              ),
+            ),
+            toArray(),
+          ),
+        ),
+        finalize(() => {
+          this.layoutQuickCreating = false;
+          this.cdr.markForCheck();
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (created) => {
+          this.rooms.push(...created);
+          this.newFloorLevel = floorLevel + 1;
+          this.layoutQuickFromTouched = false;
+          this.onLayoutQuickFloorLevelChange(this.newFloorLevel);
+          this.uiMsg.success(
+            this.uiTranslations
+              .screenText('settings', 'layoutQuickSuccess')
+              .replace('{n}', String(created.length)),
+          );
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          console.error('Quick layout room create failed', err);
+          this.uiMsg.show(this.uiTranslations.screenText('settings', 'layoutQuickFail'));
+        },
+      });
+  }
+
+  /** إنشاء الطابق إن لم يكن موجوداً وتحديث سعته */
+  private ensureLayoutFloor$(floorLevel: number, roomsCount: number) {
+    const existing = this.floors.find((f) => f.level === floorLevel);
+    if (existing?.id) {
+      const nextCount = Math.max(existing.roomsCount, roomsCount);
+      if (nextCount === existing.roomsCount) {
+        return of(existing);
+      }
+      const updated: Floor = { ...existing, roomsCount: nextCount };
+      return this.floorService.updateFloor(existing.id, updated).pipe(
+        switchMap(() => {
+          const i = this.floors.findIndex((f) => f.id === existing.id);
+          if (i !== -1) {
+            this.floors[i] = updated;
+          }
+          return of(updated);
+        }),
+        catchError((err) => {
+          console.error('Floor update failed', err);
+          throw err;
+        }),
+      );
+    }
+    const newFloor: Floor = { level: floorLevel, roomsCount };
+    return this.floorService.addFloor(newFloor).pipe(
+      switchMap((floor) => {
+        this.floors.push(floor);
+        if (!this.newRoomFloor) {
+          this.newRoomFloor = floor.level;
+        }
+        return of(floor);
+      }),
+    );
   }
 
   /** إبقاء مميزات محفوظة سابقاً (حتى لو حُذفت من القائمة) */
@@ -550,6 +798,9 @@ export class SettingsComponent implements OnInit {
   }
 
   editGuest(booking: Booking): void {
+    if (!this.settingsEditable) {
+      return;
+    }
     this.editingBooking = { ...booking };
   }
 
@@ -687,6 +938,9 @@ export class SettingsComponent implements OnInit {
   }
 
   addAppUser(): void {
+    if (!this.ensureSettingsEditable()) {
+      return;
+    }
     const input = this.normalizeAppUserInput(this.newAppUser);
     if (!input.firstName || !input.lastName || !input.userName || !input.password) {
       this.uiMsg.show(this.uiTranslations.screenText('settings', 'usersRequiredFields'));
@@ -710,6 +964,9 @@ export class SettingsComponent implements OnInit {
   }
 
   editAppUser(user: HotelAppUserDto): void {
+    if (!this.ensureSettingsEditable()) {
+      return;
+    }
     this.editingAppUser = { ...user };
   }
 
@@ -718,6 +975,9 @@ export class SettingsComponent implements OnInit {
   }
 
   saveAppUserEdit(): void {
+    if (!this.ensureSettingsEditable()) {
+      return;
+    }
     if (!this.editingAppUser?.id) {
       return;
     }
@@ -749,6 +1009,9 @@ export class SettingsComponent implements OnInit {
   }
 
   deleteAppUser(user: HotelAppUserDto): void {
+    if (!this.ensureSettingsEditable()) {
+      return;
+    }
     if (!user.id) {
       return;
     }
@@ -784,7 +1047,10 @@ export class SettingsComponent implements OnInit {
   }
 
   private applyTabFromRoute(): void {
-    const tab = (this.route.snapshot.queryParamMap.get('tab') || '').trim();
+    let tab = (this.route.snapshot.queryParamMap.get('tab') || '').trim();
+    if (tab === 'general-codes') {
+      tab = 'translations';
+    }
     if (tab === 'users' && !this.auth.canManageUsers()) {
       this.activeTab = 'general';
       void this.router.navigate([], {
@@ -930,6 +1196,9 @@ export class SettingsComponent implements OnInit {
   }
 
   saveUiTranslationsForm(options?: { silent?: boolean }): void {
+    if (!this.ensureSettingsEditable()) {
+      return;
+    }
     if (this.uiTranslationsSaving) {
       return;
     }
@@ -1137,7 +1406,18 @@ export class SettingsComponent implements OnInit {
   }
 
   requirePasswordConfirm(action: () => void): void {
+    if (!this.ensureSettingsEditable()) {
+      return;
+    }
     action();
+  }
+
+  private ensureSettingsEditable(): boolean {
+    if (this.settingsEditable) {
+      return true;
+    }
+    this.uiMsg.show(this.uiTranslations.screenText('settings', 'settingsManagerOnlyHint'));
+    return false;
   }
 
   confirmPasswordGate(): void {
@@ -1224,6 +1504,9 @@ export class SettingsComponent implements OnInit {
   }
 
   editFloor(floor: Floor): void {
+    if (!this.settingsEditable) {
+      return;
+    }
     if (floor.id) {
       this.editingFloorId = floor.id;
       this.editingFloorLevel = floor.level;
@@ -1299,6 +1582,9 @@ export class SettingsComponent implements OnInit {
   }
 
   editRoom(room: Room): void {
+    if (!this.settingsEditable) {
+      return;
+    }
     this.editingRoomId = room.id;
     this.editingRoomNumber = room.roomNumber;
     this.editingRoomType = room.type;
@@ -1412,6 +1698,9 @@ export class SettingsComponent implements OnInit {
   }
 
   openLayoutRoomPanel(room: Room): void {
+    if (!this.settingsEditable) {
+      return;
+    }
     this.layoutPanelIsNew = false;
     this.layoutPanelRoomId = room.id;
     this.layoutPanelFloorLevel = room.floor;
@@ -1427,6 +1716,9 @@ export class SettingsComponent implements OnInit {
   }
 
   openLayoutNewRoomPanel(floor: Floor): void {
+    if (!this.settingsEditable) {
+      return;
+    }
     this.layoutPanelIsNew = true;
     this.layoutPanelRoomId = null;
     this.layoutPanelFloorLevel = floor.level;
@@ -1664,6 +1956,9 @@ export class SettingsComponent implements OnInit {
   }
 
   editPayment(index: number): void {
+    if (!this.settingsEditable) {
+      return;
+    }
     this.editingPaymentIndex = index;
     this.editingPaymentValue = this.paymentMethodRows[index]?.name ?? '';
   }
@@ -1740,6 +2035,9 @@ export class SettingsComponent implements OnInit {
   }
 
   onHotelImageSelected(ev: Event): void {
+    if (!this.ensureSettingsEditable()) {
+      return;
+    }
     const input = ev.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) {
@@ -1764,6 +2062,9 @@ export class SettingsComponent implements OnInit {
   }
 
   removeHotelImage(): void {
+    if (!this.ensureSettingsEditable()) {
+      return;
+    }
     this.hotelImageDataUrl = '';
   }
 

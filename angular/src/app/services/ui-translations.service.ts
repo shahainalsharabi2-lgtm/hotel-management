@@ -1,4 +1,4 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, Injector, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { catchError, forkJoin, map, of, tap } from 'rxjs';
 import {
@@ -19,12 +19,17 @@ import type {
 import {
   HOTEL_UI_LOCALE_STORAGE_KEY,
   SIDEBAR_NAV_KEYS,
+  UI_AR_SCREEN_COPY_ASSET_OVERRIDES,
   UI_CHROME_KEYS,
   UI_EXTRA_LOCALES,
 } from '../utils/ui-translation.constants';
 import { roomTypeTranslationKey } from '../utils/room-type-i18n';
-import { HotelCurrencyService } from './hotel-currency.service';
+import { HotelCurrencyService, HOTEL_CURRENCY_UPDATED_EVENT } from './hotel-currency.service';
+import { ArabicPreferenceCategoryService } from './arabic-preference-category.service';
+import { HotelSystemSettingsLoader } from './hotel-system-settings.loader';
 import type { HotelUiLocaleCode } from '../utils/hotel-currency.presets';
+import { UiMessageService } from './ui-message.service';
+import { uiLocalePickerOption } from '../utils/ui-locale-picker.util';
 
 const DEFAULT_UI_LOCALE: UiExtraLocaleCode | 'ar' = 'ar';
 
@@ -34,6 +39,7 @@ const DEFAULT_UI_LOCALE: UiExtraLocaleCode | 'ar' = 'ar';
 export class UiTranslationsService {
   private readonly http = inject(HttpClient);
   private readonly hotelCurrency = inject(HotelCurrencyService);
+  private readonly injector = inject(Injector);
 
   /** يُحمَّل من ملفات JSON على الخادم (UiTranslations/*.json) */
   private readonly payload = signal<UiManualTranslationsPayload>({});
@@ -55,22 +61,48 @@ export class UiTranslationsService {
       const raw = localStorage.getItem(HOTEL_UI_LOCALE_STORAGE_KEY);
       if (raw === 'ar' || raw === 'fr' || raw === 'id' || raw === 'tr' || raw === 'zh-Hans') {
         this.displayLocale.set(raw);
-        this.hotelCurrency.syncForUiLocale(raw as HotelUiLocaleCode, { persist: false });
+        if (raw !== 'ar') {
+          this.hotelCurrency.syncForUiLocale(raw as HotelUiLocaleCode, { persist: false });
+        }
       }
     } catch {
       /* ignore */
     }
   }
 
-  setDisplayLocale(locale: UiExtraLocaleCode | 'ar'): void {
+  setDisplayLocale(locale: UiExtraLocaleCode | 'ar', options?: { skipToast?: boolean }): void {
+    const previous = this.displayLocale();
+    if (previous === locale) {
+      return;
+    }
     this.displayLocale.set(locale);
     try {
       localStorage.setItem(HOTEL_UI_LOCALE_STORAGE_KEY, locale);
     } catch {
       /* ignore */
     }
-    this.hotelCurrency.syncForUiLocale(locale as HotelUiLocaleCode);
+    if (locale === 'ar') {
+      this.injector.get(ArabicPreferenceCategoryService).applyCurrencyForSelectedCategory();
+    } else {
+      this.hotelCurrency.syncForUiLocale(locale as HotelUiLocaleCode, { persist: false });
+      this.injector.get(HotelSystemSettingsLoader).save().subscribe({
+        next: () => window.dispatchEvent(new Event(HOTEL_CURRENCY_UPDATED_EVENT)),
+        error: () => window.dispatchEvent(new Event(HOTEL_CURRENCY_UPDATED_EVENT)),
+      });
+    }
     window.dispatchEvent(new Event('hotelUiLocaleChanged'));
+    if (!options?.skipToast) {
+      this.showLocaleChangedToast(locale);
+    }
+  }
+
+  private showLocaleChangedToast(locale: UiExtraLocaleCode | 'ar'): void {
+    const opt = uiLocalePickerOption(locale);
+    const label = this.screenText('settings', opt.labelKey);
+    const message = this.chromeLabel('toastLocaleChanged').replace('{0}', label);
+    this.injector.get(UiMessageService).success(message, {
+      title: this.chromeLabel('toastLocaleChangedTitle'),
+    });
   }
 
   reloadFromBackend(done?: () => void): void {
@@ -107,13 +139,14 @@ export class UiTranslationsService {
               continue;
             }
             const merged = { ...(arScreen[screenId] ?? {}) };
+            const forceFromAssets = UI_AR_SCREEN_COPY_ASSET_OVERRIDES.has(screenId);
             for (const [key, value] of Object.entries(msgs)) {
               const trimmed = (value ?? '').trim();
               if (!trimmed) {
                 continue;
               }
               const existing = (merged[key] ?? '').trim();
-              if (!existing || existing === key) {
+              if (forceFromAssets || !existing || existing === key) {
                 merged[key] = trimmed;
               }
             }

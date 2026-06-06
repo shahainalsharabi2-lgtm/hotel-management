@@ -14,20 +14,17 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { HotelAuthService } from '../../services/hotel-auth.service';
 import { filter } from 'rxjs/operators';
+import { fromEvent } from 'rxjs';
 import { UiTranslationsService } from '../../services/ui-translations.service';
+import { ArabicPreferenceCategoryService } from '../../services/arabic-preference-category.service';
+import { ArabicCategoryPickerService } from '../../services/arabic-category-picker.service';
 import type { UiExtraLocaleCode } from '../../utils/ui-translation.constants';
 import { formatLocalePickerLabel } from '../../utils/locale-picker-label';
 import { bindUiTranslationRefresh } from '../../utils/ui-screen-i18n.helper';
+import { UI_LOCALE_PICKER_OPTIONS, type UiLocalePickerOption } from '../../utils/ui-locale-picker.util';
 import { DbSettingsPanelComponent } from '../db-settings-panel/db-settings-panel.component';
 
-type TopBarLocale = UiExtraLocaleCode | 'ar';
-
-interface TopBarLocaleOption {
-  code: TopBarLocale;
-  flagSrc: string;
-  shortCode: string;
-  labelKey: 'localeAr' | 'localeFr' | 'localeId' | 'localeTr';
-}
+type TopBarLocale = UiLocalePickerOption['code'];
 
 @Component({
   selector: 'app-top-bar',
@@ -38,6 +35,8 @@ interface TopBarLocaleOption {
 })
 export class AppTopBarComponent implements OnInit {
   readonly ui = inject(UiTranslationsService);
+  private readonly arabicPref = inject(ArabicPreferenceCategoryService);
+  private readonly arabicCategoryPicker = inject(ArabicCategoryPickerService);
   private readonly auth = inject(HotelAuthService);
   private readonly router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
@@ -51,12 +50,7 @@ export class AppTopBarComponent implements OnInit {
   @Output() searchOpen = new EventEmitter<void>();
   @Output() notificationsOpen = new EventEmitter<void>();
 
-  readonly localeOptions: ReadonlyArray<TopBarLocaleOption> = [
-    { code: 'ar', flagSrc: 'assets/flags/sa.svg', shortCode: 'SAU', labelKey: 'localeAr' },
-    { code: 'fr', flagSrc: 'assets/flags/fr.svg', shortCode: 'FRA', labelKey: 'localeFr' },
-    { code: 'id', flagSrc: 'assets/flags/id.svg', shortCode: 'IDN', labelKey: 'localeId' },
-    { code: 'tr', flagSrc: 'assets/flags/tr.svg', shortCode: 'TUR', labelKey: 'localeTr' },
-  ];
+  readonly localeOptions = UI_LOCALE_PICKER_OPTIONS;
 
   breadcrumb = '';
   clockDate = '';
@@ -66,6 +60,9 @@ export class AppTopBarComponent implements OnInit {
 
   ngOnInit(): void {
     bindUiTranslationRefresh(this.cdr, this.destroyRef);
+    fromEvent(window, 'hotelArabicCategoryChanged')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.cdr.markForCheck());
     this.updateBreadcrumb(this.router.url);
     this.tickClock();
     const clockTimer = window.setInterval(() => this.tickClock(), 30_000);
@@ -99,17 +96,25 @@ export class AppTopBarComponent implements OnInit {
     }
   }
 
-  localeLabel(labelKey: TopBarLocaleOption['labelKey']): string {
+  localeLabel(labelKey: UiLocalePickerOption['labelKey']): string {
     const raw = this.ui.screenText('settings', labelKey);
     return formatLocalePickerLabel(raw, this.ui.displayLocale());
   }
 
-  activeLocaleOption(): TopBarLocaleOption {
+  activeLocaleOption(): UiLocalePickerOption {
     const current = this.ui.displayLocale();
-    return this.localeOptions.find((o) => o.code === current) ?? this.localeOptions[0];
+    const base = this.localeOptions.find((o) => o.code === current) ?? this.localeOptions[0];
+    if (current === 'ar') {
+      return {
+        ...base,
+        flagSrc: this.arabicPref.activeFlagSrc(),
+        shortCode: this.arabicPref.activeShortCode(),
+      };
+    }
+    return base;
   }
 
-  otherLocaleOptions(): TopBarLocaleOption[] {
+  otherLocaleOptions(): UiLocalePickerOption[] {
     const current = this.ui.displayLocale();
     return this.localeOptions.filter((o) => o.code !== current);
   }
@@ -131,6 +136,12 @@ export class AppTopBarComponent implements OnInit {
     event?.stopPropagation();
     this.langPickerOpen = false;
     if (this.ui.displayLocale() === code) {
+      return;
+    }
+    if (code === 'ar') {
+      this.arabicCategoryPicker.requestArabicLocaleSwitch(() =>
+        this.ui.reloadFromBackend(() => this.cdr.markForCheck()),
+      );
       return;
     }
     this.ui.setDisplayLocale(code);
@@ -194,7 +205,12 @@ export class AppTopBarComponent implements OnInit {
     }
 
     if (path === '/booking') {
-      this.breadcrumb = `${this.ui.sidebarLabel('bookingsGroup')} / ${this.ui.sidebarLabel('navNewBooking')}`;
+      const walkIn = params.get('walkIn') === '1' || params.get('walkIn') === 'true';
+      const isWalkInCheckIn = params.get('mode') === 'checkIn' && walkIn;
+      const pageLabel = isWalkInCheckIn
+        ? this.ui.sidebarLabel('navWalkInCheckIn')
+        : this.ui.sidebarLabel('navNewBooking');
+      this.breadcrumb = `${this.ui.sidebarLabel('bookingsGroup')} / ${pageLabel}`;
       return;
     }
 
@@ -228,6 +244,10 @@ export class AppTopBarComponent implements OnInit {
       const settingsTitle = this.ui.chromeLabel('helpSettingsLink');
       if (tab === 'translations') {
         this.breadcrumb = `${settingsTitle} / ${this.ui.screenText('settings', 'tabGeneralCodings')}`;
+        return;
+      }
+      if (tab === 'arabicLocale') {
+        this.breadcrumb = `${settingsTitle} / ${this.ui.screenText('settings', 'tabArabicLocalePick')}`;
         return;
       }
       this.breadcrumb = `/ ${settingsTitle}`;

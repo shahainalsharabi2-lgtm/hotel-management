@@ -2,10 +2,17 @@ import { Injectable, signal } from '@angular/core';
 
 export type UiMessageTone = 'info' | 'success' | 'error' | 'warning';
 
+export interface UiToastOptions {
+  title?: string;
+  durationMs?: number;
+}
+
 export interface UiToastMessage {
   id: string;
   message: string;
+  title?: string;
   tone: UiMessageTone;
+  durationMs: number;
 }
 
 export interface UiConfirmRequest {
@@ -20,42 +27,57 @@ const TOAST_MS: Record<UiMessageTone, number> = {
   warning: 6000,
 };
 
+const MAX_TOASTS = 4;
+
 @Injectable({ providedIn: 'root' })
 export class UiMessageService {
   private readonly toastsSignal = signal<UiToastMessage[]>([]);
   private readonly confirmSignal = signal<UiConfirmRequest | null>(null);
   private toastSeq = 0;
+  private readonly dismissTimers = new Map<string, number>();
 
   readonly toasts = this.toastsSignal.asReadonly();
   readonly confirmRequest = this.confirmSignal.asReadonly();
 
-  show(message: string, tone: UiMessageTone = 'info'): void {
+  show(message: string, tone: UiMessageTone = 'info', options?: UiToastOptions): void {
     const text = String(message ?? '').trim();
     if (!text) {
       return;
     }
+    const durationMs = options?.durationMs ?? TOAST_MS[tone];
+    const title = options?.title?.trim() || undefined;
     const id = `toast-${++this.toastSeq}-${Date.now()}`;
-    this.toastsSignal.update((list) => [...list, { id, message: text, tone }]);
-    window.setTimeout(() => this.dismissToast(id), TOAST_MS[tone]);
+    const toast: UiToastMessage = { id, message: text, title, tone, durationMs };
+    this.toastsSignal.update((list) => {
+      const next = [...list, toast];
+      return next.length > MAX_TOASTS ? next.slice(-MAX_TOASTS) : next;
+    });
+    const timerId = window.setTimeout(() => this.dismissToast(id), durationMs);
+    this.dismissTimers.set(id, timerId);
   }
 
-  success(message: string): void {
-    this.show(message, 'success');
+  success(message: string, options?: UiToastOptions): void {
+    this.show(message, 'success', options);
   }
 
-  error(message: string): void {
-    this.show(message, 'error');
+  error(message: string, options?: UiToastOptions): void {
+    this.show(message, 'error', options);
   }
 
-  warning(message: string): void {
-    this.show(message, 'warning');
+  warning(message: string, options?: UiToastOptions): void {
+    this.show(message, 'warning', options);
   }
 
-  info(message: string): void {
-    this.show(message, 'info');
+  info(message: string, options?: UiToastOptions): void {
+    this.show(message, 'info', options);
   }
 
   dismissToast(id: string): void {
+    const timerId = this.dismissTimers.get(id);
+    if (timerId != null) {
+      window.clearTimeout(timerId);
+      this.dismissTimers.delete(id);
+    }
     this.toastsSignal.update((list) => list.filter((t) => t.id !== id));
   }
 

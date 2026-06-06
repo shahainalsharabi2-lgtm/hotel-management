@@ -694,6 +694,7 @@
       "devStatusRailTitle": "Görünüm durumları",
       "devTotalRatesAll": "Tüm odalar toplamı",
       "devTotalRooms": "oda",
+      "devTotalRoomsLine": "Toplam {n} oda",
       "editStatusBtn": "Durumu düzenle",
       "filterArrivingOnly": "Yalnızca dolu odalar",
       "filterAvailableReady": "Müsait — hazır",

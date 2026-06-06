@@ -1,0 +1,65 @@
+@if (picker.open()) {
+  <div class="ar-cat-sheet" dir="rtl">
+    <button
+      type="button"
+      class="ar-cat-sheet__scrim"
+      (click)="onBackdropClick()"
+      [attr.aria-label]="ui.screenText('settings', 'arabicCategorySheetClose')"></button>
+
+    <div
+      class="ar-cat-sheet__panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="ar-cat-sheet-title"
+      (click)="$event.stopPropagation()">
+      <header class="ar-cat-sheet__head">
+        <div class="ar-cat-sheet__head-icon" aria-hidden="true">
+          <i class="fas fa-globe-africa"></i>
+        </div>
+        <div class="ar-cat-sheet__head-copy">
+          <h2 id="ar-cat-sheet-title" class="ar-cat-sheet__title">
+            {{ ui.screenText('settings', 'arabicLocalePickTitle') }}
+          </h2>
+        </div>
+        <button
+          type="button"
+          class="ar-cat-sheet__close"
+          (click)="onBackdropClick()"
+          [attr.aria-label]="ui.screenText('settings', 'arabicCategorySheetClose')">
+          <i class="fas fa-times" aria-hidden="true"></i>
+        </button>
+      </header>
+
+      <div class="ar-cat-sheet__body">
+        @if (arabicPref.loading()) {
+          <div class="ar-cat-sheet__loading">
+            <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
+            <span>{{ ui.screenText('generalCodes', 'loading') }}</span>
+          </div>
+        } @else if (!arabicPref.categories().length) {
+          <div class="ar-cat-sheet__empty">
+            <i class="bi bi-inbox" aria-hidden="true"></i>
+            <p>{{ ui.screenText('settings', 'arabicLocalePickEmpty') }}</p>
+            <a routerLink="/settings" [queryParams]="{ tab: 'translations' }" class="ar-cat-sheet__link">
+              {{ ui.screenText('settings', 'arabicLocalePickGoManage') }}
+            </a>
+          </div>
+        } @else {
+          <app-arabic-category-grid
+            [categories]="arabicPref.categories()"
+            [selectedId]="arabicPref.selectedId()"
+            (categorySelect)="onPick($event)" />
+        }
+      </div>
+
+      <footer class="ar-cat-sheet__foot">
+        <p class="ar-cat-sheet__foot-hint">
+          {{ ui.screenText('settings', 'arabicCategorySheetHint') }}
+        </p>
+        <button type="button" class="ar-cat-sheet__cancel" (click)="onBackdropClick()">
+          {{ ui.screenText('settings', 'arabicCategorySheetClose') }}
+        </button>
+      </footer>
+    </div>
+  </div>
+}

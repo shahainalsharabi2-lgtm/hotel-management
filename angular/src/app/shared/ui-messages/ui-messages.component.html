@@ -6,16 +6,26 @@
     [class.ui-toast--error]="toast.tone === 'error'"
     [class.ui-toast--warning]="toast.tone === 'warning'"
     [class.ui-toast--info]="toast.tone === 'info'"
+    [style.--toast-duration.ms]="toast.durationMs"
     role="status">
-    <i class="fas" [ngClass]="toastIcon(toast.tone)" aria-hidden="true"></i>
-    <p class="ui-toast-text">{{ toast.message }}</p>
-    <button
-      type="button"
-      class="ui-toast-close"
-      (click)="uiMsg.dismissToast(toast.id)"
-      [attr.aria-label]="ui.chromeLabel('messageClose')">
-      <i class="fas fa-times" aria-hidden="true"></i>
-    </button>
+    <div class="ui-toast-accent" aria-hidden="true"></div>
+    <div class="ui-toast-body">
+      <div class="ui-toast-icon-wrap" aria-hidden="true">
+        <i class="fas" [ngClass]="toastIcon(toast.tone)"></i>
+      </div>
+      <div class="ui-toast-copy">
+        <strong *ngIf="toast.title" class="ui-toast-title">{{ toast.title }}</strong>
+        <p class="ui-toast-text">{{ toast.message }}</p>
+      </div>
+      <button
+        type="button"
+        class="ui-toast-close"
+        (click)="uiMsg.dismissToast(toast.id)"
+        [attr.aria-label]="ui.chromeLabel('messageClose')">
+        <i class="fas fa-times" aria-hidden="true"></i>
+      </button>
+    </div>
+    <div class="ui-toast-progress" aria-hidden="true"></div>
   </div>
 </div>
 
@@ -30,6 +40,9 @@
     aria-modal="true"
     aria-labelledby="ui-confirm-title"
     (click)="$event.stopPropagation()">
+    <div class="ui-confirm-icon" aria-hidden="true">
+      <i class="fas fa-question-circle"></i>
+    </div>
     <h2 id="ui-confirm-title" class="ui-confirm-title">
       {{ ui.chromeLabel('messageConfirmTitle') }}
     </h2>

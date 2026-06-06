@@ -21,7 +21,10 @@ import { UiMessageService } from '../services/ui-message.service';
 import { HotelCurrencyService } from '../services/hotel-currency.service';
 import { PaymentMethodService } from '../services/payment-method.service';
 import { bindUiTranslationRefresh } from '../utils/ui-screen-i18n.helper';
-import { todayLocalDateString } from '../utils/date-only';
+import { todayLocalDateString, toDateOnlyString } from '../utils/date-only';
+import { parseRoomFeatures, roomFeaturesSummary } from '../utils/room-features.util';
+import { HotelAuthService } from '../services/hotel-auth.service';
+import { ArabicPreferenceCategoryService } from '../services/arabic-preference-category.service';
 import { localePhoneDisplay, type LocalePhoneDisplay } from '../utils/locale-phone';
 import {
   ID_NUMBER_FIXED_LENGTH,
@@ -51,9 +54,17 @@ import { LocaleNumberPipe } from '../shared/pipes/locale-number.pipe';
 import { bookingNotifyParams } from '../utils/booking-notify-params.util';
 import {
   BOOKING_KIND_OPTIONS,
+  BOOKING_SOURCE_OPTIONS,
   type BookingKindId,
   isBookingKindId,
 } from '../utils/booking-meta.options';
+import {
+  applyPriceCodeDiscount,
+  formatPriceCodeWithDiscountLabel,
+  parsePriceCodeDiscountPercent,
+  priceCodeDiscountPercentForName,
+  priceCodeDiscountPercentLabel,
+} from '../utils/price-code.util';
 import {
   buildGuestRegistryFromCheckIn,
   emptyGuestProfile,
@@ -82,7 +93,9 @@ export const ADD_GUEST_BOOKING_STORAGE_KEY = 'hotelAddGuestBooking';
 })
 export class BookingFormComponent implements OnInit {
   readonly ui = inject(UiTranslationsService);
+  private readonly arabicPref = inject(ArabicPreferenceCategoryService);
   private readonly uiMsg = inject(UiMessageService);
+  private readonly hotelAuth = inject(HotelAuthService);
   private readonly hotelCurrency = inject(HotelCurrencyService);
   private readonly paymentMethodService = inject(PaymentMethodService);
   private readonly cdr = inject(ChangeDetectorRef);
@@ -153,6 +166,13 @@ export class BookingFormComponent implements OnInit {
   guestCodingOptionsLoading = false;
   private guestCodingPersistBusy = false;
 
+  /** القيم الافتراضية عند فتح التسكين (إن وُجدت في المدخلات) */
+  private readonly defaultGuestCodingByField = {
+    purpose_Of_Stay: 'سياحة وترفيه',
+    relationship_Type: 'نزيل',
+    price_Code: 'سعر الافراد',
+  } as const;
+
   stars = Array.from({ length: 50 }, () => ({
     top: Math.random() * 100,
     left: Math.random() * 100,
@@ -220,6 +240,7 @@ export class BookingFormComponent implements OnInit {
   }
 
   readonly bookingKindOptions = BOOKING_KIND_OPTIONS;
+  readonly bookingSourceOptions = BOOKING_SOURCE_OPTIONS;
 
   ngOnInit(): void {
     bindUiTranslationRefresh(this.cdr, this.destroyRef);
@@ -232,6 +253,9 @@ export class BookingFormComponent implements OnInit {
     this.setupPeopleCountSync();
     this.syncPhoneDisplayFromLocale();
     fromEvent(window, 'hotelUiLocaleChanged')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.syncPhoneDisplayFromLocale());
+    fromEvent(window, 'hotelArabicCategoryChanged')
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.syncPhoneDisplayFromLocale());
 
@@ -297,6 +321,21 @@ export class BookingFormComponent implements OnInit {
     return this.checkInMode || this.walkInCheckInMode;
   }
 
+  /** إظهار القوائم بعد تحميل المدخلات وتعيين القيم حتى لا يظهر «اختر» */
+  get guestCodingFieldsReady(): boolean {
+    return (
+      !this.guestCodingOptionsLoading &&
+      this.purposeOfStayOptions.length > 0 &&
+      this.relationshipTypeOptions.length > 0 &&
+      this.priceCodeOptions.length > 0
+    );
+  }
+
+  /** تسمية حقل الغرفة: فئات الغرف في التسكين، نوع الغرفة في باقي الأوضاع */
+  get roomTypeFieldLabelKey(): string {
+    return this.showGuestCodingFields ? 'roomCategoryLabel' : 'roomTypeLabel';
+  }
+
   private loadGuestCodingOptions(): void {
     if (this.guestCodingOptionsLoading) {
       return;
@@ -319,6 +358,8 @@ export class BookingFormComponent implements OnInit {
           this.purposeOfStayOptions = this.sortGeneralCodeOptions(purposes);
           this.relationshipTypeOptions = this.sortGeneralCodeOptions(relationships);
           this.priceCodeOptions = this.sortGeneralCodeOptions(priceCodes);
+          this.applyDefaultGuestCodingIfEmpty();
+          this.calculateFinances();
         },
         error: () => {
           this.purposeOfStayOptions = [];
@@ -339,10 +380,72 @@ export class BookingFormComponent implements OnInit {
     });
   }
 
+  private ensureDefaultIdTypeIfEmpty(loadedTypes: IdentityType[]): void {
+    const current = String(this.bookingForm.get('id_Type')?.value ?? '').trim();
+    if (current) {
+      return;
+    }
+    const first =
+      (loadedTypes.length > 0 ? loadedTypes[0].name : this.defaultIdentityTypes[0].name) ?? '';
+    if (first) {
+      this.bookingForm.patchValue({ id_Type: first }, { emitEvent: false });
+    }
+  }
+
+  private pickDefaultCodingValue(options: GeneralCodeItem[], preferred: string): string {
+    const names = options.map((x) => String(x.name ?? '').trim()).filter(Boolean);
+    if (!names.length) {
+      return '';
+    }
+    const pref = preferred.trim();
+    if (pref && names.includes(pref)) {
+      return pref;
+    }
+    return names[0];
+  }
+
+  /** عند التسكين: تعبئة القيم الأولى كما في الصورة إذا الحقول فارغة */
+  private applyDefaultGuestCodingIfEmpty(): void {
+    if (!this.showGuestCodingFields) {
+      return;
+    }
+    const raw = this.bookingForm.getRawValue();
+    const patch: {
+      purpose_Of_Stay?: string;
+      relationship_Type?: string;
+      price_Code?: string;
+    } = {};
+
+    if (!String(raw.purpose_Of_Stay ?? '').trim()) {
+      patch.purpose_Of_Stay = this.pickDefaultCodingValue(
+        this.purposeOfStayOptions,
+        this.defaultGuestCodingByField.purpose_Of_Stay,
+      );
+    }
+    if (!String(raw.relationship_Type ?? '').trim()) {
+      patch.relationship_Type = this.pickDefaultCodingValue(
+        this.relationshipTypeOptions,
+        this.defaultGuestCodingByField.relationship_Type,
+      );
+    }
+    if (!String(raw.price_Code ?? '').trim()) {
+      patch.price_Code = this.pickDefaultCodingValue(
+        this.priceCodeOptions,
+        this.defaultGuestCodingByField.price_Code,
+      );
+    }
+
+    if (Object.keys(patch).length) {
+      this.bookingForm.patchValue(patch, { emitEvent: false });
+      this.cdr.markForCheck();
+    }
+  }
+
   onGuestCodingFieldChange(): void {
     if (!this.showGuestCodingFields) {
       return;
     }
+    this.calculateFinances();
     this.persistGuestRegistryCodingFields(false);
   }
 
@@ -409,14 +512,23 @@ export class BookingFormComponent implements OnInit {
           if (match.id) {
             this.guestProfileSnapshot = guestRegistryToProfile(match);
           }
-          this.bookingForm.patchValue(
-            {
-              purpose_Of_Stay: match.purpose_Of_Stay ?? '',
-              relationship_Type: match.relationship_Type ?? '',
-              price_Code: match.price_Code ?? '',
-            },
-            { emitEvent: false },
-          );
+          const patch: Record<string, string> = {};
+          const purpose = String(match.purpose_Of_Stay ?? '').trim();
+          const relationship = String(match.relationship_Type ?? '').trim();
+          const priceCode = String(match.price_Code ?? '').trim();
+          if (purpose) {
+            patch['purpose_Of_Stay'] = purpose;
+          }
+          if (relationship) {
+            patch['relationship_Type'] = relationship;
+          }
+          if (priceCode) {
+            patch['price_Code'] = priceCode;
+          }
+          if (Object.keys(patch).length) {
+            this.bookingForm.patchValue(patch, { emitEvent: false });
+          }
+          this.applyDefaultGuestCodingIfEmpty();
           this.cdr.markForCheck();
         },
       });
@@ -507,7 +619,15 @@ export class BookingFormComponent implements OnInit {
     );
     this.loadKnownGuestsForPicker();
     this.loadGuestCodingOptions();
+    this.applyWalkInMetaFieldValidators();
     this.syncBookingKindFromModes();
+  }
+
+  /** تسكين مباشر — أيام ومصدر الحجز اختياريان في الشريط العلوي */
+  private applyWalkInMetaFieldValidators(): void {
+    const source = this.bookingForm.get('booking_Source');
+    source?.clearValidators();
+    source?.updateValueAndValidity({ emitEvent: false });
   }
 
   /** تسكين حجز مسبق — واجهة walkIn مع بيانات النزيل المحفوظة من البطاقة */
@@ -574,6 +694,7 @@ export class BookingFormComponent implements OnInit {
     this.syncRoomSelectionAfterPrefill();
     this.loadKnownGuestsForPicker();
     this.loadGuestCodingOptions();
+    this.applyWalkInMetaFieldValidators();
     this.syncBookingKindFromModes();
   }
 
@@ -850,6 +971,7 @@ export class BookingFormComponent implements OnInit {
       this.guestProfileRegistryId = base.registry_Id ?? this.guestProfileRegistryId;
       this.guestProfileForm.patchValue(base, { emitEvent: false });
       this.updateGuestProfileIdValidation(String(base.id_Type ?? ''));
+      this.ensureGuestProfileSelectDefaults();
       return;
     }
     const full = String(this.bookingForm.get('guest_Full_Name')?.value ?? '').trim();
@@ -870,6 +992,32 @@ export class BookingFormComponent implements OnInit {
     this.updateGuestProfileIdValidation(
       String(this.guestProfileForm.get('id_Type')?.value ?? ''),
     );
+    this.ensureGuestProfileSelectDefaults();
+  }
+
+  private ensureGuestProfileSelectDefaults(): void {
+    const gender = String(this.guestProfileForm.get('gender')?.value ?? '').trim();
+    if (!gender && this.guestGenderOptions.length) {
+      this.guestProfileForm.patchValue(
+        { gender: this.guestGenderOptions[0].id },
+        { emitEvent: false },
+      );
+    }
+    const idType = String(this.guestProfileForm.get('id_Type')?.value ?? '').trim();
+    if (idType) {
+      return;
+    }
+    const fromBooking = String(this.bookingForm.get('id_Type')?.value ?? '').trim();
+    const fallback =
+      fromBooking ||
+      this.identityTypes[0]?.name ||
+      this.defaultIdentityTypes[0]?.name ||
+      '';
+    if (fallback) {
+      this.ensureIdentityTypeOption(fallback);
+      this.guestProfileForm.patchValue({ id_Type: fallback }, { emitEvent: false });
+      this.updateGuestProfileIdValidation(fallback);
+    }
   }
 
   selectKnownGuest(guest: KnownGuestProfile): void {
@@ -1016,7 +1164,9 @@ export class BookingFormComponent implements OnInit {
   }
 
   syncPhoneDisplayFromLocale(): void {
-    this.phoneDisplay = localePhoneDisplay(this.ui.displayLocale());
+    const locale = this.ui.displayLocale();
+    const arabicProfile = locale === 'ar' ? this.arabicPref.selectedProfile() : null;
+    this.phoneDisplay = localePhoneDisplay(locale, arabicProfile);
     this.applyPhoneValidators();
     this.cdr.markForCheck();
   }
@@ -1283,6 +1433,7 @@ export class BookingFormComponent implements OnInit {
         }
         if (this.keepsGuestIdentityPrefill) {
           this.applyPendingGuestIdentity();
+          this.ensureDefaultIdTypeIfEmpty(types);
           const idType = this.bookingForm.get('id_Type')?.value;
           if (idType) {
             this.updateIdNumberValidation(idType, { clearValue: false });
@@ -1306,6 +1457,7 @@ export class BookingFormComponent implements OnInit {
         }
         if (this.keepsGuestIdentityPrefill) {
           this.applyPendingGuestIdentity();
+          this.ensureDefaultIdTypeIfEmpty([]);
           const idType = this.bookingForm.get('id_Type')?.value;
           if (idType) {
             this.updateIdNumberValidation(idType, { clearValue: false });
@@ -1326,6 +1478,40 @@ export class BookingFormComponent implements OnInit {
       .get('payment_Amount')
       ?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.calculateFinances());
+    this.bookingForm
+      .get('price_Code')
+      ?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.calculateFinances());
+  }
+
+  private selectedPriceCodeDiscountPercent(): number {
+    if (!this.showGuestCodingFields && !this.walkInCheckInMode) {
+      return 0;
+    }
+    const code = String(this.bookingForm.get('price_Code')?.value ?? '').trim();
+    return priceCodeDiscountPercentForName(this.priceCodeOptions, code);
+  }
+
+  priceCodeOptionPercent(item: GeneralCodeItem): number {
+    return parsePriceCodeDiscountPercent(item.description);
+  }
+
+  selectedPriceCodeDisplay(): string {
+    const code = String(this.bookingForm.get('price_Code')?.value ?? '').trim();
+    return formatPriceCodeWithDiscountLabel(code, this.priceCodeOptions);
+  }
+
+  selectedPriceCodePercentBadge(): string {
+    const code = String(this.bookingForm.get('price_Code')?.value ?? '').trim();
+    return priceCodeDiscountPercentLabel(code, this.priceCodeOptions);
+  }
+
+  priceCodeDiscountHintText(): string {
+    const pct = this.selectedPriceCodeDiscountPercent();
+    if (pct <= 0) {
+      return '';
+    }
+    return this.ui.screenText('booking', 'priceCodeDiscountHint').replace('{percent}', String(pct));
   }
 
   calculateFinances(): void {
@@ -1334,7 +1520,9 @@ export class BookingFormComponent implements OnInit {
       const days = this.bookingForm.get('stay_Days')?.value || 1;
       const paid = Number(this.bookingForm.get('payment_Amount')?.value) || 0;
 
-      const total = pricePerDay * days;
+      const baseTotal = pricePerDay * days;
+      const discountPercent = this.selectedPriceCodeDiscountPercent();
+      const total = applyPriceCodeDiscount(baseTotal, discountPercent);
       const remaining = total - paid;
 
       this.bookingForm.patchValue({
@@ -1809,7 +1997,11 @@ export class BookingFormComponent implements OnInit {
         en: this.phoneFieldAlertMessage(),
       },
       { key: 'room_Number', ar: 'يرجى اختيار الغرفة.', en: 'Please select a room.' },
-      { key: 'room_Type', ar: 'يرجى اختيار نوع الغرفة.', en: 'Please select a room type.' },
+      {
+        key: 'room_Type',
+        ar: this.showGuestCodingFields ? 'يرجى اختيار فئات الغرف.' : 'يرجى اختيار نوع الغرفة.',
+        en: this.showGuestCodingFields ? 'Please select a room category.' : 'Please select a room type.',
+      },
       { key: 'floor', ar: 'يرجى تحديد الطابق.', en: 'Please specify the floor.' },
       { key: 'payment_Amount', ar: 'يرجى إدخال المبلغ المدفوع.', en: 'Please enter the payment amount.' },
       { key: 'payment_Method', ar: 'يرجى اختيار طريقة الدفع.', en: 'Please select a payment method.' },
@@ -1934,7 +2126,12 @@ export class BookingFormComponent implements OnInit {
     const bookingData: any = { ...this.bookingForm.getRawValue() };
     delete bookingData.guest_Full_Name;
     delete bookingData.booking_Kind;
-    bookingData.booking_Source = 'direct';
+    if (this.walkInCheckInMode) {
+      const src = String(bookingData.booking_Source ?? '').trim();
+      bookingData.booking_Source = src || undefined;
+    } else {
+      bookingData.booking_Source = 'direct';
+    }
 
     if (this.walkInCheckInMode) {
       bookingData.booking_Confirmed = true;
@@ -2056,6 +2253,7 @@ export class BookingFormComponent implements OnInit {
           relationship_Type: '',
           price_Code: '',
         });
+        this.applyDefaultGuestCodingIfEmpty();
         this.setCurrentDateTime();
         this.selectedRoom = undefined;
         this.submitted = false;
@@ -2212,6 +2410,9 @@ export class BookingFormComponent implements OnInit {
       return this.ui.screenText('booking', 'extendStayTitle');
     }
     if (this.checkInMode) {
+      if (this.walkInCheckInMode) {
+        return '';
+      }
       return this.ui.screenText('booking', 'checkInTitle');
     }
     if (this.editBookingMode) {
@@ -2231,6 +2432,9 @@ export class BookingFormComponent implements OnInit {
       return this.ui.screenText('booking', 'extendStaySubtitle');
     }
     if (this.checkInMode) {
+      if (this.walkInCheckInMode) {
+        return '';
+      }
       return this.ui.screenText('booking', 'checkInSubtitle');
     }
     if (this.editBookingMode) {
@@ -2295,5 +2499,83 @@ export class BookingFormComponent implements OnInit {
       return this.selectedRoom.currencySymbol.trim();
     }
     return this.hotelCurrency.symbol();
+  }
+
+  /** تسكين مباشر — اسم الموظف المسجّل */
+  get walkInEmployeeName(): string {
+    const user = this.hotelAuth.currentUser();
+    if (!user) {
+      return '—';
+    }
+    const full = [user.firstName, user.lastName].filter(Boolean).join(' ').trim();
+    return full || user.userName?.trim() || '—';
+  }
+
+  /** تسكين مباشر — تاريخ المغادرة المتوقع */
+  walkInCheckoutDate(): string {
+    const start = toDateOnlyString(this.bookingForm.get('booking_Date')?.value);
+    const days = Math.max(1, Number(this.bookingForm.get('stay_Days')?.value) || 1);
+    if (!start) {
+      return '—';
+    }
+    const d = new Date(`${start}T12:00:00`);
+    d.setDate(d.getDate() + days);
+    return toDateOnlyString(d) || '—';
+  }
+
+  /** تسكين مباشر — وقت المغادرة الافتراضي */
+  walkInCheckoutTime(): string {
+    return this.ui.screenText('booking', 'walkInDefaultCheckoutTime');
+  }
+
+  /** تسكين مباشر — وقت الوصول (نفس وقت الحجز) */
+  walkInArrivalTime(): string {
+    return String(this.bookingForm.get('booking_Time')?.value ?? '').trim() || '—';
+  }
+
+  /** عرض مصدر الحجز */
+  bookingSourceDisplay(): string {
+    const src = String(this.bookingForm.get('booking_Source')?.value ?? '').trim();
+    if (!src) {
+      return '—';
+    }
+    const keyBySource: Record<string, string> = {
+      direct: 'sourceDirect',
+      electronic: 'sourceElectronic',
+      company: 'sourceCompany',
+      institution: 'sourceInstitution',
+      employee: 'sourceEmployee',
+    };
+    const key = keyBySource[src] ?? 'sourceDirect';
+    return this.ui.screenText('booking', key);
+  }
+
+  /** تسكين مباشر — حالة الغرفة المحددة */
+  walkInRoomStatusLabel(status?: Room['status'] | string | null): string {
+    const keyByStatus: Record<string, string> = {
+      available: 'statAvailable',
+      dirty: 'statDirty',
+      occupied: 'statOccupied',
+      maintenance: 'statMaintenance',
+      cleaning: 'statusCleaningShort',
+      suspended: 'statSuspended',
+    };
+    const statusKey = keyByStatus[String(status ?? '').trim()] ?? 'statAvailable';
+    const screen = statusKey === 'statusCleaningShort' ? 'bookings' : 'settings';
+    return this.ui.screenText(screen, statusKey);
+  }
+
+  walkInSelectedRoomFeatures(): string[] {
+    return parseRoomFeatures(this.selectedRoom?.roomFeatures);
+  }
+
+  walkInRoomFeaturesText(): string {
+    const summary = roomFeaturesSummary(this.walkInSelectedRoomFeatures(), 6);
+    return summary || '—';
+  }
+
+  walkInRoomDetail(value: string | number | null | undefined): string {
+    const text = String(value ?? '').trim();
+    return text || '—';
   }
 }

@@ -1,0 +1,29 @@
+<div class="ar-cat-grid" [class.ar-cat-grid--compact]="compact">
+  @for (cat of categories; track cat.id) {
+    <button
+      type="button"
+      class="ar-cat-card"
+      [class.ar-cat-card--active]="isActive(cat)"
+      [attr.aria-pressed]="isActive(cat)"
+      (click)="onPick(cat.id)">
+      <span class="ar-cat-card__glow" aria-hidden="true"></span>
+      <span class="ar-cat-card__flag-wrap">
+        <img class="ar-cat-card__flag" [src]="cat.profile.flagSrc" alt="" width="56" height="42" />
+      </span>
+      <span class="ar-cat-card__body">
+        <strong class="ar-cat-card__label">{{ cat.label }}</strong>
+        <span class="ar-cat-card__meta">
+          <span class="ar-cat-card__dial" dir="ltr">{{ cat.profile.dialCode }}</span>
+          @if (cat.currencyCode) {
+            <span class="ar-cat-card__currency">{{ cat.currencyCode }}</span>
+          }
+        </span>
+      </span>
+      @if (isActive(cat)) {
+        <span class="ar-cat-card__check" aria-hidden="true">
+          <i class="fas fa-check"></i>
+        </span>
+      }
+    </button>
+  }
+</div>

@@ -41,7 +41,13 @@ public class GeneralCodesStore(IRepository<GeneralCodeItem, Guid> repository)
             Fit(input.Name, 256),
             FitNullable(input.FName, 256),
             FitNullable(input.Description, 1024),
-            input.DisplayOrder);
+            input.DisplayOrder,
+            FitNullable(input.CountryDialCode, 32),
+            FitNullable(input.FlagImageName, 256),
+            FitNullableLarge(input.FlagImageData),
+            NormalizeCount(input.RoomCount),
+            NormalizeCount(input.RegularBedCount),
+            NormalizeCount(input.FamilyBedCount));
 
         await repository.InsertAsync(item, autoSave: true, cancellationToken);
         return MapToDto(item);
@@ -59,6 +65,14 @@ public class GeneralCodesStore(IRepository<GeneralCodeItem, Guid> repository)
         item.FName = FitNullable(input.FName, 256);
         item.Description = FitNullable(input.Description, 1024);
         item.DisplayOrder = input.DisplayOrder;
+        item.SetPrefCategoryExtras(
+            FitNullable(input.CountryDialCode, 32),
+            FitNullable(input.FlagImageName, 256),
+            FitNullableLarge(input.FlagImageData));
+        item.SetRoomClassCounts(
+            NormalizeCount(input.RoomCount),
+            NormalizeCount(input.RegularBedCount),
+            NormalizeCount(input.FamilyBedCount));
 
         await repository.UpdateAsync(item, autoSave: true, cancellationToken);
         return MapToDto(item);
@@ -107,6 +121,16 @@ public class GeneralCodesStore(IRepository<GeneralCodeItem, Guid> repository)
         return trimmed.Length <= maxLength ? trimmed : trimmed[..maxLength];
     }
 
+    private static string? FitNullableLarge(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        return value.Trim();
+    }
+
     private static GeneralCodeItemDto MapToDto(GeneralCodeItem item) =>
         new()
         {
@@ -115,6 +139,22 @@ public class GeneralCodesStore(IRepository<GeneralCodeItem, Guid> repository)
             Name = item.Name,
             FName = item.FName,
             Description = item.Description,
+            CountryDialCode = item.CountryDialCode,
+            FlagImageName = item.FlagImageName,
+            FlagImageData = item.FlagImageData,
+            RoomCount = item.RoomCount,
+            RegularBedCount = item.RegularBedCount,
+            FamilyBedCount = item.FamilyBedCount,
             DisplayOrder = item.DisplayOrder,
         };
+
+    private static int? NormalizeCount(int? value)
+    {
+        if (value is null or < 0)
+        {
+            return null;
+        }
+
+        return value;
+    }
 }

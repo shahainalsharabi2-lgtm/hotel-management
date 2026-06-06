@@ -1,14 +1,5 @@
 /** عملة محددة مسبقاً في إعدادات الفندق */
-export type HotelCurrencyPresetId =
-  | 'YER'
-  | 'SAR'
-  | 'USD'
-  | 'EUR'
-  | 'AED'
-  | 'TRY'
-  | 'CNY'
-  | 'IDR'
-  | 'custom';
+export type HotelCurrencyPresetId = string;
 
 export type HotelCurrencyPreset = {
   id: HotelCurrencyPresetId;
@@ -96,9 +87,9 @@ export const HOTEL_CURRENCY_PRESETS: readonly HotelCurrencyPreset[] = [
   },
 ] as const;
 
-export const HOTEL_CURRENCY_CUSTOM_ID: HotelCurrencyPresetId = 'custom';
+export const HOTEL_CURRENCY_CUSTOM_ID = 'custom' as const;
 
-export const DEFAULT_HOTEL_CURRENCY_ID: HotelCurrencyPresetId = 'YER';
+export const DEFAULT_HOTEL_CURRENCY_ID = 'YER' as const;
 
 /** لغات عرض الواجهة */
 export type HotelUiLocaleCode = 'ar' | 'fr' | 'id' | 'tr' | 'zh-Hans';
@@ -113,17 +104,31 @@ export const LOCALE_DEFAULT_CURRENCY_ID: Record<HotelUiLocaleCode, HotelCurrency
 };
 
 export function currencyIdForUiLocale(locale: string): HotelCurrencyPresetId {
-  if (locale === 'fr') {
-    return 'EUR';
+  if (locale in LOCALE_DEFAULT_CURRENCY_ID) {
+    return LOCALE_DEFAULT_CURRENCY_ID[locale as HotelUiLocaleCode];
   }
-  if (locale === 'id') {
-    return 'IDR';
+  return LOCALE_DEFAULT_CURRENCY_ID.ar;
+}
+
+/** عملات لغات الواجهة (فرنسية/تركية/إندونيسية/صينية) تُدمج مع عملات فئات التفضيل */
+export function mergeUiLocaleCurrencyPresets(
+  managed: readonly HotelCurrencyPreset[],
+): readonly HotelCurrencyPreset[] {
+  const seen = new Set(managed.map((p) => p.id.toUpperCase()));
+  const extra: HotelCurrencyPreset[] = [];
+  for (const locale of Object.keys(LOCALE_DEFAULT_CURRENCY_ID) as HotelUiLocaleCode[]) {
+    if (locale === 'ar') {
+      continue;
+    }
+    const id = LOCALE_DEFAULT_CURRENCY_ID[locale];
+    if (seen.has(id.toUpperCase())) {
+      continue;
+    }
+    const preset = HOTEL_CURRENCY_PRESETS.find((p) => p.id === id);
+    if (preset) {
+      extra.push(preset);
+      seen.add(id.toUpperCase());
+    }
   }
-  if (locale === 'tr') {
-    return 'TRY';
-  }
-  if (locale === 'zh-Hans') {
-    return 'CNY';
-  }
-  return 'SAR';
+  return extra.length ? [...managed, ...extra] : managed;
 }

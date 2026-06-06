@@ -18,12 +18,16 @@ export class GeneralCodesComponent implements OnInit {
 
   readonly ui = inject(UiTranslationsService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly tabs = GENERAL_CODE_TABS;
   activeTab: GeneralCodeCategoryId = GENERAL_CODE_TABS[0].id;
 
   ngOnInit(): void {
-    bindUiTranslationRefresh(this.cdr, inject(DestroyRef));
+    if (this.embedded) {
+      this.activeTab = 'preference-category';
+    }
+    bindUiTranslationRefresh(this.cdr, this.destroyRef);
   }
 
   tabLabel(labelKey: string): string {

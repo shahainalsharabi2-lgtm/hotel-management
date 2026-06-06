@@ -179,6 +179,12 @@ public class HotelDbContext(DbContextOptions<HotelDbContext> options) :
             b.Property(x => x.Name).IsRequired().HasMaxLength(256);
             b.Property(x => x.FName).HasMaxLength(256);
             b.Property(x => x.Description).HasMaxLength(1024);
+            b.Property(x => x.CountryDialCode).HasMaxLength(32);
+            b.Property(x => x.FlagImageName).HasMaxLength(256);
+            b.Property(x => x.FlagImageData).HasColumnType("text");
+            b.Property(x => x.RoomCount);
+            b.Property(x => x.RegularBedCount);
+            b.Property(x => x.FamilyBedCount);
             b.HasIndex(x => x.Category);
         });
 

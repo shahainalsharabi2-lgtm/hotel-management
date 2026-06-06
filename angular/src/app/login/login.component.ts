@@ -3,7 +3,7 @@ import { ChangeDetectorRef, Component, DestroyRef, OnInit, inject } from '@angul
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { HotelAuthService } from '../services/hotel-auth.service';
 import { HotelBrandingStoreService } from '../services/hotel-branding-store.service';
 import { HotelSystemSettingsLoader } from '../services/hotel-system-settings.loader';
@@ -20,6 +20,7 @@ import { bindUiTranslationRefresh } from '../utils/ui-screen-i18n.helper';
 export class LoginComponent implements OnInit {
   private readonly auth = inject(HotelAuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly hotelSettings = inject(HotelSystemSettingsLoader);
   readonly branding = inject(HotelBrandingStoreService);
   readonly ui = inject(UiTranslationsService);
@@ -92,7 +93,12 @@ export class LoginComponent implements OnInit {
       next: (result) => {
         this.loading = false;
         if (result.success) {
-          void this.router.navigate(['/dashboard']);
+          const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl')?.trim() ?? '';
+          if (returnUrl.startsWith('/') && !returnUrl.startsWith('//')) {
+            void this.router.navigateByUrl(returnUrl);
+          } else {
+            void this.router.navigate(['/dashboard']);
+          }
           return;
         }
         this.errorMessage =

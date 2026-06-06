@@ -50,7 +50,7 @@ export class DashboardComponent implements OnInit {
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly destroyRef = inject(DestroyRef);
 
-  viewMode: 'normal' | 'advanced' = 'normal';
+  viewMode: 'normal' | 'advanced' = 'advanced';
   availableRoomsCount = 0;
   bookingsCount = 0;
   totalRoomsCount = 0;
@@ -167,9 +167,15 @@ export class DashboardComponent implements OnInit {
     return this.pctOf(this.remainingAmount, this.totalRevenue + this.remainingAmount);
   }
 
+  /** عند فتح لوحة التحكم يُفعَّل العرض المطور (إحصائيات كاملة) تلقائياً */
   private loadSavedViewMode(): void {
-    const savedMode = localStorage.getItem(DASHBOARD_VIEW_MODE_STORAGE_KEY);
-    this.viewMode = savedMode === 'advanced' ? 'advanced' : 'normal';
+    this.viewMode = 'advanced';
+    try {
+      localStorage.setItem(DASHBOARD_VIEW_MODE_STORAGE_KEY, 'advanced');
+      window.dispatchEvent(new Event(DASHBOARD_VIEW_MODE_CHANGED_EVENT));
+    } catch {
+      /* ignore */
+    }
   }
 
   private loadHotelInfo(): void {

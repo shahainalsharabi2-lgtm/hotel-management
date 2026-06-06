@@ -233,6 +233,10 @@ namespace Modiaf.Al.Arab.Hotel.Migrations
                         .HasColumnType("character varying(40)")
                         .HasColumnName("ConcurrencyStamp");
 
+                    b.Property<string>("CountryDialCode")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
                     b.Property<DateTime>("CreationTime")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("CreationTime");
@@ -265,6 +269,16 @@ namespace Modiaf.Al.Arab.Hotel.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
+                    b.Property<int?>("FamilyBedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("FlagImageData")
+                        .HasColumnType("text");
+
+                    b.Property<string>("FlagImageName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
@@ -283,6 +297,12 @@ namespace Modiaf.Al.Arab.Hotel.Migrations
                         .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
+
+                    b.Property<int?>("RegularBedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("RoomCount")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 

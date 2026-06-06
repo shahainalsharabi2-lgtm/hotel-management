@@ -15,13 +15,17 @@ import { UiTranslationsService } from './services/ui-translations.service';
 import { SystemNotificationsService } from './services/system-notifications.service';
 import { HotelBrandingStoreService } from './services/hotel-branding-store.service';
 import { HotelSystemSettingsLoader } from './services/hotel-system-settings.loader';
+import { ArabicPreferenceCategoryService } from './services/arabic-preference-category.service';
+import { ArabicCategoryPickerService } from './services/arabic-category-picker.service';
 import { HotelAuthService } from './services/hotel-auth.service';
 import type { UiExtraLocaleCode } from './utils/ui-translation.constants';
 import { AccountLocaleEditorComponent } from './shared/account-locale-editor/account-locale-editor.component';
 import { AppTopBarComponent } from './shared/app-top-bar/app-top-bar.component';
 import { UiMessagesComponent } from './shared/ui-messages/ui-messages.component';
+import { ArabicCategoryPickerSheetComponent } from './shared/arabic-category-picker-sheet/arabic-category-picker-sheet.component';
 import { AppLoadingOverlayComponent } from './shared/app-loading-overlay/app-loading-overlay.component';
 import { CHECKIN_BOOKING_STORAGE_KEY } from './booking-form/booking-form.component';
+import { UI_LOCALE_PICKER_OPTIONS, type UiLocalePickerOption } from './utils/ui-locale-picker.util';
 
 type AppUiLocale = UiExtraLocaleCode | 'ar';
 
@@ -572,7 +576,7 @@ interface AppSearchEntry {
               (click)="onLocalePillClick(opt.code, $event)"
               [attr.aria-label]="localeOptionLabel(opt.labelKey)"
               [attr.aria-pressed]="ui.displayLocale() === opt.code">
-              <img class="sidebar-lang-mobile__flag" [src]="opt.flagSrc" alt="" width="24" height="24" />
+              <img class="sidebar-lang-mobile__flag" [src]="localeFlagSrc(opt)" alt="" width="24" height="24" />
               <span>{{ localeOptionLabel(opt.labelKey) }}</span>
             </button>
           </ng-container>
@@ -778,7 +782,6 @@ interface AppSearchEntry {
         <main class="app-content" [class.app-content--login]="!showMainChrome">
           <app-loading-overlay *ngIf="showMainChrome" />
           <router-outlet />
-          <app-ui-messages *ngIf="showMainChrome" />
         </main>
       </div>
 
@@ -932,6 +935,8 @@ interface AppSearchEntry {
         (closed)="onAccountLocaleEditorClosed()"
         (saved)="onAccountLocaleEditorSaved()" />
       </ng-container>
+      <app-ui-messages />
+      <app-arabic-category-picker-sheet />
     </div>
   `,
   styles: [
@@ -2905,6 +2910,7 @@ interface AppSearchEntry {
     AccountLocaleEditorComponent,
     AppTopBarComponent,
     UiMessagesComponent,
+    ArabicCategoryPickerSheetComponent,
     AppLoadingOverlayComponent,
   ],
 })
@@ -2913,22 +2919,14 @@ export class AppComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
   readonly ui = inject(UiTranslationsService);
+  private readonly arabicPref = inject(ArabicPreferenceCategoryService);
+  private readonly arabicCategoryPicker = inject(ArabicCategoryPickerService);
   readonly notifications = inject(SystemNotificationsService);
   private readonly hotelBranding = inject(HotelBrandingStoreService);
   private readonly hotelSystemSettings = inject(HotelSystemSettingsLoader);
   readonly auth = inject(HotelAuthService);
 
-  readonly localeOptions: ReadonlyArray<{
-    code: AppUiLocale;
-    flagSrc: string;
-    labelKey: 'localeAr' | 'localeFr' | 'localeId' | 'localeTr' | 'localeZh';
-  }> = [
-    { code: 'ar', flagSrc: 'assets/flags/sa.svg', labelKey: 'localeAr' },
-    { code: 'fr', flagSrc: 'assets/flags/fr.svg', labelKey: 'localeFr' },
-    { code: 'id', flagSrc: 'assets/flags/id.svg', labelKey: 'localeId' },
-    { code: 'tr', flagSrc: 'assets/flags/tr.svg', labelKey: 'localeTr' },
-    { code: 'zh-Hans', flagSrc: 'assets/flags/cn.svg', labelKey: 'localeZh' },
-  ];
+  readonly localeOptions = UI_LOCALE_PICKER_OPTIONS;
 
   /**
    * مسار إغلاق لحلقة حول الشعار: موجة على نصف القطر (خط متعرّج يشبه حركة القلم).
@@ -3021,7 +3019,7 @@ export class AppComponent implements OnInit {
 
   readonly settingsHotelMgmtItems: ReadonlyArray<{
     path: string;
-    tab: 'general' | 'layout' | 'payments' | 'identities' | 'guests' | 'currency';
+    tab: 'general' | 'layout' | 'payments' | 'identities' | 'guests' | 'currency' | 'arabicLocale';
     labelKey: string;
     icon: string;
     linkActive: { exact: boolean; queryParams: 'exact' | 'ignored' };
@@ -3059,6 +3057,13 @@ export class AppComponent implements OnInit {
       tab: 'guests',
       labelKey: 'tabGuests',
       icon: 'svg-guests',
+      linkActive: { exact: true, queryParams: 'exact' },
+    },
+    {
+      path: '/settings',
+      tab: 'arabicLocale',
+      labelKey: 'tabArabicLocalePick',
+      icon: 'svg-language',
       linkActive: { exact: true, queryParams: 'exact' },
     },
     {
@@ -3324,6 +3329,10 @@ export class AppComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.cdr.markForCheck());
 
+    fromEvent(window, 'hotelArabicCategoryChanged')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.cdr.markForCheck());
+
     fromEvent(window, 'hotelSystemNotificationsChanged')
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.cdr.markForCheck());
@@ -3469,9 +3478,16 @@ export class AppComponent implements OnInit {
   }
 
   localeOptionLabel(
-    labelKey: 'localeAr' | 'localeFr' | 'localeId' | 'localeTr' | 'localeZh',
+    labelKey: UiLocalePickerOption['labelKey'],
   ): string {
     return this.ui.screenText('settings', labelKey);
+  }
+
+  localeFlagSrc(opt: UiLocalePickerOption): string {
+    if (opt.code === 'ar') {
+      return this.arabicPref.activeFlagSrc();
+    }
+    return opt.flagSrc;
   }
 
   openAccountJsonEditor(event?: Event): void {
@@ -3608,6 +3624,14 @@ export class AppComponent implements OnInit {
         pathSegments: ['/booking'],
       },
       {
+        id: 'walkInCheckIn',
+        title: this.ui.sidebarLabel('navWalkInCheckIn'),
+        breadcrumb: `${this.ui.sidebarLabel('bookingsGroup')} / ${this.ui.sidebarLabel('navWalkInCheckIn')}`,
+        tag: this.ui.chromeLabel('searchTagBookings'),
+        pathSegments: ['/booking'],
+        queryParams: { mode: 'checkIn', walkIn: '1' },
+      },
+      {
         id: 'bookings',
         title: this.ui.sidebarLabel('bookingsHub'),
         breadcrumb: `${this.ui.sidebarLabel('bookingsGroup')} / ${this.ui.sidebarLabel('bookingsHub')}`,
@@ -3680,6 +3704,13 @@ export class AppComponent implements OnInit {
       return;
     }
     this.langPickerOpen = false;
+    if (code === 'ar') {
+      this.arabicCategoryPicker.requestArabicLocaleSwitch(() =>
+        this.ui.reloadFromBackend(() => this.cdr.markForCheck()),
+      );
+      this.cdr.markForCheck();
+      return;
+    }
     this.ui.setDisplayLocale(code);
     this.ui.reloadFromBackend(() => this.cdr.markForCheck());
   }
@@ -3706,7 +3737,8 @@ export class AppComponent implements OnInit {
       tab === 'payments' ||
       tab === 'identities' ||
       tab === 'guests' ||
-      tab === 'currency'
+      tab === 'currency' ||
+      tab === 'arabicLocale'
     );
   }
 

@@ -27,3 +27,12 @@ export const BOOKING_KIND_OPTIONS: ReadonlyArray<{
 export function isBookingKindId(value: unknown): value is BookingKindId {
   return BOOKING_KIND_OPTIONS.some((o) => o.id === value);
 }
+
+/** مصادر الحجز — قائمة اختيارية في التسكين المباشر */
+export const BOOKING_SOURCE_OPTIONS = [
+  { id: 'direct', labelKey: 'sourceDirect' },
+  { id: 'electronic', labelKey: 'sourceElectronic' },
+  { id: 'company', labelKey: 'sourceCompany' },
+  { id: 'institution', labelKey: 'sourceInstitution' },
+  { id: 'employee', labelKey: 'sourceEmployee' },
+] as const;

@@ -59,6 +59,7 @@ import {
   getRoomCleaningReadyAt,
   setRoomCleaningReadyAt,
 } from '../utils/room-cleaning.util';
+import { parseRoomFeatures } from '../utils/room-features.util';
 
 export interface RoomsDevSummaryTile {
   key: string;
@@ -149,6 +150,9 @@ export class RoomsComponent implements OnInit, AfterViewInit {
   /** شريط أدوات العرض المطوّر */
   devDataScope: 'all' | 'floor' = 'all';
   devRoomType = '';
+  devFilterFloor = '';
+  devFilterFeature = '';
+  devFilterPrice = '';
   devArrivingOnly = false;
   devPaymentDueOnly = false;
   devSearch = '';
@@ -967,6 +971,51 @@ export class RoomsComponent implements OnInit, AfterViewInit {
     return [...new Set(this.rooms.map((r) => r.type).filter(Boolean))].sort();
   }
 
+  uniqueFloors(): number[] {
+    return [...new Set(this.rooms.map((r) => r.floor).filter((f) => f != null))].sort((a, b) => a - b);
+  }
+
+  uniqueRoomFeatures(): string[] {
+    const set = new Set<string>();
+    for (const room of this.rooms) {
+      for (const feature of parseRoomFeatures(room.roomFeatures)) {
+        set.add(feature);
+      }
+    }
+    return [...set].sort((a, b) => a.localeCompare(b, 'ar'));
+  }
+
+  uniqueRoomPrices(): number[] {
+    return [...new Set(this.rooms.map((r) => r.price).filter((p) => p > 0))].sort((a, b) => a - b);
+  }
+
+  formatFilterPrice(price: number): string {
+    return this.hotelCurrency.formatWithSymbol(price);
+  }
+
+  get smartFilterActive(): boolean {
+    return !!(
+      this.devRoomType ||
+      this.devFilterFloor ||
+      this.devFilterFeature ||
+      this.devFilterPrice ||
+      this.devSearch.trim()
+    );
+  }
+
+  clearSmartFilters(): void {
+    this.devRoomType = '';
+    this.devFilterFloor = '';
+    this.devFilterFeature = '';
+    this.devFilterPrice = '';
+    this.devSearch = '';
+    this.cdr.markForCheck();
+  }
+
+  floorFilterLabel(floor: number): string {
+    return this.ui.screenText('rooms', 'floorBadge').replace('{f}', String(floor));
+  }
+
   /** بطاقات الملخص بنمط لوحة الاستقبال (أرقام حقيقية حيث تتوفر البيانات) */
   get devSummaryTiles(): RoomsDevSummaryTile[] {
     const a = this.getRoomsByStatus('available');
@@ -1044,6 +1093,22 @@ export class RoomsComponent implements OnInit, AfterViewInit {
     }
     if (this.devRoomType) {
       list = list.filter((r) => r.type === this.devRoomType);
+    }
+    if (this.devFilterFloor) {
+      const floor = Number(this.devFilterFloor);
+      if (!Number.isNaN(floor)) {
+        list = list.filter((r) => r.floor === floor);
+      }
+    }
+    if (this.devFilterFeature) {
+      const feature = this.devFilterFeature;
+      list = list.filter((r) => parseRoomFeatures(r.roomFeatures).includes(feature));
+    }
+    if (this.devFilterPrice) {
+      const price = Number(this.devFilterPrice);
+      if (!Number.isNaN(price)) {
+        list = list.filter((r) => r.price === price);
+      }
     }
     if (this.devSearch.trim()) {
       const term = this.devSearch.trim().toLowerCase();
@@ -1346,7 +1411,20 @@ export class RoomsComponent implements OnInit, AfterViewInit {
       lines.push(this.ui.screenText('rooms', 'filterPaymentDue'));
     }
     if (this.devRoomType) {
-      lines.push(`${this.ui.screenText('rooms', 'filterRoomTypePrefix')} ${this.devRoomType}`);
+      lines.push(`${this.ui.screenText('rooms', 'filterRoomCategoryPrefix')} ${this.ui.roomTypeLabel(this.devRoomType)}`);
+    }
+    if (this.devFilterFeature) {
+      lines.push(`${this.ui.screenText('rooms', 'filterRoomFeaturePrefix')} ${this.devFilterFeature}`);
+    }
+    if (this.devFilterFloor) {
+      lines.push(
+        `${this.ui.screenText('rooms', 'filterFloorPrefix')} ${this.floorFilterLabel(Number(this.devFilterFloor))}`,
+      );
+    }
+    if (this.devFilterPrice) {
+      lines.push(
+        `${this.ui.screenText('rooms', 'filterPricePrefix')} ${this.formatFilterPrice(Number(this.devFilterPrice))}`,
+      );
     }
     const q = this.devSearch.trim();
     if (q) {
@@ -1363,9 +1441,8 @@ export class RoomsComponent implements OnInit, AfterViewInit {
     this.selectedStatus = '';
     this.devArrivingOnly = false;
     this.devPaymentDueOnly = false;
-    this.devRoomType = '';
-    this.devSearch = '';
-    this.collapseFilterToolbar();
+    this.clearSmartFilters();
+    this.cdr.markForCheck();
   }
 
   isDevTileActive(tile: RoomsDevSummaryTile): boolean {

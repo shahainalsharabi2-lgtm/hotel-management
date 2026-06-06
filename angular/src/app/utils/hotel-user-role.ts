@@ -28,3 +28,8 @@ export function normalizeHotelUserRole(role: string | null | undefined): HotelUs
 export function canManageHotelUsers(role: string | null | undefined): boolean {
   return normalizeHotelUserRole(role) === HOTEL_USER_ROLE.Manager;
 }
+
+/** إضافة / تعديل / حذف في واجهة الإعدادات — للمدير فقط */
+export function canManageSettings(role: string | null | undefined): boolean {
+  return normalizeHotelUserRole(role) === HOTEL_USER_ROLE.Manager;
+}

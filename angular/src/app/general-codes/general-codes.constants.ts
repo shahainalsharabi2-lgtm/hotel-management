@@ -54,7 +54,9 @@ export const GENERAL_CODE_CATEGORIES_WITHOUT_DESCRIPTION = new Set<GeneralCodeCa
   'purposes-of-stay',
   'relationship-types',
   'preference-type',
+  'preference-category',
   'room-features',
+  'room-classes',
 ]);
 
 export function generalCodeShowsForeignName(category: GeneralCodeCategoryId): boolean {

@@ -2,9 +2,11 @@
   <header class="gc-panel__header">
     <div>
       <h2 class="gc-panel__title">{{ ui.screenText('generalCodes', titleKey) }}</h2>
-      <p class="gc-panel__subtitle">{{ ui.screenText('generalCodes', descriptionKey) }}</p>
+      @if (panelDescription()) {
+        <p class="gc-panel__subtitle">{{ panelDescription() }}</p>
+      }
     </div>
-    <button type="button" class="gc-btn gc-btn--primary gc-btn--sm" (click)="openCreate()">
+    <button type="button" class="gc-btn gc-btn--primary gc-btn--sm" *ngIf="canEdit" (click)="openCreate()">
       <i class="fas fa-plus" aria-hidden="true"></i>
       {{ ui.screenText('generalCodes', 'addNew') }}
     </button>
@@ -23,7 +25,7 @@
     <div class="gc-panel__empty">
       <i class="bi bi-inbox" aria-hidden="true"></i>
       <p>{{ ui.screenText('generalCodes', 'emptyList') }}</p>
-      <button type="button" class="gc-btn gc-btn--outline gc-btn--sm" (click)="openCreate()">
+      <button type="button" class="gc-btn gc-btn--outline gc-btn--sm" *ngIf="canEdit" (click)="openCreate()">
         {{ ui.screenText('generalCodes', 'addFirst') }}
       </button>
     </div>
@@ -32,55 +34,113 @@
       <table class="gc-table">
         <thead>
           <tr>
-            <th>
-              <span class="gc-col-label">
-                <i class="fas fa-tag gc-col-label__icon" aria-hidden="true"></i>
-                {{ ui.screenText('generalCodes', 'colName') }}
-              </span>
-            </th>
-            @if (showForeignName) {
-              <th>
-                <span class="gc-col-label">
-                  <i class="fas fa-globe gc-col-label__icon" aria-hidden="true"></i>
-                  {{ ui.screenText('generalCodes', 'colFName') }}
-                </span>
-              </th>
-            }
-            @if (showDescription) {
-              <th>
-                <span class="gc-col-label">
-                  <i class="fas fa-align-right gc-col-label__icon" aria-hidden="true"></i>
-                  {{ ui.screenText('generalCodes', 'colDescription') }}
-                </span>
-              </th>
-            }
             <th class="gc-table__center">
               <span class="gc-col-label gc-col-label--center">
                 <i class="fas fa-sort-numeric-down gc-col-label__icon" aria-hidden="true"></i>
                 {{ ui.screenText('generalCodes', 'colDisplayOrder') }}
               </span>
             </th>
+            @if (isPrefCategory) {
+              <th>{{ ui.screenText('generalCodes', 'prefCatColName') }}</th>
+              <th>{{ ui.screenText('generalCodes', 'prefCatColRegion') }}</th>
+              <th dir="ltr">{{ ui.screenText('generalCodes', 'prefCatColCurrencyCode') }}</th>
+              <th>{{ ui.screenText('generalCodes', 'prefCatColDialCode') }}</th>
+              <th class="gc-table__center">{{ ui.screenText('generalCodes', 'prefCatColFlag') }}</th>
+            } @else {
+              <th>
+                <span class="gc-col-label">
+                  <i class="fas fa-tag gc-col-label__icon" aria-hidden="true"></i>
+                  {{ ui.screenText('generalCodes', nameColumnLabelKey) }}
+                </span>
+              </th>
+              @if (isPriceCodeType) {
+                <th class="gc-table__center">
+                  <span class="gc-col-label gc-col-label--center">
+                    <i class="fas fa-percent gc-col-label__icon" aria-hidden="true"></i>
+                    {{ ui.screenText('generalCodes', 'priceCodeColFinancial') }}
+                  </span>
+                </th>
+              }
+              @if (isRoomClasses) {
+                <th class="gc-table__center">
+                  <span class="gc-col-label gc-col-label--center">
+                    <i class="fas fa-door-open gc-col-label__icon" aria-hidden="true"></i>
+                    {{ ui.screenText('generalCodes', 'roomClassColRoomCount') }}
+                  </span>
+                </th>
+                <th class="gc-table__center">
+                  <span class="gc-col-label gc-col-label--center">
+                    <i class="fas fa-bed gc-col-label__icon" aria-hidden="true"></i>
+                    {{ ui.screenText('generalCodes', 'roomClassColRegularBed') }}
+                  </span>
+                </th>
+                <th class="gc-table__center">
+                  <span class="gc-col-label gc-col-label--center">
+                    <i class="fas fa-people-roof gc-col-label__icon" aria-hidden="true"></i>
+                    {{ ui.screenText('generalCodes', 'roomClassColFamilyBed') }}
+                  </span>
+                </th>
+              }
+              @if (showForeignName) {
+                <th>
+                  <span class="gc-col-label">
+                    <i class="fas fa-globe gc-col-label__icon" aria-hidden="true"></i>
+                    {{ ui.screenText('generalCodes', foreignNameColumnLabelKey) }}
+                  </span>
+                </th>
+              }
+              @if (showDescription) {
+                <th>
+                  <span class="gc-col-label">
+                    <i class="fas fa-align-right gc-col-label__icon" aria-hidden="true"></i>
+                    {{ ui.screenText('generalCodes', 'colDescription') }}
+                  </span>
+                </th>
+              }
+            }
             <th class="gc-table__actions-head">{{ ui.screenText('generalCodes', 'colActions') }}</th>
           </tr>
         </thead>
         <tbody>
           @for (item of items; track item.id) {
             <tr>
-              <td>{{ item.name }}</td>
-              @if (showForeignName) {
-                <td>{{ item.fName || '—' }}</td>
-              }
-              @if (showDescription) {
-                <td>{{ item.description || '—' }}</td>
-              }
               <td class="gc-table__center">{{ item.displayOrder }}</td>
+              @if (isPrefCategory) {
+                <td>{{ languageLabel(item.name) }}</td>
+                <td>{{ item.fName || '—' }}</td>
+                <td dir="ltr">{{ itemPrefCurrencyCode(item) }}</td>
+                <td dir="ltr">{{ itemDialCode(item) }}</td>
+                <td class="gc-table__center">
+                  <img class="gc-flag-thumb" [src]="itemFlagSrc(item)" alt="" width="32" height="24" />
+                </td>
+              } @else {
+                <td>{{ item.name }}</td>
+                @if (isPriceCodeType) {
+                  <td class="gc-table__center" dir="ltr">{{ itemFinancialValue(item) }}</td>
+                }
+                @if (isRoomClasses) {
+                  <td class="gc-table__center">{{ formatCount(item.roomCount) }}</td>
+                  <td class="gc-table__center">{{ formatCount(item.regularBedCount) }}</td>
+                  <td class="gc-table__center">{{ formatCount(item.familyBedCount) }}</td>
+                }
+                @if (showForeignName) {
+                  <td>{{ item.fName || '—' }}</td>
+                }
+                @if (showDescription) {
+                  <td>{{ item.description || '—' }}</td>
+                }
+              }
               <td class="gc-table__actions">
-                <button type="button" class="gc-icon-btn" (click)="openEdit(item)" [attr.title]="ui.screenText('generalCodes', 'editTitle')">
-                  <i class="fas fa-edit" aria-hidden="true"></i>
-                </button>
-                <button type="button" class="gc-icon-btn gc-icon-btn--danger" (click)="deleteItem(item)" [attr.title]="ui.screenText('generalCodes', 'confirmDelete')">
-                  <i class="fas fa-trash" aria-hidden="true"></i>
-                </button>
+                @if (canEdit) {
+                  <button type="button" class="gc-icon-btn" (click)="openEdit(item)" [attr.title]="ui.screenText('generalCodes', 'editTitle')">
+                    <i class="fas fa-edit" aria-hidden="true"></i>
+                  </button>
+                  <button type="button" class="gc-icon-btn gc-icon-btn--danger" (click)="deleteItem(item)" [attr.title]="ui.screenText('generalCodes', 'confirmDelete')">
+                    <i class="fas fa-trash" aria-hidden="true"></i>
+                  </button>
+                } @else {
+                  <span class="gc-table__readonly">—</span>
+                }
               </td>
             </tr>
           }
@@ -91,7 +151,7 @@
 
   @if (modalOpen) {
     <div class="gc-modal-backdrop" (click)="closeModal()"></div>
-    <div class="gc-modal" role="dialog" aria-modal="true">
+    <div class="gc-modal" [class.gc-modal--pref]="isPrefCategory" role="dialog" aria-modal="true">
       <header class="gc-modal__header">
         <h3>
           {{
@@ -105,37 +165,203 @@
         </button>
       </header>
       <form [formGroup]="form" (ngSubmit)="save()" class="gc-modal__body">
-        <div class="gc-field">
-          <label class="gc-field__label">
-            <i class="fas fa-tag gc-field__icon" aria-hidden="true"></i>
-            {{ ui.screenText('generalCodes', 'colName') }}
-          </label>
-          <div class="gc-input-wrap">
-            <input type="text" class="gc-input" formControlName="name" />
+        @if (isPrefCategory) {
+          <div class="gc-pref-form">
+            <div class="gc-pref-form__grid">
+              <div class="gc-field gc-field--compact">
+                <label class="gc-field__label">
+                  <i class="fas fa-language gc-field__icon" aria-hidden="true"></i>
+                  {{ ui.screenText('generalCodes', 'prefCatColName') }}
+                </label>
+                <div class="gc-input-wrap gc-input-wrap--compact">
+                  <select class="gc-input gc-input--select gc-input--compact" formControlName="languageCode">
+                    @for (lang of systemLanguages; track lang.code) {
+                      <option [value]="lang.code">{{ ui.screenText('settings', lang.labelKey) }}</option>
+                    }
+                  </select>
+                </div>
+              </div>
+              <div class="gc-field gc-field--compact">
+                <label class="gc-field__label">
+                  <i class="fas fa-globe gc-field__icon" aria-hidden="true"></i>
+                  {{ ui.screenText('generalCodes', 'prefCatColRegion') }}
+                </label>
+                <div class="gc-input-wrap gc-input-wrap--compact">
+                  <input type="text" class="gc-input gc-input--compact" formControlName="fName" [attr.placeholder]="foreignNameFieldPlaceholder || null" />
+                </div>
+              </div>
+              <div class="gc-field gc-field--compact">
+                <label class="gc-field__label">
+                  <i class="fas fa-coins gc-field__icon" aria-hidden="true"></i>
+                  {{ ui.screenText('generalCodes', 'prefCatColCurrencyCode') }}
+                </label>
+                <div class="gc-input-wrap gc-input-wrap--compact">
+                  <input
+                    type="text"
+                    class="gc-input gc-input--compact"
+                    formControlName="prefCurrencyCode"
+                    dir="ltr"
+                    [attr.placeholder]="ui.screenText('generalCodes', 'prefCatCurrencyCodePlaceholder')" />
+                </div>
+              </div>
+              <div class="gc-field gc-field--compact">
+                <label class="gc-field__label">
+                  <i class="fas fa-phone gc-field__icon" aria-hidden="true"></i>
+                  {{ ui.screenText('generalCodes', 'prefCatColDialCode') }}
+                </label>
+                <div class="gc-input-wrap gc-input-wrap--compact">
+                  <input type="text" class="gc-input gc-input--compact" formControlName="countryDialCode" dir="ltr" [attr.placeholder]="ui.screenText('generalCodes', 'prefCatDialPlaceholder')" />
+                </div>
+              </div>
+              <div class="gc-field gc-field--compact">
+                <label class="gc-field__label">
+                  <i class="fas fa-sort-numeric-down gc-field__icon" aria-hidden="true"></i>
+                  {{ ui.screenText('generalCodes', 'colDisplayOrder') }}
+                </label>
+                <div class="gc-input-wrap gc-input-wrap--compact">
+                  <input type="number" min="0" class="gc-input gc-input--compact" formControlName="displayOrder" />
+                </div>
+              </div>
+            </div>
+
+            <div class="gc-field gc-field--compact gc-field--flag">
+              <label class="gc-field__label">
+                <i class="fas fa-flag gc-field__icon" aria-hidden="true"></i>
+                {{ ui.screenText('generalCodes', 'prefCatColFlag') }}
+              </label>
+              <div class="gc-flag-box">
+                <div class="gc-flag-box__top">
+                  <img class="gc-flag-box__preview" [src]="modalFlagPreview()" alt="" width="36" height="27" />
+                  <div class="gc-input-wrap gc-input-wrap--compact gc-flag-box__file">
+                    <input
+                      type="text"
+                      class="gc-input gc-input--compact"
+                      formControlName="flagImageName"
+                      dir="ltr"
+                      [attr.placeholder]="ui.screenText('generalCodes', 'prefCatFlagFilePlaceholder')" />
+                  </div>
+                  <label class="gc-flag-box__upload" [attr.title]="ui.screenText('generalCodes', 'prefCatFlagChoose')">
+                    <i class="fas fa-folder-open" aria-hidden="true"></i>
+                    <input type="file" [attr.accept]="flagUploadAccept" hidden (change)="onFlagFileChosen($event)" />
+                  </label>
+                  <button
+                    type="button"
+                    class="gc-flag-box__apply"
+                    [disabled]="!pendingFlagFile || flagUploadApplying"
+                    (click)="applyPendingFlagUpload()"
+                    [attr.title]="ui.screenText('generalCodes', 'prefCatFlagApplyUpload')">
+                    @if (flagUploadApplying) {
+                      <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
+                    } @else {
+                      <i class="fas fa-upload" aria-hidden="true"></i>
+                    }
+                  </button>
+                  @if (flagImageDataDraft) {
+                    <button type="button" class="gc-flag-box__clear" (click)="clearUploadedFlag()" [attr.title]="ui.screenText('generalCodes', 'prefCatFlagClearUpload')">
+                      <i class="fas fa-times" aria-hidden="true"></i>
+                    </button>
+                  }
+                </div>
+                @if (pendingFlagFileName) {
+                  <p class="gc-flag-box__pending">
+                    {{ ui.screenText('generalCodes', 'prefCatFlagPendingHint') }}
+                    <span dir="ltr">{{ pendingFlagFileName }}</span>
+                  </p>
+                }
+                <div class="gc-flag-box__presets">
+                  @for (flag of presetFlags; track flag) {
+                    <button type="button" class="gc-flag-preset gc-flag-preset--sm" (click)="onPresetFlagPick(flag)" [attr.title]="flag">
+                      <img [src]="'assets/flags/' + flag" alt="" width="24" height="18" />
+                    </button>
+                  }
+                </div>
+                <p class="gc-flag-box__hint">{{ ui.screenText('generalCodes', 'prefCatFlagFileHint') }}</p>
+              </div>
+            </div>
           </div>
-        </div>
-        @if (showForeignName) {
+        } @else {
           <div class="gc-field">
             <label class="gc-field__label">
-              <i class="fas fa-globe gc-field__icon" aria-hidden="true"></i>
-              {{ ui.screenText('generalCodes', 'colFName') }}
+              <i class="fas fa-tag gc-field__icon" aria-hidden="true"></i>
+              {{ ui.screenText('generalCodes', nameColumnLabelKey) }}
             </label>
             <div class="gc-input-wrap">
-              <input type="text" class="gc-input" formControlName="fName" />
+              <input type="text" class="gc-input" formControlName="name" [attr.placeholder]="nameFieldPlaceholder || null" />
             </div>
           </div>
-        }
-        @if (showDescription) {
-          <div class="gc-field">
-            <label class="gc-field__label">
-              <i class="fas fa-align-right gc-field__icon" aria-hidden="true"></i>
-              {{ ui.screenText('generalCodes', 'colDescription') }}
-            </label>
-            <div class="gc-input-wrap gc-input-wrap--textarea">
-              <textarea rows="3" class="gc-input gc-input--textarea" formControlName="description"></textarea>
+          @if (isPriceCodeType) {
+            <div class="gc-field">
+              <label class="gc-field__label">
+                <i class="fas fa-percent gc-field__icon" aria-hidden="true"></i>
+                {{ ui.screenText('generalCodes', 'priceCodeColFinancial') }}
+              </label>
+              <div class="gc-input-wrap">
+                <input
+                  type="text"
+                  inputmode="decimal"
+                  class="gc-input"
+                  formControlName="description"
+                  dir="ltr"
+                  [attr.placeholder]="ui.screenText('generalCodes', 'priceCodeFinancialPlaceholder')" />
+              </div>
+              <p class="gc-flag-box__hint">{{ ui.screenText('generalCodes', 'priceCodeFinancialHint') }}</p>
             </div>
-          </div>
+          }
+          @if (isRoomClasses) {
+            <div class="gc-field">
+              <label class="gc-field__label">
+                <i class="fas fa-door-open gc-field__icon" aria-hidden="true"></i>
+                {{ ui.screenText('generalCodes', 'roomClassColRoomCount') }}
+              </label>
+              <div class="gc-input-wrap">
+                <input type="number" min="0" class="gc-input" formControlName="roomCount" inputmode="numeric" />
+              </div>
+            </div>
+            <div class="gc-field gc-field--inline-pair">
+              <div class="gc-field">
+                <label class="gc-field__label">
+                  <i class="fas fa-bed gc-field__icon" aria-hidden="true"></i>
+                  {{ ui.screenText('generalCodes', 'roomClassColRegularBed') }}
+                </label>
+                <div class="gc-input-wrap">
+                  <input type="number" min="0" class="gc-input" formControlName="regularBedCount" inputmode="numeric" />
+                </div>
+              </div>
+              <div class="gc-field">
+                <label class="gc-field__label">
+                  <i class="fas fa-people-roof gc-field__icon" aria-hidden="true"></i>
+                  {{ ui.screenText('generalCodes', 'roomClassColFamilyBed') }}
+                </label>
+                <div class="gc-input-wrap">
+                  <input type="number" min="0" class="gc-input" formControlName="familyBedCount" inputmode="numeric" />
+                </div>
+              </div>
+            </div>
+          }
+          @if (showForeignName) {
+            <div class="gc-field">
+              <label class="gc-field__label">
+                <i class="fas fa-globe gc-field__icon" aria-hidden="true"></i>
+                {{ ui.screenText('generalCodes', foreignNameColumnLabelKey) }}
+              </label>
+              <div class="gc-input-wrap">
+                <input type="text" class="gc-input" formControlName="fName" [attr.placeholder]="foreignNameFieldPlaceholder || null" />
+              </div>
+            </div>
+          }
+          @if (showDescription) {
+            <div class="gc-field">
+              <label class="gc-field__label">
+                <i class="fas fa-align-right gc-field__icon" aria-hidden="true"></i>
+                {{ ui.screenText('generalCodes', 'colDescription') }}
+              </label>
+              <div class="gc-input-wrap gc-input-wrap--textarea">
+                <textarea rows="3" class="gc-input gc-input--textarea" formControlName="description"></textarea>
+              </div>
+            </div>
+          }
         }
+        @if (!isPrefCategory) {
         <div class="gc-field">
           <label class="gc-field__label">
             <i class="fas fa-sort-numeric-down gc-field__icon" aria-hidden="true"></i>
@@ -145,11 +371,12 @@
             <input type="number" min="0" class="gc-input" formControlName="displayOrder" />
           </div>
         </div>
+        }
         <footer class="gc-modal__footer">
           <button type="button" class="gc-btn gc-btn--ghost" (click)="closeModal()">
             {{ ui.screenText('generalCodes', 'cancel') }}
           </button>
-          <button type="submit" class="gc-btn gc-btn--primary" [disabled]="saving || form.invalid">
+          <button type="submit" class="gc-btn gc-btn--primary" [disabled]="!canSaveForm">
             @if (saving) {
               <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
             }

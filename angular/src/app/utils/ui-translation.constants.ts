@@ -19,6 +19,7 @@ export const UI_CHROME_KEYS: readonly { key: string; arabic: string }[] = [
   { key: 'langPickerLabel', arabic: 'لغة الواجهة' },
   { key: 'langPickerAria', arabic: 'اختيار لغة عرض التطبيق' },
   { key: 'langPickerToggleAria', arabic: 'تغيير لغة الواجهة' },
+  { key: 'langPickerOtherLocales', arabic: 'لغات أخرى' },
   { key: 'accountPanelTitle', arabic: 'قائمة المساعدة' },
   { key: 'accountMenuTitle', arabic: 'قائمة المساعدة' },
   { key: 'helpMenuTitle', arabic: 'قائمة المساعدة' },
@@ -79,6 +80,13 @@ export const UI_CHROME_KEYS: readonly { key: string; arabic: string }[] = [
   { key: 'messageConfirm', arabic: 'نعم' },
   { key: 'messageCancel', arabic: 'إلغاء' },
   { key: 'messageClose', arabic: 'إغلاق' },
+  { key: 'toastSavedTitle', arabic: 'تم بنجاح' },
+  { key: 'toastSaveFailedTitle', arabic: 'تعذّر الحفظ' },
+  { key: 'toastLocaleChangedTitle', arabic: 'تغيير اللغة' },
+  { key: 'toastLocaleChanged', arabic: 'تم التبديل إلى {0}' },
+  { key: 'toastLocaleCategoryTitle', arabic: 'فئة اللغة العربية' },
+  { key: 'toastLocaleCategorySelected', arabic: 'تم اختيار {0}' },
+  { key: 'toastCurrencySaved', arabic: 'تم حفظ إعدادات العملة' },
   { key: 'loadingDataHint', arabic: 'جاري تحميل البيانات…' },
   { key: 'loadingSlowHint', arabic: 'يستغرق التحميل وقتاً أطول — قد يكون الخادم في حالة إعداد' },
   { key: 'loadingRefreshBtn', arabic: 'تحديث الصفحة' },
@@ -104,6 +112,9 @@ export const SIDEBAR_NAV_KEYS: readonly { routeKey: string; arabic: string }[] =
   { routeKey: 'reports', arabic: 'التقارير' },
   { routeKey: 'settings', arabic: 'إعدادات النظام' },
 ];
+
+/** شاشات تُستبدَل ترجماتها العربية دائماً من ملفات assets المدمجة مع التطبيق */
+export const UI_AR_SCREEN_COPY_ASSET_OVERRIDES = new Set(['generalCodes', 'settings']);
 
 /**
  * شكل JSON المُركَّب من الخادم (ar.json / tr.json / zh-Hans.json):

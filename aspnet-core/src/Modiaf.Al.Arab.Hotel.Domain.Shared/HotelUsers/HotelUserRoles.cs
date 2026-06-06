@@ -26,4 +26,7 @@ public static class HotelUserRoles
 
     public static bool CanManageUsers(string? role) =>
         string.Equals(Normalize(role), Manager, StringComparison.Ordinal);
+
+    public static bool CanManageSettings(string? role) =>
+        string.Equals(Normalize(role), Manager, StringComparison.Ordinal);
 }

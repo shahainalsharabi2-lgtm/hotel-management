@@ -3,6 +3,18 @@ import type { UiExtraLocaleCode } from '../utils/ui-translation.constants';
 import { UiTranslationsService } from './ui-translations.service';
 import type { HotelSettingsDto } from './hotel-settings.service';
 
+function parseProfileRoot(raw: string | null | undefined): Record<string, unknown> {
+  try {
+    const parsed = JSON.parse(raw || '{}') as unknown;
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      return parsed as Record<string, unknown>;
+    }
+  } catch {
+    /* ignore */
+  }
+  return {};
+}
+
 export type HotelProfileLocale = UiExtraLocaleCode | 'ar';
 
 export interface HotelProfileFields {
@@ -52,6 +64,7 @@ export class HotelBrandingStoreService {
   readonly profileByLocale = emptyByLocale();
   hotelImageDataUrl = '';
   password = '123';
+  private profileMeta: Record<string, unknown> = {};
 
   activeProfile(): HotelProfileFields {
     const loc = this.ui.displayLocale();
@@ -66,19 +79,24 @@ export class HotelBrandingStoreService {
         : '';
 
     try {
-      const parsed = JSON.parse(dto.profileJson || '{}') as Record<string, HotelProfileFields>;
-      if (parsed && typeof parsed === 'object') {
-        for (const loc of LOCALES) {
-          const row = parsed[loc];
-          if (row && typeof row === 'object') {
-            this.profileByLocale[loc] = {
-              hotelName: String(row.hotelName ?? ''),
-              hotelAddress: String(row.hotelAddress ?? ''),
-              hotelLandline: String(row.hotelLandline ?? ''),
-              hotelMobile: String(row.hotelMobile ?? ''),
-              hotelEmail: String(row.hotelEmail ?? ''),
-            };
-          }
+      const parsed = parseProfileRoot(dto.profileJson);
+      this.profileMeta = {};
+      for (const [key, value] of Object.entries(parsed)) {
+        if (LOCALES.includes(key as HotelProfileLocale)) {
+          continue;
+        }
+        this.profileMeta[key] = value;
+      }
+      for (const loc of LOCALES) {
+        const row = parsed[loc] as HotelProfileFields | undefined;
+        if (row && typeof row === 'object') {
+          this.profileByLocale[loc] = {
+            hotelName: String(row.hotelName ?? ''),
+            hotelAddress: String(row.hotelAddress ?? ''),
+            hotelLandline: String(row.hotelLandline ?? ''),
+            hotelMobile: String(row.hotelMobile ?? ''),
+            hotelEmail: String(row.hotelEmail ?? ''),
+          };
         }
       }
     } catch {
@@ -94,14 +112,13 @@ export class HotelBrandingStoreService {
     return {
       password: this.password,
       hotelImageDataUrl: this.hotelImageDataUrl || null,
-      profileJson: JSON.stringify(this.profileByLocale),
+      profileJson: JSON.stringify({ ...this.profileByLocale, ...this.profileMeta }),
       currencyId: currency.currencyId ?? 'sar',
       currencySymbol: currency.currencySymbol ?? null,
       currencyCode: currency.currencyCode ?? null,
     };
   }
 
-  /** @deprecated استخدم applyFromDto بعد جلب الإعدادات من API */
   loadFromStorage(): void {
     /* no-op: البيانات من قاعدة البيانات عبر HotelSettingsService */
   }
@@ -129,12 +146,10 @@ export class HotelBrandingStoreService {
     return this.brandingView().address;
   }
 
-  /** @deprecated */
   saveToStorage(_extra: Record<string, unknown>): void {
     /* no-op */
   }
 
-  /** @deprecated */
   readRawStorage(): Record<string, unknown> {
     return {};
   }

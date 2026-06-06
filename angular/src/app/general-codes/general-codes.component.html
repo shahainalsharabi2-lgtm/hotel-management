@@ -43,13 +43,15 @@
 
     <div class="gc-content-col">
       <div class="gc-content-card">
-        @if (activeTabConfig(); as tab) {
-          <div class="gc-content-inner">
-            <app-general-code-panel
-              [category]="tab.id"
-              [titleKey]="tab.labelKey"
-              [descriptionKey]="tab.descriptionKey" />
-          </div>
+        @for (tab of tabs; track tab.id) {
+          @if (activeTab === tab.id) {
+            <div class="gc-content-inner">
+              <app-general-code-panel
+                [category]="tab.id"
+                [titleKey]="tab.labelKey"
+                [descriptionKey]="tab.descriptionKey" />
+            </div>
+          }
         }
       </div>
     </div>

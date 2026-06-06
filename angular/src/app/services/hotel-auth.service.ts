@@ -2,7 +2,12 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { canManageHotelUsers, normalizeHotelUserRole, type HotelUserRole } from '../utils/hotel-user-role';
+import {
+  canManageHotelUsers,
+  canManageSettings,
+  normalizeHotelUserRole,
+  type HotelUserRole,
+} from '../utils/hotel-user-role';
 
 export interface HotelAppUserSession {
   id: number;
@@ -49,6 +54,10 @@ export class HotelAuthService {
 
   canManageUsers(): boolean {
     return canManageHotelUsers(this.session?.role);
+  }
+
+  canManageSettings(): boolean {
+    return canManageSettings(this.session?.role);
   }
 
   login(userName: string, password: string): Observable<HotelLoginResult> {

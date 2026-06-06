@@ -1,3 +1,4 @@
+import { resolveArabicRegionProfile, type ArabicRegionProfile } from './arabic-region-profile.util';
 import type { HotelUiLocaleCode } from './hotel-currency.presets';
 
 /** بادئة الهاتف المعروضة حسب لغة الواجهة (نفس أعلام الشريط الجانبي) */
@@ -16,7 +17,17 @@ const LOCALE_PHONE: Record<HotelUiLocaleCode, LocalePhoneDisplay> = {
   'zh-Hans': { flagEmoji: '🇨🇳', flagSrc: 'assets/flags/cn.svg', dialCode: '+86', maxLength: 11 },
 };
 
-export function localePhoneDisplay(locale: string): LocalePhoneDisplay {
+export function localePhoneDisplay(
+  locale: string,
+  arabicProfile?: ArabicRegionProfile | LocalePhoneDisplay | null,
+): LocalePhoneDisplay {
+  if (locale === 'ar') {
+    if (arabicProfile) {
+      const { flagEmoji, flagSrc, dialCode, maxLength } = arabicProfile;
+      return { flagEmoji, flagSrc, dialCode, maxLength };
+    }
+    return resolveArabicRegionProfile('');
+  }
   if (locale in LOCALE_PHONE) {
     return LOCALE_PHONE[locale as HotelUiLocaleCode];
   }

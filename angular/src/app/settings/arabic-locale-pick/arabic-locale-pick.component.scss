@@ -1,0 +1,49 @@
+.ar-locale-pick__hint {
+  margin: 0 0 1.25rem;
+  font-size: 0.88rem;
+  color: #546e7a;
+  line-height: 1.55;
+}
+
+.ar-locale-pick__link {
+  color: var(--app-primary-mid, #1976d2);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.ar-locale-pick__link:hover {
+  text-decoration: underline;
+}
+
+.ar-locale-pick__loading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--app-primary-mid, #1976d2);
+  font-weight: 600;
+}
+
+.ar-locale-pick__empty {
+  text-align: center;
+  padding: 2rem 1rem;
+  border: 1px dashed rgba(21, 101, 192, 0.25);
+  border-radius: 14px;
+  background: #f8fbff;
+  color: #607d8b;
+}
+
+.ar-locale-pick__empty i {
+  font-size: 2rem;
+  opacity: 0.5;
+}
+
+.ar-locale-pick__btn {
+  display: inline-block;
+  margin-top: 0.75rem;
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+  background: var(--app-primary-mid, #1976d2);
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+}

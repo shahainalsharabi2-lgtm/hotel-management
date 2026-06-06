@@ -372,6 +372,10 @@
   color: var(--app-text-muted);
 }
 
+.card-header--no-title {
+  margin-bottom: 1rem;
+}
+
 .booking-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -1450,5 +1454,531 @@ select.premium-input option {
 
   .gp-modal-grid-span-2 {
     grid-column: auto;
+  }
+}
+
+/* ─── تسكين مباشر — تخطيط منظم ─── */
+.glass-card--walkin {
+  max-width: 1240px;
+  padding: 20px 28px 28px;
+}
+
+.modern-form--walkin .form-footer {
+  margin-top: 1.5rem;
+}
+
+.walkin-meta-board {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 0.75rem;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(227, 242, 253, 0.95) 0%, rgba(248, 251, 255, 0.98) 100%);
+  border: 1px solid rgba(21, 101, 192, 0.14);
+  box-shadow: 0 4px 14px rgba(21, 101, 192, 0.06);
+}
+
+.walkin-meta-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.walkin-meta-row--head {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding-bottom: 5px;
+  border-bottom: 1px dashed rgba(21, 101, 192, 0.14);
+}
+
+.walkin-meta-row--foot {
+  padding-top: 5px;
+  border-top: 1px dashed rgba(21, 101, 192, 0.14);
+}
+
+.walkin-meta-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 4px 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(21, 101, 192, 0.08);
+}
+
+.walkin-meta-cell--invoice {
+  background: linear-gradient(135deg, rgba(21, 101, 192, 0.08) 0%, rgba(14, 165, 233, 0.06) 100%);
+}
+
+.walkin-meta-cell--field {
+  gap: 3px;
+}
+
+.walkin-meta-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--app-primary-mid, #1976d2);
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+
+.walkin-meta-value {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--app-primary, #1565c0);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+
+.walkin-meta-value--accent {
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+}
+
+.walkin-meta-select {
+  width: 100%;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid rgba(21, 101, 192, 0.18);
+  background: #fff;
+  color: var(--app-primary, #1565c0);
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0 6px;
+  cursor: pointer;
+}
+
+.walkin-meta-select:focus,
+.walkin-meta-input:focus {
+  outline: none;
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.12);
+}
+
+.walkin-meta-input {
+  width: 100%;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid rgba(21, 101, 192, 0.18);
+  background: #fff;
+  color: var(--app-primary, #1565c0);
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 0 6px;
+  box-sizing: border-box;
+}
+
+.form-panes-container.walkin-layout {
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.05fr) minmax(220px, 270px);
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.form-panes-container.walkin-layout .guest-pane--walkin {
+  order: 1;
+}
+
+.form-panes-container.walkin-layout .order-pane--walkin {
+  order: 2;
+}
+
+.form-panes-container.walkin-layout .walkin-sidebar {
+  order: 3;
+}
+
+.walkin-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  min-width: 0;
+  align-self: stretch;
+}
+
+.walkin-room-preview,
+.walkin-payment-board {
+  background: var(--app-surface, #fff);
+  border: var(--app-card-border, 1px solid rgba(21, 101, 192, 0.12));
+  border-radius: 14px;
+  padding: 1rem;
+  box-shadow: var(--app-shadow-sm, 0 4px 14px rgba(21, 101, 192, 0.08));
+}
+
+.walkin-room-preview--empty {
+  min-height: 200px;
+}
+
+.walkin-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 0.85rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid rgba(21, 101, 192, 0.1);
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--app-primary, #1565c0);
+}
+
+.walkin-panel-title i {
+  color: var(--app-primary-mid, #1976d2);
+}
+
+.walkin-panel-title--payment {
+  color: #0d47a1;
+}
+
+.walkin-detail-list {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.walkin-detail-item {
+  display: grid;
+  grid-template-columns: minmax(0, 42%) minmax(0, 58%);
+  gap: 8px;
+  align-items: start;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(248, 251, 255, 0.9);
+}
+
+.walkin-detail-item dt {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--app-text-muted, #546e7a);
+}
+
+.walkin-detail-item dd {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--app-primary, #1565c0);
+  word-break: break-word;
+}
+
+.walkin-detail-item--strong {
+  font-size: 1rem;
+}
+
+.walkin-detail-item--price {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.walkin-detail-item--price small,
+.walkin-payment-amount small,
+.walkin-paid-currency {
+  font-size: 0.72rem;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.walkin-price-code-value {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.walkin-price-code-pct {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgba(21, 101, 192, 0.12);
+  color: var(--app-primary-mid, #1565c0);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.walkin-payment-discount {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--app-primary-mid, #1565c0);
+}
+
+.walkin-status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(46, 125, 50, 0.12);
+  color: #2e7d32;
+  font-size: 0.75rem;
+}
+
+.walkin-empty-hint {
+  margin: 1.5rem 0 0.5rem;
+  text-align: center;
+  font-size: 0.82rem;
+  color: rgba(21, 101, 192, 0.6);
+}
+
+.walkin-payment-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.walkin-payment-board--inline {
+  margin-top: 4px;
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  background: transparent;
+}
+
+.walkin-payment-board--inline .walkin-panel-title {
+  margin-bottom: 0.65rem;
+}
+
+.walkin-payment-grid--inline {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.walkin-payment-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 10px 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(21, 101, 192, 0.1);
+  overflow: hidden;
+}
+
+.walkin-payment-card--required {
+  background: linear-gradient(135deg, rgba(21, 101, 192, 0.06) 0%, rgba(14, 165, 233, 0.04) 100%);
+}
+
+.walkin-payment-card--paid {
+  background: #fff;
+}
+
+.walkin-payment-card--balance {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.walkin-payment-card--balance.walkin-payment-card--debt {
+  background: rgba(244, 63, 94, 0.1);
+  border-color: rgba(244, 63, 94, 0.22);
+}
+
+.walkin-payment-label {
+  font-size: 0.66rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--app-primary-mid, #1976d2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.walkin-payment-amount {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+  font-size: clamp(0.82rem, 2.2vw, 1rem);
+  font-weight: 700;
+  color: var(--app-primary, #1565c0);
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.walkin-payment-amount small {
+  flex-shrink: 0;
+}
+
+.walkin-paid-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  background: #fff;
+  border: 1px solid rgba(21, 101, 192, 0.18);
+  border-radius: 10px;
+  padding: 0 6px;
+  height: 36px;
+}
+
+.walkin-paid-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--app-primary, #1565c0);
+  text-align: center;
+  outline: none;
+}
+
+.field-box__action--chart-search {
+  background: #f5f9ff !important;
+  color: rgba(21, 101, 192, 0.72) !important;
+}
+
+.field-box__action--chart-search:hover,
+.field-box__action--chart-search:focus-visible {
+  background: rgba(21, 101, 192, 0.1) !important;
+  color: var(--app-primary, #1565c0) !important;
+}
+
+.field-box__action--chart-search i {
+  font-size: 0.88rem;
+}
+
+.guest-pane--walkin .pane-grid {
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.guest-pane--walkin .walkin-guest-name {
+  order: 1;
+  grid-column: 1 / -1;
+}
+
+.guest-pane--walkin .walkin-id-type {
+  order: 2;
+}
+
+.guest-pane--walkin .walkin-id-inline {
+  order: 3;
+  grid-column: span 1;
+}
+
+.guest-pane--walkin .walkin-phone {
+  order: 4;
+  grid-column: 1 / -1;
+}
+
+.guest-pane--walkin .divider {
+  order: 5;
+  grid-column: 1 / -1;
+}
+
+.guest-pane--walkin .numbers-modern-grid--triple {
+  order: 6;
+  grid-column: 1 / -1;
+}
+
+.guest-pane--walkin .walkin-occupancy-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.guest-pane--walkin .walkin-occupancy-grid .stat-input-card {
+  min-height: 92px;
+  padding: 14px 12px;
+  justify-content: center;
+  border-radius: 12px;
+}
+
+.guest-pane--walkin .walkin-occupancy-grid .stat-input-card label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--app-primary-mid, #1976d2);
+}
+
+.guest-pane--walkin .walkin-occupancy-grid .stat-input-card input {
+  font-size: 1.4rem;
+  font-weight: 700;
+  padding: 6px 0;
+}
+
+.guest-pane--walkin .walkin-occupancy-grid .stat-input-card input[readonly] {
+  background: rgba(248, 251, 255, 0.9);
+  cursor: default;
+}
+
+.guest-pane--walkin .walkin-occupancy-grid .stat-input-card.highlight {
+  background: linear-gradient(180deg, rgba(14, 165, 233, 0.08) 0%, rgba(255, 255, 255, 1) 100%);
+  border-color: rgba(14, 165, 233, 0.28);
+}
+
+.order-pane--walkin .walkin-order-grid {
+  gap: 0.75rem;
+}
+
+.order-pane--walkin .walkin-payment-method {
+  grid-column: 1 / -1;
+}
+
+.order-pane--walkin .walkin-payment-board--inline {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 1100px) {
+  .form-panes-container.walkin-layout {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .form-panes-container.walkin-layout .walkin-sidebar {
+    grid-column: 1 / -1;
+    order: 3;
+  }
+
+  .form-panes-container.walkin-layout .guest-pane--walkin {
+    order: 1;
+  }
+
+  .form-panes-container.walkin-layout .order-pane--walkin {
+    order: 2;
+  }
+
+  .walkin-payment-grid--inline {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .walkin-meta-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .form-panes-container.walkin-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .walkin-sidebar {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .walkin-meta-row {
+    grid-template-columns: 1fr;
+  }
+
+  .guest-pane--walkin .walkin-id-inline {
+    grid-column: 1 / -1;
+  }
+
+  .guest-pane--walkin .walkin-occupancy-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .walkin-payment-grid--inline {
+    grid-template-columns: 1fr;
   }
 }
